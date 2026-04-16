@@ -11,13 +11,13 @@ import {
   ExpeditionDetailScreen,
   ExploreScreen,
   FeedScreen,
-  MapNoticeScreen,
   ProfileScreen,
   SettingsScreen,
   TrackScreen,
 } from '@minga/ui';
 import './src/supabase';
 import { startLocationStream } from './src/locationAdapter';
+import { MapScreen } from './src/MapScreen';
 
 type Tab = 'feed' | 'explore' | 'map' | 'track' | 'profile' | 'settings';
 type Route = { kind: 'tab'; tab: Tab } | { kind: 'expedition'; id: string };
@@ -67,7 +67,7 @@ function Root() {
           <ExploreScreen onPickCategory={(_c: ExpeditionCategory) => setRoute({ kind: 'tab', tab: 'feed' })} />
         );
       case 'map':
-        return <MapNoticeScreen />;
+        return <MapScreen onOpenExpedition={(id) => setRoute({ kind: 'expedition', id })} />;
       case 'track':
         return <TrackScreen startLocationStream={startLocationStream} />;
       case 'profile':
