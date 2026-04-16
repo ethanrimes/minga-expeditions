@@ -13,20 +13,19 @@
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
     "declaration": false,
-    "baseUrl": ".",
     "paths": {
-      "@minga/types": ["packages/types/src/index.ts"],
-      "@minga/types/*": ["packages/types/src/*"],
-      "@minga/supabase": ["packages/supabase/src/index.ts"],
-      "@minga/supabase/*": ["packages/supabase/src/*"],
-      "@minga/theme": ["packages/theme/src/index.ts"],
-      "@minga/theme/*": ["packages/theme/src/*"],
-      "@minga/logic": ["packages/logic/src/index.ts"],
-      "@minga/logic/*": ["packages/logic/src/*"],
-      "@minga/ui": ["packages/ui/src/index.ts"],
-      "@minga/ui/*": ["packages/ui/src/*"],
-      "@minga/i18n": ["packages/i18n/src/index.ts"],
-      "@minga/i18n/*": ["packages/i18n/src/*"]
+      "@minga/types": ["./packages/types/src/index.ts"],
+      "@minga/types/*": ["./packages/types/src/*"],
+      "@minga/supabase": ["./packages/supabase/src/index.ts"],
+      "@minga/supabase/*": ["./packages/supabase/src/*"],
+      "@minga/theme": ["./packages/theme/src/index.ts"],
+      "@minga/theme/*": ["./packages/theme/src/*"],
+      "@minga/logic": ["./packages/logic/src/index.ts"],
+      "@minga/logic/*": ["./packages/logic/src/*"],
+      "@minga/ui": ["./packages/ui/src/index.ts"],
+      "@minga/ui/*": ["./packages/ui/src/*"],
+      "@minga/i18n": ["./packages/i18n/src/index.ts"],
+      "@minga/i18n/*": ["./packages/i18n/src/*"]
     }
   },
   "exclude": ["node_modules", "dist", "build", ".expo"]
