@@ -3,6 +3,7 @@ import { ActivityIndicator, Text, View } from 'react-native';
 import { useTheme, spacing, fontSizes, fontWeights, radii } from '@minga/theme';
 import { fetchProfile, getSupabase } from '@minga/supabase';
 import { formatDistanceKm, formatElevation } from '@minga/logic';
+import { useT } from '@minga/i18n';
 import type { DbProfile } from '@minga/types';
 import { Screen } from '../primitives/Screen';
 import { Avatar } from '../primitives/Avatar';
@@ -18,6 +19,7 @@ import { useMyActivities } from '../hooks/useMyActivities';
 
 export function ProfileScreen({ onSignIn }: { onSignIn?: () => void }) {
   const { theme } = useTheme();
+  const { t } = useT();
   const { user, signOut, loading: authLoading } = useAuth();
   const { activities, loading: actsLoading } = useMyActivities();
   const [profile, setProfile] = useState<DbProfile | null>(null);
@@ -38,8 +40,8 @@ export function ProfileScreen({ onSignIn }: { onSignIn?: () => void }) {
   if (!user) {
     return (
       <Screen>
-        <EmptyState icon="👤" title="Sign in to see your profile" body="Track expeditions, earn tiers, and follow friends." />
-        <Button label="Sign in" onPress={onSignIn} />
+        <EmptyState icon="👤" title={t('profile.signInTitle')} body={t('profile.signInBody')} />
+        <Button label={t('auth.signIn')} onPress={onSignIn} />
       </Screen>
     );
   }
@@ -79,18 +81,18 @@ export function ProfileScreen({ onSignIn }: { onSignIn?: () => void }) {
           borderRadius: radii.lg,
         }}
       >
-        <StatBlock label="Total km" value={formatDistanceKm(profile?.total_distance_km ?? 0)} />
-        <StatBlock label="Elevation" value={formatElevation(profile?.total_elevation_m ?? 0)} />
-        <StatBlock label="Activities" value={String(activities.length)} />
+        <StatBlock label={t('stats.totalKm')} value={formatDistanceKm(profile?.total_distance_km ?? 0)} />
+        <StatBlock label={t('stats.elevation')} value={formatElevation(profile?.total_elevation_m ?? 0)} />
+        <StatBlock label={t('stats.activities')} value={String(activities.length)} />
       </View>
 
       {profile ? <TierProgress distanceKm={profile.total_distance_km} /> : null}
 
-      <SectionHeader title="Recent activities" />
+      <SectionHeader title={t('profile.recentActivities')} />
       {actsLoading ? (
         <ActivityIndicator />
       ) : activities.length === 0 ? (
-        <EmptyState icon="🥾" title="No activities yet" body="Start a tracking session to rack up km." />
+        <EmptyState icon="🥾" title={t('profile.emptyActivitiesCta')} body={t('profile.emptyActivities')} />
       ) : (
         <View style={{ gap: spacing.md }}>
           {activities.slice(0, 10).map((a) => (
@@ -99,7 +101,7 @@ export function ProfileScreen({ onSignIn }: { onSignIn?: () => void }) {
         </View>
       )}
 
-      <Button label="Sign out" variant="ghost" onPress={signOut} />
+      <Button label={t('profile.signOut')} variant="ghost" onPress={signOut} />
     </Screen>
   );
 }

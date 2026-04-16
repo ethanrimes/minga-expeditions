@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useTheme, spacing, fontSizes, fontWeights, radii } from '@minga/theme';
 import { relativeTime } from '@minga/logic';
+import { useT } from '@minga/i18n';
 import type { CommentWithAuthor } from '@minga/types';
 import { Avatar } from '../primitives/Avatar';
 import { TierBadge } from '../primitives/TierBadge';
@@ -36,6 +37,7 @@ function CommentItem({
   depth: number;
 }) {
   const { theme } = useTheme();
+  const { t, language } = useT();
   const [replying, setReplying] = useState(false);
   const [draft, setDraft] = useState('');
   const [busy, setBusy] = useState(false);
@@ -70,7 +72,7 @@ function CommentItem({
             {comment.author.display_name}
           </Text>
           <Text style={{ color: theme.textMuted, fontSize: fontSizes.xs }}>
-            {relativeTime(comment.created_at)}
+            {relativeTime(comment.created_at, language)}
           </Text>
         </View>
         <TierBadge tier={comment.author.tier} />
@@ -79,14 +81,14 @@ function CommentItem({
       {depth < 2 && onReply ? (
         <Pressable onPress={() => setReplying((r) => !r)}>
           <Text style={{ color: theme.primary, fontSize: fontSizes.sm, fontWeight: fontWeights.semibold }}>
-            {replying ? 'Cancel' : 'Reply'}
+            {replying ? t('detail.cancel') : t('detail.reply')}
           </Text>
         </Pressable>
       ) : null}
       {replying ? (
         <View style={{ gap: spacing.sm }}>
-          <Input placeholder="Write a reply…" value={draft} onChangeText={setDraft} multiline />
-          <Button label="Post reply" loading={busy} onPress={submit} size="sm" />
+          <Input placeholder={t('detail.replyPlaceholder')} value={draft} onChangeText={setDraft} multiline />
+          <Button label={t('detail.postReply')} loading={busy} onPress={submit} size="sm" />
         </View>
       ) : null}
       {comment.replies && comment.replies.length > 0 ? (

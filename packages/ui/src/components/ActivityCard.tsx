@@ -2,6 +2,7 @@ import React from 'react';
 import { Text, View } from 'react-native';
 import { useTheme, radii, spacing, fontSizes, fontWeights } from '@minga/theme';
 import { formatDistanceKm, formatDuration, formatElevation } from '@minga/logic';
+import { useT } from '@minga/i18n';
 import type { DbActivity } from '@minga/types';
 
 const ACTIVITY_ICON: Record<DbActivity['activity_type'], string> = {
@@ -13,6 +14,8 @@ const ACTIVITY_ICON: Record<DbActivity['activity_type'], string> = {
 
 export function ActivityCard({ activity }: { activity: DbActivity }) {
   const { theme } = useTheme();
+  const { t, language } = useT();
+  const locale = language === 'es' ? 'es-CO' : 'en-US';
   return (
     <View
       style={{
@@ -30,13 +33,13 @@ export function ActivityCard({ activity }: { activity: DbActivity }) {
           {activity.title}
         </Text>
         <Text style={{ color: theme.textMuted, fontSize: fontSizes.xs }}>
-          {new Date(activity.started_at).toLocaleDateString()}
+          {new Date(activity.started_at).toLocaleDateString(locale)}
         </Text>
       </View>
       <View style={{ flexDirection: 'row', gap: spacing.xl }}>
-        <Stat theme={theme} label="Distance" value={formatDistanceKm(activity.distance_km)} />
-        <Stat theme={theme} label="Duration" value={formatDuration(activity.duration_seconds)} />
-        <Stat theme={theme} label="Elevation" value={formatElevation(activity.elevation_gain_m)} />
+        <Stat theme={theme} label={t('stats.distance')} value={formatDistanceKm(activity.distance_km)} />
+        <Stat theme={theme} label={t('stats.duration')} value={formatDuration(activity.duration_seconds)} />
+        <Stat theme={theme} label={t('stats.elevation')} value={formatElevation(activity.elevation_gain_m)} />
       </View>
     </View>
   );

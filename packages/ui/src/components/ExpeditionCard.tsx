@@ -2,11 +2,22 @@ import React from 'react';
 import { Image, Pressable, Text, View } from 'react-native';
 import { useTheme, radii, spacing, fontSizes, fontWeights } from '@minga/theme';
 import { formatDistanceKm, formatElevation, formatPriceCents } from '@minga/logic';
-import type { ExpeditionWithAuthor } from '@minga/types';
+import { useT } from '@minga/i18n';
+import type { ExpeditionWithAuthor, ExpeditionCategory } from '@minga/types';
 import { Avatar } from '../primitives/Avatar';
 import { TierBadge } from '../primitives/TierBadge';
 import { CategoryChip } from '../primitives/CategoryChip';
 import { StarRating } from '../primitives/StarRating';
+
+const CATEGORY_KEY: Record<ExpeditionCategory, any> = {
+  hiking: 'cat.hiking',
+  cycling: 'cat.cycling',
+  running: 'cat.running',
+  trekking: 'cat.trekking',
+  cultural: 'cat.cultural',
+  wildlife: 'cat.wildlife',
+  other: 'cat.other',
+};
 
 export function ExpeditionCard({
   expedition,
@@ -18,6 +29,7 @@ export function ExpeditionCard({
   compact?: boolean;
 }) {
   const { theme } = useTheme();
+  const { t } = useT();
   const coverUri = expedition.cover_photo_url ?? expedition.photos[0]?.url ?? null;
 
   return (
@@ -35,7 +47,7 @@ export function ExpeditionCard({
         <View style={{ width: '100%', aspectRatio: compact ? 16 / 9 : 4 / 3, backgroundColor: theme.surfaceAlt }}>
           <Image source={{ uri: coverUri }} style={{ width: '100%', height: '100%' }} />
           <View style={{ position: 'absolute', top: spacing.md, left: spacing.md }}>
-            <CategoryChip label={expedition.category} />
+            <CategoryChip label={t(CATEGORY_KEY[expedition.category])} />
           </View>
           {expedition.is_official ? (
             <View style={{ position: 'absolute', top: spacing.md, right: spacing.md }}>
@@ -48,7 +60,7 @@ export function ExpeditionCard({
                 }}
               >
                 <Text style={{ color: '#fff', fontWeight: fontWeights.bold, fontSize: fontSizes.xs }}>
-                  MINGA OFFICIAL
+                  {t('common.official')}
                 </Text>
               </View>
             </View>
@@ -69,12 +81,16 @@ export function ExpeditionCard({
 
         <View style={{ flexDirection: 'row', gap: spacing.lg, marginTop: spacing.xs, flexWrap: 'wrap' }}>
           {expedition.distance_km != null ? (
-            <MiniStat label="Distance" value={formatDistanceKm(expedition.distance_km)} theme={theme} />
+            <MiniStat label={t('stats.distance')} value={formatDistanceKm(expedition.distance_km)} theme={theme} />
           ) : null}
           {expedition.elevation_gain_m != null ? (
-            <MiniStat label="Elevation" value={formatElevation(expedition.elevation_gain_m)} theme={theme} />
+            <MiniStat label={t('stats.elevation')} value={formatElevation(expedition.elevation_gain_m)} theme={theme} />
           ) : null}
-          <MiniStat label="Difficulty" value={'●'.repeat(expedition.difficulty) + '○'.repeat(5 - expedition.difficulty)} theme={theme} />
+          <MiniStat
+            label={t('stats.difficulty')}
+            value={'●'.repeat(expedition.difficulty) + '○'.repeat(5 - expedition.difficulty)}
+            theme={theme}
+          />
         </View>
 
         <View
@@ -109,7 +125,7 @@ export function ExpeditionCard({
           </Text>
           <View style={{ flex: 1 }} />
           <Text style={{ color: theme.primary, fontWeight: fontWeights.bold, fontSize: fontSizes.sm }}>
-            {formatPriceCents(expedition.price_cents, expedition.currency)}
+            {formatPriceCents(expedition.price_cents, { currency: expedition.currency, freeLabel: t('common.free') })}
           </Text>
         </View>
       </View>

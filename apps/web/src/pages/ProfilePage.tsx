@@ -1,17 +1,34 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme, tierColors } from '@minga/theme';
+import { useT } from '@minga/i18n';
 import { fetchMyActivities, fetchProfile } from '@minga/supabase';
 import { formatDistanceKm, formatDuration, formatElevation, progressToNextTier, TIER_THRESHOLDS_KM } from '@minga/logic';
-import type { DbActivity, DbProfile } from '@minga/types';
+import type { ActivityType, DbActivity, DbProfile, TierLevel } from '@minga/types';
 import { supabase } from '../supabase';
+
+const TIER_KEY: Record<TierLevel, any> = {
+  bronze: 'tier.bronze',
+  silver: 'tier.silver',
+  gold: 'tier.gold',
+  diamond: 'tier.diamond',
+};
+
+const ACT_KEY: Record<ActivityType, any> = {
+  hike: 'track.actType.hike',
+  ride: 'track.actType.ride',
+  run: 'track.actType.run',
+  walk: 'track.actType.walk',
+};
 
 export function ProfilePage() {
   const { theme } = useTheme();
+  const { t, language } = useT();
   const [profile, setProfile] = useState<DbProfile | null>(null);
   const [activities, setActivities] = useState<DbActivity[]>([]);
   const [email, setEmail] = useState<string | null>(null);
   const [signedIn, setSignedIn] = useState<boolean>(false);
+  const locale = language === 'es' ? 'es-CO' : 'en-US';
 
   useEffect(() => {
     (async () => {
@@ -32,8 +49,8 @@ export function ProfilePage() {
     return (
       <div style={{ maxWidth: 600, margin: '80px auto', padding: '0 24px', textAlign: 'center' }}>
         <div style={{ fontSize: 60 }}>👤</div>
-        <h1 style={{ color: theme.text }}>Sign in to see your profile</h1>
-        <p style={{ color: theme.textMuted }}>Track expeditions, earn tiers, and follow friends.</p>
+        <h1 style={{ color: theme.text }}>{t('profile.signInTitle')}</h1>
+        <p style={{ color: theme.textMuted }}>{t('profile.signInBody')}</p>
         <Link
           to="/auth"
           style={{
@@ -45,7 +62,7 @@ export function ProfilePage() {
             fontWeight: 800,
           }}
         >
-          Sign in
+          {t('auth.signIn')}
         </Link>
       </div>
     );
@@ -59,7 +76,7 @@ export function ProfilePage() {
         {profile?.avatar_url ? (
           <img
             src={profile.avatar_url}
-            alt=""
+            alt={t('profile.avatarAlt')}
             style={{ width: 96, height: 96, borderRadius: 999, background: theme.surfaceAlt }}
           />
         ) : (
@@ -97,7 +114,7 @@ export function ProfilePage() {
                 letterSpacing: 1,
               }}
             >
-              {profile.tier.toUpperCase()}
+              {t(TIER_KEY[profile.tier])}
             </span>
           ) : null}
         </div>
@@ -112,9 +129,9 @@ export function ProfilePage() {
             marginBottom: 32,
           }}
         >
-          <Stat theme={theme} label="Total distance" value={formatDistanceKm(profile.total_distance_km)} />
-          <Stat theme={theme} label="Elevation gained" value={formatElevation(profile.total_elevation_m)} />
-          <Stat theme={theme} label="Activities" value={String(activities.length)} />
+          <Stat theme={theme} label={t('stats.totalKm')} value={formatDistanceKm(profile.total_distance_km)} />
+          <Stat theme={theme} label={t('stats.totalElevation')} value={formatElevation(profile.total_elevation_m)} />
+          <Stat theme={theme} label={t('stats.activities')} value={String(activities.length)} />
         </section>
       ) : null}
 
@@ -129,8 +146,8 @@ export function ProfilePage() {
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
             <strong style={{ color: theme.text }}>
-              {profile.tier.toUpperCase()}
-              {progress.next ? ` → ${progress.next.toUpperCase()}` : ' · MAX TIER'}
+              {t(TIER_KEY[profile.tier])}
+              {progress.next ? ` → ${t(TIER_KEY[progress.next])}` : ` · ${t('tier.maxTier')}`}
             </strong>
             <span style={{ color: theme.textMuted }}>{formatDistanceKm(profile.total_distance_km)}</span>
           </div>
@@ -145,17 +162,20 @@ export function ProfilePage() {
           </div>
           {progress.next ? (
             <div style={{ color: theme.textMuted, fontSize: 13, marginTop: 8 }}>
-              {formatDistanceKm(progress.remainingKm)} more to reach {progress.next} (threshold{' '}
+              {formatDistanceKm(progress.remainingKm)} {t('profile.tierToGo')} {t(TIER_KEY[progress.next])} ({t('tier.thresholdSuffix')}{' '}
               {formatDistanceKm(TIER_THRESHOLDS_KM[progress.next])}).
             </div>
           ) : null}
         </section>
       ) : null}
 
-      <h2 style={{ color: theme.text, marginTop: 0 }}>Recent activities</h2>
+      <h2 style={{ color: theme.text, marginTop: 0 }}>{t('profile.recentActivities')}</h2>
       {activities.length === 0 ? (
         <div style={{ color: theme.textMuted }}>
-          No activities yet. <Link to="/track" style={{ color: theme.primary, fontWeight: 700 }}>Start tracking</Link> →
+          {t('profile.emptyActivities')}{' '}
+          <Link to="/track" style={{ color: theme.primary, fontWeight: 700 }}>
+            {t('profile.emptyActivitiesCta')}
+          </Link>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -176,12 +196,12 @@ export function ProfilePage() {
               <div>
                 <strong style={{ color: theme.text }}>{a.title}</strong>
                 <div style={{ color: theme.textMuted, fontSize: 13 }}>
-                  {a.activity_type} · {new Date(a.started_at).toLocaleDateString()}
+                  {t(ACT_KEY[a.activity_type])} · {new Date(a.started_at).toLocaleDateString(locale)}
                 </div>
               </div>
-              <Stat theme={theme} label="Distance" value={formatDistanceKm(a.distance_km)} small />
-              <Stat theme={theme} label="Elevation" value={formatElevation(a.elevation_gain_m)} small />
-              <Stat theme={theme} label="Duration" value={formatDuration(a.duration_seconds)} small />
+              <Stat theme={theme} label={t('stats.distance')} value={formatDistanceKm(a.distance_km)} small />
+              <Stat theme={theme} label={t('stats.elevation')} value={formatElevation(a.elevation_gain_m)} small />
+              <Stat theme={theme} label={t('stats.duration')} value={formatDuration(a.duration_seconds)} small />
             </div>
           ))}
         </div>

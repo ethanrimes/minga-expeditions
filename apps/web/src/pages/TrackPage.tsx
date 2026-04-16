@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useTheme } from '@minga/theme';
+import { useT } from '@minga/i18n';
 import {
   formatDistanceKm,
   formatDuration,
@@ -12,11 +13,19 @@ import type { ActivityType, TrackPoint } from '@minga/types';
 import { supabase } from '../supabase';
 
 const ACTIVITY_TYPES: ActivityType[] = ['hike', 'ride', 'run', 'walk'];
+const ACT_KEY: Record<ActivityType, any> = {
+  hike: 'track.actType.hike',
+  ride: 'track.actType.ride',
+  run: 'track.actType.run',
+  walk: 'track.actType.walk',
+};
 
 type Status = 'idle' | 'recording' | 'paused' | 'ended';
 
 export function TrackPage() {
   const { theme } = useTheme();
+  const { t, language } = useT();
+  const locale = language === 'es' ? 'es-CO' : 'en-US';
   const [status, setStatus] = useState<Status>('idle');
   const [points, setPoints] = useState<TrackPoint[]>([]);
   const [elapsed, setElapsed] = useState(0);
@@ -53,7 +62,11 @@ export function TrackPage() {
   const start = () => {
     setError(null);
     if (!('geolocation' in navigator)) {
-      setError('Geolocation is not available in this browser.');
+      setError(
+        language === 'es'
+          ? 'La geolocalización no está disponible en este navegador.'
+          : 'Geolocation is not available in this browser.',
+      );
       return;
     }
     accumulatedRef.current = 0;
@@ -121,9 +134,10 @@ export function TrackPage() {
   const save = async () => {
     setSavedMsg(null);
     try {
+      const fallbackTitle = `${t(ACT_KEY[activityType])} · ${new Date().toLocaleDateString(locale)}`;
       await saveActivity(supabase, {
         activity_type: activityType,
-        title: title.trim() || `${activityType} on ${new Date().toLocaleDateString()}`,
+        title: title.trim() || fallbackTitle,
         started_at: new Date(points[0]?.timestamp ?? Date.now() - elapsed * 1000).toISOString(),
         ended_at: new Date().toISOString(),
         distance_km: summary.distanceKm,
@@ -132,25 +146,34 @@ export function TrackPage() {
         notes: notes.trim() || null,
         track: points,
       });
-      setSavedMsg('Saved! See it on your profile.');
+      setSavedMsg(t('track.savedSuccess'));
       reset();
     } catch (e: any) {
-      setSavedMsg(e?.message ?? 'Failed to save');
+      setSavedMsg(e?.message ?? t('common.loadError'));
     }
   };
 
+  const statusLabel =
+    status === 'recording'
+      ? t('track.statusRecording')
+      : status === 'paused'
+        ? t('track.statusPaused')
+        : status === 'ended'
+          ? t('track.statusEnded')
+          : t('track.statusReady');
+
   return (
     <div style={{ maxWidth: 900, margin: '0 auto', padding: '40px 24px' }}>
-      <h1 style={{ color: theme.text }}>Track activity</h1>
-      <p style={{ color: theme.textMuted }}>Record a GPS-tracked hike, ride, run, or walk — Strava-style.</p>
+      <h1 style={{ color: theme.text }}>{t('track.title')}</h1>
+      <p style={{ color: theme.textMuted }}>{t('track.subtitle')}</p>
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 24 }}>
-        {ACTIVITY_TYPES.map((t) => {
-          const active = t === activityType;
+        {ACTIVITY_TYPES.map((typ) => {
+          const active = typ === activityType;
           return (
             <button
-              key={t}
-              onClick={() => setActivityType(t)}
+              key={typ}
+              onClick={() => setActivityType(typ)}
               style={{
                 background: active ? theme.primary : theme.surfaceAlt,
                 color: active ? theme.onPrimary : theme.text,
@@ -158,10 +181,9 @@ export function TrackPage() {
                 padding: '8px 16px',
                 borderRadius: 999,
                 fontWeight: 700,
-                textTransform: 'capitalize',
               }}
             >
-              {t}
+              {t(ACT_KEY[typ])}
             </button>
           );
         })}
@@ -177,15 +199,23 @@ export function TrackPage() {
         }}
       >
         <div style={{ color: theme.textMuted, fontSize: 13, letterSpacing: 2, textTransform: 'uppercase' }}>
-          {status === 'recording' ? 'Recording' : status === 'paused' ? 'Paused' : status === 'ended' ? 'Finished' : 'Ready'}
+          {statusLabel}
         </div>
         <div style={{ color: theme.text, fontSize: 64, fontWeight: 800, letterSpacing: 2, margin: '4px 0 16px' }}>
           {formatDuration(elapsed)}
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-around', gap: 16 }}>
           <Metric theme={theme} label="km" value={summary.distanceKm.toFixed(2)} />
-          <Metric theme={theme} label="elev m" value={String(Math.round(summary.elevationGainM))} />
-          <Metric theme={theme} label="avg km/h" value={summary.avgSpeedKmh.toFixed(1)} />
+          <Metric
+            theme={theme}
+            label={language === 'es' ? 'desnivel m' : 'elev m'}
+            value={String(Math.round(summary.elevationGainM))}
+          />
+          <Metric
+            theme={theme}
+            label={language === 'es' ? 'km/h prom' : 'avg km/h'}
+            value={summary.avgSpeedKmh.toFixed(1)}
+          />
         </div>
       </section>
 
@@ -193,12 +223,12 @@ export function TrackPage() {
 
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}>
         {(status === 'idle' || status === 'ended') && (
-          <Btn theme={theme} label="Start" primary onClick={start} />
+          <Btn theme={theme} label={t('track.start')} primary onClick={start} />
         )}
-        {status === 'recording' && <Btn theme={theme} label="Pause" onClick={pause} />}
-        {status === 'paused' && <Btn theme={theme} label="Resume" primary onClick={resume} />}
+        {status === 'recording' && <Btn theme={theme} label={t('track.pause')} onClick={pause} />}
+        {status === 'paused' && <Btn theme={theme} label={t('track.resume')} primary onClick={resume} />}
         {(status === 'recording' || status === 'paused') && (
-          <Btn theme={theme} label="Finish" danger onClick={stop} />
+          <Btn theme={theme} label={t('track.finish')} danger onClick={stop} />
         )}
       </div>
 
@@ -207,31 +237,29 @@ export function TrackPage() {
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Title (e.g., Cerro Tusa · 8km loop)"
+            placeholder={t('track.titlePlaceholder')}
             style={inputStyle(theme)}
           />
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Notes"
+            placeholder={t('track.notesPlaceholder')}
             rows={3}
             style={inputStyle(theme)}
           />
           <div style={{ display: 'flex', gap: 12 }}>
-            <Btn theme={theme} label="Save activity" primary onClick={save} />
-            <Btn theme={theme} label="Discard" onClick={reset} />
+            <Btn theme={theme} label={t('track.save')} primary onClick={save} />
+            <Btn theme={theme} label={t('track.discard')} onClick={reset} />
           </div>
           <div style={{ color: theme.textMuted, fontSize: 13 }}>
             {summary.distanceKm > 0
-              ? `Pace ${formatSpeedKmh(summary.distanceKm, elapsed)} · ${formatDistanceKm(summary.distanceKm)} · ${formatElevation(summary.elevationGainM)}`
+              ? `${t('feed.pace')} ${formatSpeedKmh(summary.distanceKm, elapsed)} · ${formatDistanceKm(summary.distanceKm)} · ${formatElevation(summary.elevationGainM)}`
               : ''}
           </div>
         </section>
       ) : null}
 
-      {savedMsg ? (
-        <div style={{ color: theme.success, marginTop: 24, fontWeight: 700 }}>{savedMsg}</div>
-      ) : null}
+      {savedMsg ? <div style={{ color: theme.success, marginTop: 24, fontWeight: 700 }}>{savedMsg}</div> : null}
     </div>
   );
 }

@@ -30,8 +30,21 @@ export function formatSpeedKmh(distanceKm: number, durationSeconds: number): str
   return `${kmh.toFixed(1)} km/h`;
 }
 
-export function formatPriceCents(cents: number, currency = 'COP', locale = 'es-CO'): string {
-  if (cents === 0) return 'Free';
+export interface FormatPriceOpts {
+  currency?: string;
+  locale?: string;
+  // Callers pass their translated "Free" label so this function stays pure.
+  freeLabel?: string;
+}
+
+export function formatPriceCents(cents: number, opts: FormatPriceOpts | string = {}, maybeLocale?: string): string {
+  // Back-compat: older callers used (cents, currency, locale). Detect that form.
+  const o: FormatPriceOpts =
+    typeof opts === 'string' ? { currency: opts, locale: maybeLocale } : opts;
+  const currency = o.currency ?? 'COP';
+  const locale = o.locale ?? 'es-CO';
+  const freeLabel = o.freeLabel ?? 'Free';
+  if (cents === 0) return freeLabel;
   const amount = cents / 100;
   try {
     return new Intl.NumberFormat(locale, { style: 'currency', currency, maximumFractionDigits: 0 }).format(amount);
@@ -40,7 +53,7 @@ export function formatPriceCents(cents: number, currency = 'COP', locale = 'es-C
   }
 }
 
-export function relativeTime(from: string | Date, now: Date = new Date()): string {
+export function relativeTime(from: string | Date, locale = 'en', now: Date = new Date()): string {
   const then = typeof from === 'string' ? new Date(from) : from;
   const diffSec = Math.round((now.getTime() - then.getTime()) / 1000);
   const abs = Math.abs(diffSec);
@@ -53,7 +66,7 @@ export function relativeTime(from: string | Date, now: Date = new Date()): strin
     [31557600, 'month'],
     [Number.POSITIVE_INFINITY, 'year'],
   ];
-  const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
+  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
   let prev = 1;
   for (const [limit, unit] of units) {
     if (abs < limit) {
@@ -62,5 +75,5 @@ export function relativeTime(from: string | Date, now: Date = new Date()): strin
     }
     prev = limit;
   }
-  return then.toLocaleDateString();
+  return then.toLocaleDateString(locale);
 }

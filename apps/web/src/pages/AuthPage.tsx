@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@minga/theme';
+import { useT } from '@minga/i18n';
 import { supabase } from '../supabase';
 
 export function AuthPage() {
   const { theme } = useTheme();
+  const { t } = useT();
   const nav = useNavigate();
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
@@ -37,7 +39,7 @@ export function AuthPage() {
       }
       nav('/profile');
     } catch (err: any) {
-      setError(err?.message ?? 'Something went wrong');
+      setError(err?.message ?? t('common.loadError'));
     } finally {
       setBusy(false);
     }
@@ -47,21 +49,19 @@ export function AuthPage() {
     <div style={{ maxWidth: 480, margin: '80px auto', padding: '0 24px' }}>
       <div style={{ color: theme.primary, letterSpacing: 2, fontWeight: 800, fontSize: 14 }}>MINGA</div>
       <h1 style={{ color: theme.text, fontSize: 36, margin: '6px 0 8px 0' }}>
-        {mode === 'signin' ? 'Welcome back' : 'Join the expedition'}
+        {mode === 'signin' ? t('auth.welcomeBack') : t('auth.joinTitle')}
       </h1>
-      <div style={{ color: theme.textMuted, marginBottom: 24 }}>
-        Google & Meta sign-in coming soon — email + password for now.
-      </div>
+      <div style={{ color: theme.textMuted, marginBottom: 24 }}>{t('auth.oauthNote')}</div>
 
       <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         {mode === 'signup' ? (
           <>
-            <Field label="Display name" value={displayName} onChange={setDisplayName} theme={theme} />
-            <Field label="Username" value={username} onChange={setUsername} theme={theme} />
+            <Field label={t('auth.displayName')} value={displayName} onChange={setDisplayName} theme={theme} />
+            <Field label={t('auth.username')} value={username} onChange={setUsername} theme={theme} />
           </>
         ) : null}
-        <Field label="Email" value={email} onChange={setEmail} theme={theme} type="email" />
-        <Field label="Password" value={password} onChange={setPassword} theme={theme} type="password" />
+        <Field label={t('auth.email')} value={email} onChange={setEmail} theme={theme} type="email" />
+        <Field label={t('auth.password')} value={password} onChange={setPassword} theme={theme} type="password" />
         {error ? <div style={{ color: theme.danger }}>{error}</div> : null}
         <button
           type="submit"
@@ -77,14 +77,14 @@ export function AuthPage() {
             opacity: busy ? 0.7 : 1,
           }}
         >
-          {busy ? '…' : mode === 'signin' ? 'Sign in' : 'Create account'}
+          {busy ? '…' : mode === 'signin' ? t('auth.signIn') : t('auth.createAccount')}
         </button>
         <button
           type="button"
           onClick={() => setMode((m) => (m === 'signin' ? 'signup' : 'signin'))}
           style={{ background: 'transparent', border: 0, color: theme.primary, fontWeight: 700, padding: 10 }}
         >
-          {mode === 'signin' ? 'No account? Create one' : 'Already a member? Sign in'}
+          {mode === 'signin' ? t('auth.switchToSignup') : t('auth.switchToSignin')}
         </button>
       </form>
     </div>

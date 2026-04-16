@@ -127,7 +127,39 @@ export type TranslationKey =
   | 'empty.couldNotLoad'
   | 'common.official'
   | 'common.free'
-  | 'common.more';
+  | 'common.more'
+  | 'common.back'
+  | 'common.allExpeditions'
+  | 'common.signInToLike'
+  | 'common.signInToRate'
+  | 'common.signInToComment'
+  | 'common.loadError'
+  | 'common.and'
+  | 'common.expeditionCount'
+  | 'common.expeditionCountOne'
+  | 'tier.bronze'
+  | 'tier.silver'
+  | 'tier.gold'
+  | 'tier.diamond'
+  | 'tier.maxTier'
+  | 'tier.thresholdSuffix'
+  | 'detail.avgRating'
+  | 'detail.avgSuffix'
+  | 'detail.replyPlaceholder'
+  | 'detail.postReply'
+  | 'feed.pace'
+  | 'footer.aboutHeading'
+  | 'footer.aboutBody'
+  | 'footer.exploreHeading'
+  | 'footer.exploreBody'
+  | 'footer.pocHeading'
+  | 'footer.pocBody'
+  | 'home.pillarsHeading'
+  | 'auth.demoHeading'
+  | 'auth.demoBody'
+  | 'profile.avatarAlt'
+  | 'map.official'
+  | 'detail.photoBy';
 
 export const en: Record<TranslationKey, string> = {
   'app.tagline': 'Every trail in Colombia, in one happy app.',
@@ -255,6 +287,39 @@ export const en: Record<TranslationKey, string> = {
   'common.official': 'MINGA OFFICIAL',
   'common.free': 'Free',
   'common.more': 'See all →',
+  'common.back': '← Back',
+  'common.allExpeditions': 'All expeditions',
+  'common.signInToLike': 'Sign in to like',
+  'common.signInToRate': 'Sign in to rate',
+  'common.signInToComment': 'Sign in to comment',
+  'common.loadError': 'Something went wrong',
+  'common.and': 'and',
+  'common.expeditionCount': 'expeditions',
+  'common.expeditionCountOne': 'expedition',
+  'tier.bronze': 'BRONZE',
+  'tier.silver': 'SILVER',
+  'tier.gold': 'GOLD',
+  'tier.diamond': 'DIAMOND',
+  'tier.maxTier': 'MAX TIER',
+  'tier.thresholdSuffix': 'threshold',
+  'detail.avgRating': 'avg',
+  'detail.avgSuffix': '',
+  'detail.replyPlaceholder': 'Write a reply…',
+  'detail.postReply': 'Post reply',
+  'feed.pace': 'Pace',
+  'footer.aboutHeading': 'Minga Expeditions',
+  'footer.aboutBody': "Connecting travelers to Colombia's trails, rivers, and pueblos.",
+  'footer.exploreHeading': 'Explore',
+  'footer.exploreBody': 'Hiking · Cycling · Trekking · Wildlife · Cultural',
+  'footer.pocHeading': 'About',
+  'footer.pocBody': 'Proof-of-concept build · 2026',
+  'home.pillarsHeading': 'Pillars',
+  'auth.demoHeading': 'Demo accounts',
+  'auth.demoBody':
+    'Create any email to try the app. The seed includes demo authors (juliana, andres, carolina, lucas) whose expeditions appear in the feed without needing to log in.',
+  'profile.avatarAlt': 'Avatar',
+  'map.official': 'MINGA OFFICIAL',
+  'detail.photoBy': 'Photo',
 };
 
 export const es: Record<TranslationKey, string> = {
@@ -384,6 +449,39 @@ export const es: Record<TranslationKey, string> = {
   'common.official': 'OFICIAL DE MINGA',
   'common.free': 'Gratis',
   'common.more': 'Ver todo →',
+  'common.back': '← Volver',
+  'common.allExpeditions': 'Todas las expediciones',
+  'common.signInToLike': 'Inicia sesión para dar me gusta',
+  'common.signInToRate': 'Inicia sesión para calificar',
+  'common.signInToComment': 'Inicia sesión para comentar',
+  'common.loadError': 'Algo salió mal',
+  'common.and': 'y',
+  'common.expeditionCount': 'expediciones',
+  'common.expeditionCountOne': 'expedición',
+  'tier.bronze': 'BRONCE',
+  'tier.silver': 'PLATA',
+  'tier.gold': 'ORO',
+  'tier.diamond': 'DIAMANTE',
+  'tier.maxTier': 'CATEGORÍA MÁXIMA',
+  'tier.thresholdSuffix': 'umbral',
+  'detail.avgRating': 'promedio',
+  'detail.avgSuffix': '',
+  'detail.replyPlaceholder': 'Escribe una respuesta…',
+  'detail.postReply': 'Publicar respuesta',
+  'feed.pace': 'Ritmo',
+  'footer.aboutHeading': 'Minga Expeditions',
+  'footer.aboutBody': 'Conectamos viajeros con los senderos, ríos y pueblos de Colombia.',
+  'footer.exploreHeading': 'Explorar',
+  'footer.exploreBody': 'Caminata · Ciclismo · Trekking · Fauna · Cultural',
+  'footer.pocHeading': 'Acerca de',
+  'footer.pocBody': 'Build de prueba de concepto · 2026',
+  'home.pillarsHeading': 'Pilares',
+  'auth.demoHeading': 'Cuentas demo',
+  'auth.demoBody':
+    'Crea cualquier correo para probar la app. La semilla incluye autores demo (juliana, andres, carolina, lucas) cuyas expediciones aparecen en el feed sin necesidad de iniciar sesión.',
+  'profile.avatarAlt': 'Avatar',
+  'map.official': 'OFICIAL DE MINGA',
+  'detail.photoBy': 'Foto',
 };
 
 export const dictionaries: Record<LanguageCode, Record<TranslationKey, string>> = { en, es };

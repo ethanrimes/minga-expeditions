@@ -1,26 +1,28 @@
 import React, { useEffect, useState } from 'react';
 import { useTheme } from '@minga/theme';
+import { useT } from '@minga/i18n';
 import { fetchFeedExpeditions } from '@minga/supabase';
 import type { ExpeditionCategory, ExpeditionWithAuthor } from '@minga/types';
 import { supabase } from '../supabase';
 import { ExpeditionTile } from '../components/ExpeditionTile';
 
-const CATEGORIES: { label: string; value: ExpeditionCategory | 'all' }[] = [
-  { label: 'All', value: 'all' },
-  { label: 'Hiking', value: 'hiking' },
-  { label: 'Trekking', value: 'trekking' },
-  { label: 'Cycling', value: 'cycling' },
-  { label: 'Running', value: 'running' },
-  { label: 'Cultural', value: 'cultural' },
-  { label: 'Wildlife', value: 'wildlife' },
-];
-
 export function FeedPage() {
   const { theme } = useTheme();
+  const { t } = useT();
   const [category, setCategory] = useState<ExpeditionCategory | 'all'>('all');
   const [data, setData] = useState<ExpeditionWithAuthor[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const CATEGORIES: { label: string; value: ExpeditionCategory | 'all' }[] = [
+    { label: t('feed.allCategory'), value: 'all' },
+    { label: t('cat.hiking'), value: 'hiking' },
+    { label: t('cat.trekking'), value: 'trekking' },
+    { label: t('cat.cycling'), value: 'cycling' },
+    { label: t('cat.running'), value: 'running' },
+    { label: t('cat.cultural'), value: 'cultural' },
+    { label: t('cat.wildlife'), value: 'wildlife' },
+  ];
 
   useEffect(() => {
     let cancelled = false;
@@ -28,7 +30,7 @@ export function FeedPage() {
     setError(null);
     fetchFeedExpeditions(supabase, { category: category === 'all' ? null : category })
       .then((d) => !cancelled && setData(d))
-      .catch((e) => !cancelled && setError(e?.message ?? 'Failed to load'))
+      .catch((e) => !cancelled && setError(e?.message ?? t('common.loadError')))
       .finally(() => !cancelled && setLoading(false));
     return () => {
       cancelled = true;
@@ -37,10 +39,8 @@ export function FeedPage() {
 
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 24px' }}>
-      <h1 style={{ color: theme.text, fontSize: 40, fontWeight: 800, margin: 0 }}>Expeditions</h1>
-      <p style={{ color: theme.textMuted, marginBottom: 24 }}>
-        Find an adventure — or start tracking your own.
-      </p>
+      <h1 style={{ color: theme.text, fontSize: 40, fontWeight: 800, margin: 0 }}>{t('feed.title')}</h1>
+      <p style={{ color: theme.textMuted, marginBottom: 24 }}>{t('feed.subtitle')}</p>
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 32 }}>
         {CATEGORIES.map((c) => {
           const active = c.value === category;
@@ -65,11 +65,11 @@ export function FeedPage() {
       </div>
 
       {loading ? (
-        <div style={{ color: theme.textMuted }}>Loading…</div>
+        <div style={{ color: theme.textMuted }}>{t('feed.loading')}</div>
       ) : error ? (
         <div style={{ color: theme.danger }}>{error}</div>
       ) : data.length === 0 ? (
-        <div style={{ color: theme.textMuted }}>No expeditions in this category yet.</div>
+        <div style={{ color: theme.textMuted }}>{t('feed.empty')}</div>
       ) : (
         <div
           style={{

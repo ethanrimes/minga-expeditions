@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useTheme, spacing, fontSizes, fontWeights, radii } from '@minga/theme';
+import { useT } from '@minga/i18n';
 import { Screen } from '../primitives/Screen';
 import { Button } from '../primitives/Button';
 import { Input } from '../primitives/Input';
@@ -8,6 +9,7 @@ import { useAuth } from '../hooks/useAuth';
 
 export function AuthScreen({ onAuthenticated }: { onAuthenticated?: () => void }) {
   const { theme } = useTheme();
+  const { t } = useT();
   const { signIn, signUp } = useAuth();
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
@@ -28,7 +30,7 @@ export function AuthScreen({ onAuthenticated }: { onAuthenticated?: () => void }
       }
       onAuthenticated?.();
     } catch (e: any) {
-      setError(e?.message ?? 'Something went wrong');
+      setError(e?.message ?? t('common.loadError'));
     } finally {
       setBusy(false);
     }
@@ -41,32 +43,49 @@ export function AuthScreen({ onAuthenticated }: { onAuthenticated?: () => void }
           MINGA
         </Text>
         <Text style={{ color: theme.text, fontSize: fontSizes['2xl'], fontWeight: fontWeights.heavy }}>
-          {mode === 'signin' ? 'Welcome back' : 'Join the expedition'}
+          {mode === 'signin' ? t('auth.welcomeBack') : t('auth.joinTitle')}
         </Text>
-        <Text style={{ color: theme.textMuted }}>
-          Google & Meta sign-in coming soon — email + password for now.
-        </Text>
+        <Text style={{ color: theme.textMuted }}>{t('auth.oauthNote')}</Text>
       </View>
 
       <View style={{ gap: spacing.md }}>
         {mode === 'signup' ? (
           <>
-            <Input label="Display name" placeholder="Juliana Restrepo" value={displayName} onChangeText={setDisplayName} />
-            <Input label="Username" placeholder="juli.trails" autoCapitalize="none" value={username} onChangeText={setUsername} />
+            <Input label={t('auth.displayName')} placeholder="Juliana Restrepo" value={displayName} onChangeText={setDisplayName} />
+            <Input
+              label={t('auth.username')}
+              placeholder="juli.trails"
+              autoCapitalize="none"
+              value={username}
+              onChangeText={setUsername}
+            />
           </>
         ) : null}
-        <Input label="Email" placeholder="you@minga.co" autoCapitalize="none" keyboardType="email-address" value={email} onChangeText={setEmail} />
-        <Input label="Password" placeholder="At least 8 characters" secureTextEntry value={password} onChangeText={setPassword} />
+        <Input
+          label={t('auth.email')}
+          placeholder="you@minga.co"
+          autoCapitalize="none"
+          keyboardType="email-address"
+          value={email}
+          onChangeText={setEmail}
+        />
+        <Input
+          label={t('auth.password')}
+          placeholder="••••••••"
+          secureTextEntry
+          value={password}
+          onChangeText={setPassword}
+        />
         {error ? <Text style={{ color: theme.danger }}>{error}</Text> : null}
         <Button
-          label={mode === 'signin' ? 'Sign in' : 'Create account'}
+          label={mode === 'signin' ? t('auth.signIn') : t('auth.createAccount')}
           loading={busy}
           onPress={submit}
           fullWidth
         />
         <Pressable onPress={() => setMode((m) => (m === 'signin' ? 'signup' : 'signin'))}>
           <Text style={{ color: theme.primary, textAlign: 'center', fontWeight: fontWeights.semibold }}>
-            {mode === 'signin' ? 'No account? Create one' : 'Already a member? Sign in'}
+            {mode === 'signin' ? t('auth.switchToSignup') : t('auth.switchToSignin')}
           </Text>
         </Pressable>
       </View>
@@ -80,11 +99,8 @@ export function AuthScreen({ onAuthenticated }: { onAuthenticated?: () => void }
           gap: spacing.xs,
         }}
       >
-        <Text style={{ color: theme.text, fontWeight: fontWeights.semibold }}>Demo accounts</Text>
-        <Text style={{ color: theme.textMuted, fontSize: fontSizes.sm }}>
-          Create any email to try the app. The seed includes demo authors (juliana, andres, carolina, lucas) whose
-          expeditions appear in the feed without needing to log in.
-        </Text>
+        <Text style={{ color: theme.text, fontWeight: fontWeights.semibold }}>{t('auth.demoHeading')}</Text>
+        <Text style={{ color: theme.textMuted, fontSize: fontSizes.sm }}>{t('auth.demoBody')}</Text>
       </View>
     </Screen>
   );

@@ -1,8 +1,10 @@
 import React from 'react';
 import { useTheme } from '@minga/theme';
+import { useT } from '@minga/i18n';
 
 export function Footer() {
   const { theme } = useTheme();
+  const { t } = useT();
   return (
     <footer
       style={{
@@ -25,17 +27,17 @@ export function Footer() {
       >
         <div>
           <div style={{ color: theme.text, fontWeight: 800, fontSize: 18, marginBottom: 8 }}>
-            Minga Expeditions
+            {t('footer.aboutHeading')}
           </div>
-          <div>Connecting travelers to Colombia's trails, rivers, and pueblos.</div>
+          <div>{t('footer.aboutBody')}</div>
         </div>
         <div>
-          <div style={{ color: theme.text, fontWeight: 700, marginBottom: 8 }}>Explore</div>
-          <div>Hiking · Cycling · Trekking · Wildlife · Cultural</div>
+          <div style={{ color: theme.text, fontWeight: 700, marginBottom: 8 }}>{t('footer.exploreHeading')}</div>
+          <div>{t('footer.exploreBody')}</div>
         </div>
         <div>
-          <div style={{ color: theme.text, fontWeight: 700, marginBottom: 8 }}>About</div>
-          <div>Proof-of-concept build · 2026</div>
+          <div style={{ color: theme.text, fontWeight: 700, marginBottom: 8 }}>{t('footer.pocHeading')}</div>
+          <div>{t('footer.pocBody')}</div>
         </div>
       </div>
     </footer>

@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { ActivityIndicator, Image, Pressable, ScrollView, Text, View } from 'react-native';
 import { useTheme, spacing, fontSizes, fontWeights, radii } from '@minga/theme';
 import { formatDistanceKm, formatElevation, formatPriceCents } from '@minga/logic';
+import { useT } from '@minga/i18n';
+import type { ExpeditionCategory } from '@minga/types';
 import { Screen } from '../primitives/Screen';
 import { Button } from '../primitives/Button';
 import { Avatar } from '../primitives/Avatar';
@@ -14,6 +16,16 @@ import { PhotoAttribution } from '../components/PhotoAttribution';
 import { EmptyState } from '../components/EmptyState';
 import { useExpedition } from '../hooks/useExpedition';
 
+const CATEGORY_KEY: Record<ExpeditionCategory, any> = {
+  hiking: 'cat.hiking',
+  cycling: 'cat.cycling',
+  running: 'cat.running',
+  trekking: 'cat.trekking',
+  cultural: 'cat.cultural',
+  wildlife: 'cat.wildlife',
+  other: 'cat.other',
+};
+
 export function ExpeditionDetailScreen({
   id,
   onBack,
@@ -22,6 +34,7 @@ export function ExpeditionDetailScreen({
   onBack?: () => void;
 }) {
   const { theme } = useTheme();
+  const { t } = useT();
   const { expedition, comments, loading, error, reply, rootComment, like, rate } = useExpedition(id);
   const [draft, setDraft] = useState('');
   const [posting, setPosting] = useState(false);
@@ -38,8 +51,8 @@ export function ExpeditionDetailScreen({
   if (error || !expedition) {
     return (
       <Screen>
-        <EmptyState icon="⚠️" title="Expedition not found" body={error ?? undefined} />
-        {onBack ? <Button label="Go back" onPress={onBack} variant="secondary" /> : null}
+        <EmptyState icon="⚠️" title={t('empty.notFound')} body={error ?? undefined} />
+        {onBack ? <Button label={t('common.back')} onPress={onBack} variant="secondary" /> : null}
       </Screen>
     );
   }
@@ -59,7 +72,7 @@ export function ExpeditionDetailScreen({
     <Screen>
       {onBack ? (
         <Pressable onPress={onBack} style={{ paddingTop: spacing.md }}>
-          <Text style={{ color: theme.primary, fontWeight: fontWeights.semibold }}>← Back</Text>
+          <Text style={{ color: theme.primary, fontWeight: fontWeights.semibold }}>{t('common.back')}</Text>
         </Pressable>
       ) : null}
 
@@ -77,7 +90,16 @@ export function ExpeditionDetailScreen({
               }}
             >
               <Image source={{ uri: p.url }} style={{ width: '100%', height: '100%' }} />
-              <View style={{ position: 'absolute', bottom: 8, left: 8, backgroundColor: theme.overlay, padding: 4, borderRadius: 4 }}>
+              <View
+                style={{
+                  position: 'absolute',
+                  bottom: 8,
+                  left: 8,
+                  backgroundColor: theme.overlay,
+                  padding: 4,
+                  borderRadius: 4,
+                }}
+              >
                 <PhotoAttribution attribution={p.attribution} />
               </View>
             </View>
@@ -86,10 +108,19 @@ export function ExpeditionDetailScreen({
       </ScrollView>
 
       <View style={{ flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' }}>
-        <CategoryChip label={expedition.category} />
+        <CategoryChip label={t(CATEGORY_KEY[expedition.category])} />
         {expedition.is_official ? (
-          <View style={{ backgroundColor: theme.accent, paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: radii.sm }}>
-            <Text style={{ color: '#fff', fontWeight: fontWeights.bold, fontSize: fontSizes.xs }}>MINGA OFFICIAL</Text>
+          <View
+            style={{
+              backgroundColor: theme.accent,
+              paddingHorizontal: spacing.sm,
+              paddingVertical: 2,
+              borderRadius: radii.sm,
+            }}
+          >
+            <Text style={{ color: '#fff', fontWeight: fontWeights.bold, fontSize: fontSizes.xs }}>
+              {t('common.official')}
+            </Text>
           </View>
         ) : null}
       </View>
@@ -108,9 +139,7 @@ export function ExpeditionDetailScreen({
           <Text style={{ color: theme.text, fontWeight: fontWeights.semibold }}>
             {expedition.author.display_name}
           </Text>
-          <Text style={{ color: theme.textMuted, fontSize: fontSizes.sm }}>
-            @{expedition.author.username}
-          </Text>
+          <Text style={{ color: theme.textMuted, fontSize: fontSizes.sm }}>@{expedition.author.username}</Text>
         </View>
         <TierBadge tier={expedition.author.tier} />
       </View>
@@ -124,28 +153,45 @@ export function ExpeditionDetailScreen({
           borderRadius: radii.lg,
         }}
       >
-        <Stat theme={theme} label="Distance" value={expedition.distance_km ? formatDistanceKm(expedition.distance_km) : '—'} />
-        <Stat theme={theme} label="Elevation" value={expedition.elevation_gain_m ? formatElevation(expedition.elevation_gain_m) : '—'} />
-        <Stat theme={theme} label="Difficulty" value={'●'.repeat(expedition.difficulty) + '○'.repeat(5 - expedition.difficulty)} />
-        <Stat theme={theme} label="Price" value={formatPriceCents(expedition.price_cents, expedition.currency)} />
+        <Stat
+          theme={theme}
+          label={t('stats.distance')}
+          value={expedition.distance_km ? formatDistanceKm(expedition.distance_km) : '—'}
+        />
+        <Stat
+          theme={theme}
+          label={t('stats.elevation')}
+          value={expedition.elevation_gain_m ? formatElevation(expedition.elevation_gain_m) : '—'}
+        />
+        <Stat
+          theme={theme}
+          label={t('stats.difficulty')}
+          value={'●'.repeat(expedition.difficulty) + '○'.repeat(5 - expedition.difficulty)}
+        />
+        <Stat
+          theme={theme}
+          label={t('stats.price')}
+          value={formatPriceCents(expedition.price_cents, {
+            currency: expedition.currency,
+            freeLabel: t('common.free'),
+          })}
+        />
       </View>
 
-      <Text style={{ color: theme.text, fontSize: fontSizes.md, lineHeight: 24 }}>
-        {expedition.description}
-      </Text>
+      <Text style={{ color: theme.text, fontSize: fontSizes.md, lineHeight: 24 }}>{expedition.description}</Text>
 
       <View style={{ flexDirection: 'row', gap: spacing.md, alignItems: 'center' }}>
         <Button label={`♥ ${expedition.likes_count}`} variant="secondary" onPress={() => void like()} />
         <View style={{ flexDirection: 'row', gap: spacing.xs, alignItems: 'center' }}>
           <StarRating value={expedition.avg_rating ?? 0} />
           <Text style={{ color: theme.textMuted }}>
-            {expedition.avg_rating ? expedition.avg_rating.toFixed(1) : 'Not yet rated'}
+            {expedition.avg_rating ? expedition.avg_rating.toFixed(1) : t('detail.notRated')}
           </Text>
         </View>
       </View>
 
       <View style={{ gap: spacing.sm }}>
-        <Text style={{ color: theme.text, fontWeight: fontWeights.semibold }}>Rate this expedition</Text>
+        <Text style={{ color: theme.text, fontWeight: fontWeights.semibold }}>{t('detail.rateTitle')}</Text>
         <StarRating
           value={myRating}
           size={fontSizes['2xl']}
@@ -158,10 +204,15 @@ export function ExpeditionDetailScreen({
 
       <View style={{ gap: spacing.sm, marginTop: spacing.lg }}>
         <Text style={{ color: theme.text, fontSize: fontSizes.xl, fontWeight: fontWeights.bold }}>
-          Comments ({expedition.comments_count})
+          {t('detail.comments')} ({expedition.comments_count})
         </Text>
-        <Input placeholder="Share a tip, question, or trip report…" value={draft} onChangeText={setDraft} multiline />
-        <Button label="Post comment" loading={posting} onPress={postRoot} />
+        <Input
+          placeholder={t('detail.commentPlaceholder')}
+          value={draft}
+          onChangeText={setDraft}
+          multiline
+        />
+        <Button label={t('detail.post')} loading={posting} onPress={postRoot} />
         <CommentThread comments={comments} onReply={reply} />
       </View>
     </Screen>
@@ -172,7 +223,9 @@ function Stat({ theme, label, value }: { theme: any; label: string; value: strin
   return (
     <View>
       <Text style={{ color: theme.text, fontSize: fontSizes.sm, fontWeight: fontWeights.bold }}>{value}</Text>
-      <Text style={{ color: theme.textMuted, fontSize: 10, letterSpacing: 0.5, textTransform: 'uppercase' }}>{label}</Text>
+      <Text style={{ color: theme.textMuted, fontSize: 10, letterSpacing: 0.5, textTransform: 'uppercase' }}>
+        {label}
+      </Text>
     </View>
   );
 }

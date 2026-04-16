@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useTheme, tierColors } from '@minga/theme';
+import { useT } from '@minga/i18n';
 import {
   fetchComments,
   fetchExpeditionById,
@@ -9,12 +10,20 @@ import {
   toggleLike,
 } from '@minga/supabase';
 import { formatDistanceKm, formatElevation, formatPriceCents, relativeTime } from '@minga/logic';
-import type { CommentWithAuthor, ExpeditionWithAuthor } from '@minga/types';
+import type { CommentWithAuthor, ExpeditionWithAuthor, TierLevel } from '@minga/types';
 import { supabase } from '../supabase';
+
+const TIER_KEY: Record<TierLevel, any> = {
+  bronze: 'tier.bronze',
+  silver: 'tier.silver',
+  gold: 'tier.gold',
+  diamond: 'tier.diamond',
+};
 
 export function ExpeditionPage() {
   const { id } = useParams<{ id: string }>();
   const { theme } = useTheme();
+  const { t, language } = useT();
   const [expedition, setExpedition] = useState<ExpeditionWithAuthor | null>(null);
   const [comments, setComments] = useState<CommentWithAuthor[]>([]);
   const [draft, setDraft] = useState('');
@@ -31,7 +40,7 @@ export function ExpeditionPage() {
       setExpedition(exp);
       setComments(cmts);
     } catch (e: any) {
-      setError(e?.message ?? 'Failed to load');
+      setError(e?.message ?? t('common.loadError'));
     }
   };
 
@@ -40,14 +49,14 @@ export function ExpeditionPage() {
   }, [id]);
 
   if (error) return <Msg>{error}</Msg>;
-  if (!expedition) return <Msg>Loading…</Msg>;
+  if (!expedition) return <Msg>{t('feed.loading')}</Msg>;
 
   const like = async () => {
     try {
       await toggleLike(supabase, expedition.id);
       await load();
     } catch (e: any) {
-      setError(e?.message ?? 'Sign in to like');
+      setError(e?.message ?? t('common.signInToLike'));
     }
   };
 
@@ -57,7 +66,7 @@ export function ExpeditionPage() {
       await rateExpedition(supabase, { expedition_id: expedition.id, stars });
       await load();
     } catch (e: any) {
-      setError(e?.message ?? 'Sign in to rate');
+      setError(e?.message ?? t('common.signInToRate'));
     }
   };
 
@@ -68,14 +77,14 @@ export function ExpeditionPage() {
       setDraft('');
       await load();
     } catch (e: any) {
-      setError(e?.message ?? 'Sign in to comment');
+      setError(e?.message ?? t('common.signInToComment'));
     }
   };
 
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px' }}>
       <Link to="/expeditions" style={{ color: theme.primary, fontWeight: 700 }}>
-        ← All expeditions
+        ← {t('common.allExpeditions')}
       </Link>
       <h1 style={{ color: theme.text, fontSize: 44, fontWeight: 800, margin: '12px 0 6px 0' }}>
         {expedition.title}
@@ -91,7 +100,7 @@ export function ExpeditionPage() {
             <img src={p.url} alt={p.caption ?? ''} style={{ width: '100%', aspectRatio: '4/3', objectFit: 'cover' }} />
             {p.attribution ? (
               <figcaption style={{ padding: '8px 12px', fontSize: 12, color: theme.textMuted }}>
-                Photo © {p.attribution.photographer_name} ·{' '}
+                {t('detail.photoBy')} © {p.attribution.photographer_name} ·{' '}
                 <a href={p.attribution.source_url} target="_blank" rel="noopener" style={{ color: theme.primary }}>
                   {p.attribution.license}
                 </a>
@@ -113,10 +122,18 @@ export function ExpeditionPage() {
               marginBottom: 24,
             }}
           >
-            <Stat theme={theme} label="Distance" value={expedition.distance_km ? formatDistanceKm(expedition.distance_km) : '—'} />
-            <Stat theme={theme} label="Elevation" value={expedition.elevation_gain_m ? formatElevation(expedition.elevation_gain_m) : '—'} />
-            <Stat theme={theme} label="Difficulty" value={`${'●'.repeat(expedition.difficulty)}${'○'.repeat(5 - expedition.difficulty)}`} />
-            <Stat theme={theme} label="Price" value={formatPriceCents(expedition.price_cents, expedition.currency)} />
+            <Stat theme={theme} label={t('stats.distance')} value={expedition.distance_km ? formatDistanceKm(expedition.distance_km) : '—'} />
+            <Stat theme={theme} label={t('stats.elevation')} value={expedition.elevation_gain_m ? formatElevation(expedition.elevation_gain_m) : '—'} />
+            <Stat
+              theme={theme}
+              label={t('stats.difficulty')}
+              value={`${'●'.repeat(expedition.difficulty)}${'○'.repeat(5 - expedition.difficulty)}`}
+            />
+            <Stat
+              theme={theme}
+              label={t('stats.price')}
+              value={formatPriceCents(expedition.price_cents, { currency: expedition.currency, freeLabel: t('common.free') })}
+            />
           </div>
 
           <p style={{ color: theme.text, fontSize: 16, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
@@ -139,19 +156,19 @@ export function ExpeditionPage() {
             </button>
             <StarPicker value={Math.max(myStars, Math.round(expedition.avg_rating ?? 0))} onPick={rate} color={theme.accent} muted={theme.textMuted} />
             <span style={{ color: theme.textMuted, fontSize: 14 }}>
-              {expedition.avg_rating ? `${expedition.avg_rating.toFixed(1)} avg` : 'Not yet rated'}
+              {expedition.avg_rating ? `${expedition.avg_rating.toFixed(1)} ${t('detail.avgRating')}` : t('detail.notRated')}
             </span>
           </div>
 
           <h2 style={{ color: theme.text, marginTop: 40, marginBottom: 16 }}>
-            Comments ({expedition.comments_count})
+            {t('detail.comments')} ({expedition.comments_count})
           </h2>
 
           <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
             <textarea
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              placeholder="Share a tip, question, or trip report…"
+              placeholder={t('detail.commentPlaceholder')}
               style={{
                 flex: 1,
                 padding: 12,
@@ -175,11 +192,17 @@ export function ExpeditionPage() {
                 alignSelf: 'stretch',
               }}
             >
-              Post
+              {t('detail.post')}
             </button>
           </div>
 
-          <CommentList comments={comments} onReply={(parentId, body) => post(parentId, body)} theme={theme} />
+          <CommentList
+            comments={comments}
+            onReply={(parentId, body) => post(parentId, body)}
+            theme={theme}
+            t={t}
+            language={language}
+          />
         </div>
 
         <aside>
@@ -197,7 +220,7 @@ export function ExpeditionPage() {
             {expedition.author.avatar_url ? (
               <img
                 src={expedition.author.avatar_url}
-                alt=""
+                alt={t('profile.avatarAlt')}
                 style={{ width: 52, height: 52, borderRadius: 999, background: theme.surfaceAlt }}
               />
             ) : null}
@@ -215,7 +238,7 @@ export function ExpeditionPage() {
                 fontWeight: 800,
               }}
             >
-              {expedition.author.tier.toUpperCase()}
+              {t(TIER_KEY[expedition.author.tier])}
             </span>
           </div>
         </aside>
@@ -228,17 +251,21 @@ function CommentList({
   comments,
   onReply,
   theme,
+  t,
+  language,
   depth = 0,
 }: {
   comments: CommentWithAuthor[];
   onReply: (parentId: string, body: string) => Promise<void> | void;
   theme: any;
+  t: (key: any) => string;
+  language: string;
   depth?: number;
 }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginLeft: depth > 0 ? 24 : 0 }}>
       {comments.map((c) => (
-        <CommentNode key={c.id} comment={c} onReply={onReply} theme={theme} depth={depth} />
+        <CommentNode key={c.id} comment={c} onReply={onReply} theme={theme} t={t} language={language} depth={depth} />
       ))}
     </div>
   );
@@ -248,11 +275,15 @@ function CommentNode({
   comment,
   onReply,
   theme,
+  t,
+  language,
   depth,
 }: {
   comment: CommentWithAuthor;
   onReply: (parentId: string, body: string) => Promise<void> | void;
   theme: any;
+  t: (key: any) => string;
+  language: string;
   depth: number;
 }) {
   const [replyDraft, setReplyDraft] = useState('');
@@ -276,7 +307,7 @@ function CommentNode({
         ) : null}
         <div style={{ flex: 1 }}>
           <div style={{ color: theme.text, fontWeight: 700, fontSize: 14 }}>{comment.author.display_name}</div>
-          <div style={{ color: theme.textMuted, fontSize: 12 }}>{relativeTime(comment.created_at)}</div>
+          <div style={{ color: theme.textMuted, fontSize: 12 }}>{relativeTime(comment.created_at, language)}</div>
         </div>
         <span
           style={{
@@ -288,7 +319,7 @@ function CommentNode({
             fontWeight: 800,
           }}
         >
-          {comment.author.tier.toUpperCase()}
+          {t(TIER_KEY[comment.author.tier])}
         </span>
       </div>
       <div style={{ color: theme.text, lineHeight: 1.5 }}>{comment.body}</div>
@@ -304,7 +335,7 @@ function CommentNode({
             marginTop: 8,
           }}
         >
-          {open ? 'Cancel' : 'Reply'}
+          {open ? t('detail.cancel') : t('detail.reply')}
         </button>
       ) : null}
       {open ? (
@@ -312,7 +343,7 @@ function CommentNode({
           <input
             value={replyDraft}
             onChange={(e) => setReplyDraft(e.target.value)}
-            placeholder="Reply…"
+            placeholder={t('detail.replyPlaceholder')}
             style={{
               flex: 1,
               padding: 10,
@@ -337,13 +368,13 @@ function CommentNode({
               fontWeight: 700,
             }}
           >
-            Post
+            {t('detail.post')}
           </button>
         </div>
       ) : null}
       {comment.replies && comment.replies.length > 0 ? (
         <div style={{ marginTop: 12 }}>
-          <CommentList comments={comment.replies} onReply={onReply} theme={theme} depth={depth + 1} />
+          <CommentList comments={comment.replies} onReply={onReply} theme={theme} t={t} language={language} depth={depth + 1} />
         </div>
       ) : null}
     </div>

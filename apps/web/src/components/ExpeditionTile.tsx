@@ -2,10 +2,29 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme, tierColors } from '@minga/theme';
 import { formatDistanceKm, formatElevation, formatPriceCents } from '@minga/logic';
-import type { ExpeditionWithAuthor } from '@minga/types';
+import { useT } from '@minga/i18n';
+import type { ExpeditionWithAuthor, ExpeditionCategory, TierLevel } from '@minga/types';
+
+const CATEGORY_KEY: Record<ExpeditionCategory, any> = {
+  hiking: 'cat.hiking',
+  cycling: 'cat.cycling',
+  running: 'cat.running',
+  trekking: 'cat.trekking',
+  cultural: 'cat.cultural',
+  wildlife: 'cat.wildlife',
+  other: 'cat.other',
+};
+
+const TIER_KEY: Record<TierLevel, any> = {
+  bronze: 'tier.bronze',
+  silver: 'tier.silver',
+  gold: 'tier.gold',
+  diamond: 'tier.diamond',
+};
 
 export function ExpeditionTile({ expedition }: { expedition: ExpeditionWithAuthor }) {
   const { theme } = useTheme();
+  const { t } = useT();
   const cover = expedition.cover_photo_url ?? expedition.photos[0]?.url;
   return (
     <Link
@@ -45,7 +64,7 @@ export function ExpeditionTile({ expedition }: { expedition: ExpeditionWithAutho
             textTransform: 'uppercase',
           }}
         >
-          {expedition.category}
+          {t(CATEGORY_KEY[expedition.category])}
         </span>
         {expedition.is_official ? (
           <span
@@ -62,7 +81,7 @@ export function ExpeditionTile({ expedition }: { expedition: ExpeditionWithAutho
               letterSpacing: 0.4,
             }}
           >
-            MINGA OFFICIAL
+            {t('common.official')}
           </span>
         ) : null}
       </div>
@@ -111,10 +130,10 @@ export function ExpeditionTile({ expedition }: { expedition: ExpeditionWithAutho
               letterSpacing: 0.5,
             }}
           >
-            {expedition.author.tier.toUpperCase()}
+            {t(TIER_KEY[expedition.author.tier])}
           </span>
           <span style={{ color: theme.primary, fontWeight: 800, fontSize: 14 }}>
-            {formatPriceCents(expedition.price_cents, expedition.currency)}
+            {formatPriceCents(expedition.price_cents, { currency: expedition.currency, freeLabel: t('common.free') })}
           </span>
         </div>
       </div>
