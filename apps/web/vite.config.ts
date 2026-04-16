@@ -12,10 +12,12 @@ export default defineConfig({
       '@minga/supabase': pkg('supabase'),
       '@minga/theme': pkg('theme'),
       '@minga/logic': pkg('logic'),
+      '@minga/i18n': pkg('i18n'),
     },
   },
   server: {
     port: 5173,
     host: true,
+    strictPort: true,
   },
 });

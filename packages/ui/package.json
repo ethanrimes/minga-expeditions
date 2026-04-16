@@ -15,6 +15,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@minga/i18n": "*",
     "@minga/logic": "*",
     "@minga/supabase": "*",
     "@minga/theme": "*",
@@ -22,13 +23,13 @@
   },
   "peerDependencies": {
     "@supabase/supabase-js": "^2.45.4",
-    "react": ">=18",
+    "react": ">=19",
     "react-native": "*"
   },
   "devDependencies": {
-    "@types/react": "^18.3.3",
-    "react": "^18.3.1",
-    "react-native": "0.74.5",
-    "typescript": "^5.5.4"
+    "@types/react": "~19.1.0",
+    "react": "19.1.0",
+    "react-native": "0.81.5",
+    "typescript": "~5.9.0"
   }
 }

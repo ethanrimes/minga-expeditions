@@ -1,14 +1,7 @@
 import React from 'react';
+import { useT } from '@minga/i18n';
 
-export type TabKey = 'feed' | 'explore' | 'track' | 'profile' | 'settings';
-
-const TABS: { key: TabKey; label: string; icon: string }[] = [
-  { key: 'feed', label: 'Feed', icon: '🏔' },
-  { key: 'explore', label: 'Explore', icon: '🧭' },
-  { key: 'track', label: 'Track', icon: '⏱' },
-  { key: 'profile', label: 'Profile', icon: '👤' },
-  { key: 'settings', label: 'Settings', icon: '⚙️' },
-];
+export type TabKey = 'feed' | 'explore' | 'map' | 'track' | 'profile' | 'settings';
 
 // Renders the @minga/ui screens inside a 428px-wide phone frame on a desktop page.
 // Deliberately boring — this surface exists so we can iterate on the RN screens
@@ -94,21 +87,31 @@ function TabBar({
   activeTab: TabKey;
   onChangeTab: (t: TabKey) => void;
 }) {
+  const { t } = useT();
+  const tabs: { key: TabKey; icon: string; label: string }[] = [
+    { key: 'feed', icon: '🏔', label: t('tab.feed') },
+    { key: 'explore', icon: '🧭', label: t('tab.explore') },
+    { key: 'map', icon: '🗺️', label: t('tab.map') },
+    { key: 'track', icon: '⏱', label: t('tab.track') },
+    { key: 'profile', icon: '👤', label: t('tab.profile') },
+    { key: 'settings', icon: '⚙️', label: t('tab.settings') },
+  ];
+
   return (
     <nav
       style={{
         display: 'flex',
         borderTop: `1px solid ${theme.border}`,
         background: theme.surface,
-        padding: '6px 4px 14px',
+        padding: '6px 2px 14px',
       }}
     >
-      {TABS.map((t) => {
-        const active = activeTab === t.key;
+      {tabs.map((tab) => {
+        const active = activeTab === tab.key;
         return (
           <button
-            key={t.key}
-            onClick={() => onChangeTab(t.key)}
+            key={tab.key}
+            onClick={() => onChangeTab(tab.key)}
             style={{
               flex: 1,
               background: 'transparent',
@@ -120,11 +123,11 @@ function TabBar({
               gap: 2,
               color: active ? theme.primary : theme.textMuted,
               fontWeight: 700,
-              fontSize: 11,
+              fontSize: 10,
             }}
           >
-            <span style={{ fontSize: 22, filter: active ? 'none' : 'grayscale(0.4)' }}>{t.icon}</span>
-            {t.label}
+            <span style={{ fontSize: 20, filter: active ? 'none' : 'grayscale(0.4)' }}>{tab.icon}</span>
+            {tab.label}
           </button>
         );
       })}

@@ -1,15 +1,18 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath, URL } from 'node:url';
+import { createRequire } from 'node:module';
 import path from 'node:path';
+
+const require = createRequire(import.meta.url);
 
 const pkg = (name: string) => fileURLToPath(new URL(`../../packages/${name}/src/index.ts`, import.meta.url));
 
-// react-native-web lives in apps/mobile-web/node_modules (not hoisted because
-// apps/mobile pins react-native at a conflicting version), so Vite can't find
-// it via the normal resolver when imports come from packages/ui. Pin the alias
-// to this app's node_modules copy.
-const rnwPath = path.resolve(__dirname, 'node_modules/react-native-web');
+// react-native-web might live in apps/mobile-web/node_modules or get hoisted
+// to the monorepo root (npm decides based on version peer compatibility).
+// Use createRequire from this file's location to resolve wherever it is.
+const rnwPkgJson = require.resolve('react-native-web/package.json');
+const rnwPath = path.dirname(rnwPkgJson);
 
 export default defineConfig({
   plugins: [react()],
@@ -26,8 +29,12 @@ export default defineConfig({
       { find: '@minga/theme', replacement: pkg('theme') },
       { find: '@minga/logic', replacement: pkg('logic') },
       { find: '@minga/ui', replacement: pkg('ui') },
+      { find: '@minga/i18n', replacement: pkg('i18n') },
     ],
     extensions: ['.web.tsx', '.web.ts', '.web.jsx', '.web.js', '.tsx', '.ts', '.jsx', '.js', '.json'],
+    // react-native-web expects a single React copy across all consumers; dedupe in case
+    // a stray version sneaks in through a transitive dep.
+    dedupe: ['react', 'react-dom', 'react-native-web'],
   },
   optimizeDeps: {
     include: ['react-native-web'],
@@ -35,6 +42,7 @@ export default defineConfig({
   server: {
     port: 5174,
     host: true,
+    strictPort: true,
     fs: {
       allow: [path.resolve(__dirname, '../..')],
     },

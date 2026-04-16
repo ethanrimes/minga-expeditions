@@ -1,5 +1,5 @@
 {
-  "name": "@minga/logic",
+  "name": "@minga/i18n",
   "version": "0.1.0",
   "private": true,
   "main": "./src/index.ts",
@@ -10,10 +10,12 @@
   "scripts": {
     "typecheck": "tsc --noEmit"
   },
-  "dependencies": {
-    "@minga/types": "*"
+  "peerDependencies": {
+    "react": ">=19"
   },
   "devDependencies": {
+    "@types/react": "~19.1.0",
+    "react": "19.1.0",
     "typescript": "~5.9.0"
   }
 }

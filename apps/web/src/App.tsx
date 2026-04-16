@@ -10,6 +10,7 @@ import { ProfilePage } from './pages/ProfilePage';
 import { AuthPage } from './pages/AuthPage';
 import { TrackPage } from './pages/TrackPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { MapPage } from './pages/MapPage';
 
 export function App() {
   const { theme } = useTheme();
@@ -38,6 +39,7 @@ export function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/expeditions" element={<FeedPage />} />
           <Route path="/expeditions/:id" element={<ExpeditionPage />} />
+          <Route path="/map" element={<MapPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/track" element={<TrackPage />} />
           <Route path="/auth" element={<AuthPage />} />

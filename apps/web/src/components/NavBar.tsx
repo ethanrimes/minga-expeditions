@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useTheme } from '@minga/theme';
+import { useT } from '@minga/i18n';
 import { supabase } from '../supabase';
 import type { Session } from '@supabase/supabase-js';
 
 export function NavBar() {
   const { theme } = useTheme();
+  const { t } = useT();
   const nav = useNavigate();
   const [session, setSession] = useState<Session | null>(null);
 
@@ -25,6 +27,14 @@ export function NavBar() {
   const activeStyle: React.CSSProperties = {
     color: theme.primary,
   };
+
+  const items: { to: string; label: string }[] = [
+    { to: '/expeditions', label: t('nav.expeditions') },
+    { to: '/map', label: t('nav.map') },
+    { to: '/track', label: t('nav.track') },
+    { to: '/profile', label: t('nav.profile') },
+    { to: '/settings', label: t('nav.settings') },
+  ];
 
   return (
     <header
@@ -54,18 +64,15 @@ export function NavBar() {
         </Link>
 
         <nav style={{ display: 'flex', gap: 4, flex: 1 }}>
-          <NavLink to="/expeditions" style={({ isActive }) => ({ ...linkStyle, ...(isActive ? activeStyle : {}) })}>
-            Expeditions
-          </NavLink>
-          <NavLink to="/track" style={({ isActive }) => ({ ...linkStyle, ...(isActive ? activeStyle : {}) })}>
-            Track
-          </NavLink>
-          <NavLink to="/profile" style={({ isActive }) => ({ ...linkStyle, ...(isActive ? activeStyle : {}) })}>
-            Profile
-          </NavLink>
-          <NavLink to="/settings" style={({ isActive }) => ({ ...linkStyle, ...(isActive ? activeStyle : {}) })}>
-            Settings
-          </NavLink>
+          {items.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              style={({ isActive }) => ({ ...linkStyle, ...(isActive ? activeStyle : {}) })}
+            >
+              {item.label}
+            </NavLink>
+          ))}
         </nav>
 
         {session ? (
@@ -83,7 +90,7 @@ export function NavBar() {
               fontWeight: 600,
             }}
           >
-            Sign out
+            {t('nav.signOut')}
           </button>
         ) : (
           <Link
@@ -96,7 +103,7 @@ export function NavBar() {
               fontWeight: 700,
             }}
           >
-            Sign in
+            {t('nav.signIn')}
           </Link>
         )}
       </div>

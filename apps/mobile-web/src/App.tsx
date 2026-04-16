@@ -12,6 +12,7 @@ import {
 } from '@minga/ui';
 import { startLocationStream } from './locationAdapter';
 import { MobileShell, type TabKey } from './MobileShell';
+import { MapScreen } from './MapScreen';
 
 type Route =
   | { kind: 'tab'; tab: TabKey }
@@ -32,15 +33,13 @@ export function App() {
     }
     switch (route.tab) {
       case 'feed':
-        return (
-          <FeedScreen onOpenExpedition={(id) => setRoute({ kind: 'expedition', id })} />
-        );
+        return <FeedScreen onOpenExpedition={(id) => setRoute({ kind: 'expedition', id })} />;
       case 'explore':
         return (
-          <ExploreScreen
-            onPickCategory={(_cat: ExpeditionCategory) => setRoute({ kind: 'tab', tab: 'feed' })}
-          />
+          <ExploreScreen onPickCategory={(_cat: ExpeditionCategory) => setRoute({ kind: 'tab', tab: 'feed' })} />
         );
+      case 'map':
+        return <MapScreen onOpenExpedition={(id) => setRoute({ kind: 'expedition', id })} />;
       case 'track':
         return <TrackScreen startLocationStream={startLocationStream} />;
       case 'profile':

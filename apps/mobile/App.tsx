@@ -4,12 +4,14 @@ import { StatusBar } from 'expo-status-bar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { ThemeProvider, useTheme } from '@minga/theme';
+import { LanguageProvider, useT } from '@minga/i18n';
 import type { ExpeditionCategory } from '@minga/types';
 import {
   AuthScreen,
   ExpeditionDetailScreen,
   ExploreScreen,
   FeedScreen,
+  MapNoticeScreen,
   ProfileScreen,
   SettingsScreen,
   TrackScreen,
@@ -17,41 +19,45 @@ import {
 import './src/supabase';
 import { startLocationStream } from './src/locationAdapter';
 
-type Tab = 'feed' | 'explore' | 'track' | 'profile' | 'settings';
+type Tab = 'feed' | 'explore' | 'map' | 'track' | 'profile' | 'settings';
 type Route = { kind: 'tab'; tab: Tab } | { kind: 'expedition'; id: string };
 
-const TABS: { key: Tab; label: string; icon: string }[] = [
-  { key: 'feed', label: 'Feed', icon: '🏔' },
-  { key: 'explore', label: 'Explore', icon: '🧭' },
-  { key: 'track', label: 'Track', icon: '⏱' },
-  { key: 'profile', label: 'Profile', icon: '👤' },
-  { key: 'settings', label: 'Settings', icon: '⚙️' },
-];
+const asyncStoragePersist = {
+  get: (k: string) => AsyncStorage.getItem(k),
+  set: (k: string, v: string) => AsyncStorage.setItem(k, v),
+};
 
 export default function App() {
   return (
     <SafeAreaProvider>
-      <ThemeProvider persist={{ get: (k) => AsyncStorage.getItem(k), set: (k, v) => AsyncStorage.setItem(k, v) }}>
-        <Root />
-      </ThemeProvider>
+      <LanguageProvider persist={asyncStoragePersist}>
+        <ThemeProvider persist={asyncStoragePersist}>
+          <Root />
+        </ThemeProvider>
+      </LanguageProvider>
     </SafeAreaProvider>
   );
 }
 
 function Root() {
   const { theme } = useTheme();
+  const { t } = useT();
   const [route, setRoute] = useState<Route>({ kind: 'tab', tab: 'feed' });
   const [auth, setAuth] = useState(false);
+
+  const tabs: { key: Tab; label: string; icon: string }[] = [
+    { key: 'feed', label: t('tab.feed'), icon: '🏔' },
+    { key: 'explore', label: t('tab.explore'), icon: '🧭' },
+    { key: 'map', label: t('tab.map'), icon: '🗺️' },
+    { key: 'track', label: t('tab.track'), icon: '⏱' },
+    { key: 'profile', label: t('tab.profile'), icon: '👤' },
+    { key: 'settings', label: t('tab.settings'), icon: '⚙️' },
+  ];
 
   const screen = () => {
     if (auth) return <AuthScreen onAuthenticated={() => setAuth(false)} />;
     if (route.kind === 'expedition') {
-      return (
-        <ExpeditionDetailScreen
-          id={route.id}
-          onBack={() => setRoute({ kind: 'tab', tab: 'feed' })}
-        />
-      );
+      return <ExpeditionDetailScreen id={route.id} onBack={() => setRoute({ kind: 'tab', tab: 'feed' })} />;
     }
     switch (route.tab) {
       case 'feed':
@@ -60,6 +66,8 @@ function Root() {
         return (
           <ExploreScreen onPickCategory={(_c: ExpeditionCategory) => setRoute({ kind: 'tab', tab: 'feed' })} />
         );
+      case 'map':
+        return <MapNoticeScreen />;
       case 'track':
         return <TrackScreen startLocationStream={startLocationStream} />;
       case 'profile':
@@ -76,33 +84,28 @@ function Root() {
         <View style={{ flex: 1 }}>{screen()}</View>
       </SafeAreaView>
       <SafeAreaView edges={['bottom']} style={{ backgroundColor: theme.surface }}>
-        <View
-          style={[
-            styles.tabBar,
-            { backgroundColor: theme.surface, borderTopColor: theme.border },
-          ]}
-        >
-          {TABS.map((t) => {
-            const active = route.kind === 'tab' && route.tab === t.key;
+        <View style={[styles.tabBar, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
+          {tabs.map((tab) => {
+            const active = route.kind === 'tab' && route.tab === tab.key;
             return (
               <Pressable
-                key={t.key}
+                key={tab.key}
                 onPress={() => {
                   setAuth(false);
-                  setRoute({ kind: 'tab', tab: t.key });
+                  setRoute({ kind: 'tab', tab: tab.key });
                 }}
                 style={styles.tab}
               >
-                <Text style={{ fontSize: 22, opacity: active ? 1 : 0.6 }}>{t.icon}</Text>
+                <Text style={{ fontSize: 20, opacity: active ? 1 : 0.6 }}>{tab.icon}</Text>
                 <Text
                   style={{
-                    fontSize: 11,
+                    fontSize: 10,
                     fontWeight: '700',
                     color: active ? theme.primary : theme.textMuted,
                     marginTop: 2,
                   }}
                 >
-                  {t.label}
+                  {tab.label}
                 </Text>
               </Pressable>
             );

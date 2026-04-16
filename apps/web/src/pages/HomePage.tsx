@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '@minga/theme';
+import { useT } from '@minga/i18n';
 import { fetchFeedExpeditions } from '@minga/supabase';
 import type { ExpeditionWithAuthor } from '@minga/types';
 import { supabase } from '../supabase';
@@ -8,6 +9,7 @@ import { ExpeditionTile } from '../components/ExpeditionTile';
 
 export function HomePage() {
   const { theme } = useTheme();
+  const { t } = useT();
   const [expeditions, setExpeditions] = useState<ExpeditionWithAuthor[]>([]);
 
   useEffect(() => {
@@ -28,17 +30,12 @@ export function HomePage() {
         <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: '1.3fr 1fr', gap: 40, alignItems: 'center' }}>
           <div>
             <div style={{ letterSpacing: 3, fontWeight: 700, fontSize: 14, opacity: 0.9, marginBottom: 12 }}>
-              CONNECT · TRACK · CELEBRATE
+              {t('home.eyebrow')}
             </div>
-            <h1 style={{ fontSize: 56, lineHeight: 1.05, fontWeight: 800, margin: 0 }}>
-              Every trail in Colombia,
-              <br />in one happy app.
+            <h1 style={{ fontSize: 56, lineHeight: 1.05, fontWeight: 800, margin: 0, whiteSpace: 'pre-line' }}>
+              {t('home.heroTitle')}
             </h1>
-            <p style={{ fontSize: 18, lineHeight: 1.5, maxWidth: 560, marginTop: 20 }}>
-              Minga Expeditions turns your hikes, rides, and cultural visits into a shared journey.
-              Track kilometers and climbs, earn tier badges, and discover expeditions from locals
-              and the Minga team across Colombia.
-            </p>
+            <p style={{ fontSize: 18, lineHeight: 1.5, maxWidth: 560, marginTop: 20 }}>{t('home.heroBody')}</p>
             <div style={{ display: 'flex', gap: 12, marginTop: 28, flexWrap: 'wrap' }}>
               <Link
                 to="/expeditions"
@@ -51,7 +48,21 @@ export function HomePage() {
                   fontSize: 16,
                 }}
               >
-                Browse expeditions
+                {t('home.ctaBrowse')}
+              </Link>
+              <Link
+                to="/map"
+                style={{
+                  background: 'rgba(255,255,255,0.2)',
+                  color: '#fff',
+                  border: '2px solid rgba(255,255,255,0.6)',
+                  padding: '12px 24px',
+                  borderRadius: 999,
+                  fontWeight: 800,
+                  fontSize: 16,
+                }}
+              >
+                {t('nav.map')}
               </Link>
               <Link
                 to="/auth"
@@ -65,7 +76,7 @@ export function HomePage() {
                   fontSize: 16,
                 }}
               >
-                Create account
+                {t('home.ctaCreate')}
               </Link>
             </div>
           </div>
@@ -85,14 +96,14 @@ export function HomePage() {
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 24 }}>
           <div>
             <div style={{ color: theme.primary, fontWeight: 800, letterSpacing: 2, fontSize: 13 }}>
-              FEATURED EXPEDITIONS
+              {t('home.featuredSub')}
             </div>
             <h2 style={{ margin: '6px 0 0 0', fontSize: 36, fontWeight: 800, color: theme.text }}>
-              Start your next story
+              {t('home.featured')}
             </h2>
           </div>
           <Link to="/expeditions" style={{ color: theme.primary, fontWeight: 700 }}>
-            See all →
+            {t('common.more')}
           </Link>
         </div>
         <div
@@ -118,30 +129,10 @@ export function HomePage() {
             gap: 32,
           }}
         >
-          <Pillar
-            icon="📍"
-            title="Real-time tracking"
-            body="GPS-recorded hikes and rides, with elevation, pace, and route history — just like Strava."
-            theme={theme}
-          />
-          <Pillar
-            icon="🏅"
-            title="Earn your tier"
-            body="Rack up kilometers to progress from Bronze to Diamond. Every trail counts."
-            theme={theme}
-          />
-          <Pillar
-            icon="💬"
-            title="Travel community"
-            body="Comment threads, likes, and ratings on every expedition — local tips straight from travelers."
-            theme={theme}
-          />
-          <Pillar
-            icon="💸"
-            title="Monetize your own"
-            body="List your expedition, charge a small fee, and let Minga travelers discover it."
-            theme={theme}
-          />
+          <Pillar icon="📍" title={t('home.pillarTrackingTitle')} body={t('home.pillarTrackingBody')} theme={theme} />
+          <Pillar icon="🏅" title={t('home.pillarTierTitle')} body={t('home.pillarTierBody')} theme={theme} />
+          <Pillar icon="💬" title={t('home.pillarCommunityTitle')} body={t('home.pillarCommunityBody')} theme={theme} />
+          <Pillar icon="💸" title={t('home.pillarMonetizeTitle')} body={t('home.pillarMonetizeBody')} theme={theme} />
         </div>
       </section>
     </>

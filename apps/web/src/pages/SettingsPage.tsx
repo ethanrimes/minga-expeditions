@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTheme } from '@minga/theme';
+import { useT } from '@minga/i18n';
 import type { ThemeName } from '@minga/types';
 
 const META: Record<ThemeName, { title: string; subtitle: string; swatch: string }> = {
@@ -10,11 +11,46 @@ const META: Record<ThemeName, { title: string; subtitle: string; swatch: string 
 
 export function SettingsPage() {
   const { theme, themeName, setTheme, available } = useTheme();
+  const { t, language, setLanguage, available: langs } = useT();
+
   return (
     <div style={{ maxWidth: 800, margin: '0 auto', padding: '40px 24px' }}>
-      <h1 style={{ color: theme.text }}>Settings</h1>
+      <h1 style={{ color: theme.text }}>{t('settings.title')}</h1>
 
-      <h2 style={{ color: theme.text, marginTop: 32 }}>Theme</h2>
+      <h2 style={{ color: theme.text, marginTop: 32 }}>{t('settings.language')}</h2>
+      <div
+        style={{
+          display: 'inline-flex',
+          background: theme.surfaceAlt,
+          borderRadius: 999,
+          padding: 4,
+          border: `1px solid ${theme.border}`,
+        }}
+      >
+        {langs.map((l) => {
+          const active = l === language;
+          const label = l === 'en' ? t('settings.languageEn') : t('settings.languageEs');
+          return (
+            <button
+              key={l}
+              onClick={() => setLanguage(l)}
+              style={{
+                background: active ? theme.primary : 'transparent',
+                color: active ? theme.onPrimary : theme.text,
+                border: 0,
+                padding: '8px 20px',
+                borderRadius: 999,
+                fontWeight: 700,
+                fontSize: 14,
+              }}
+            >
+              {label}
+            </button>
+          );
+        })}
+      </div>
+
+      <h2 style={{ color: theme.text, marginTop: 40 }}>{t('settings.theme')}</h2>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
         {available.map((name) => {
           const active = name === themeName;
@@ -44,11 +80,8 @@ export function SettingsPage() {
         })}
       </div>
 
-      <h2 style={{ color: theme.text, marginTop: 40 }}>About</h2>
-      <p style={{ color: theme.textMuted, lineHeight: 1.6 }}>
-        This is the proof-of-concept build of Minga Expeditions — a cross-platform traveler-community app for
-        Colombia. The same code powers the phone app, the mobile-look debug web app, and this desktop website.
-      </p>
+      <h2 style={{ color: theme.text, marginTop: 40 }}>{t('settings.about')}</h2>
+      <p style={{ color: theme.textMuted, lineHeight: 1.6 }}>{t('settings.aboutBody')}</p>
     </div>
   );
 }
