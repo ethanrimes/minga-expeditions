@@ -1,0 +1,49 @@
+{
+  "expo": {
+    "name": "Minga Expeditions",
+    "slug": "minga-expeditions",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ED8B00"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "co.minga.expeditions",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Minga uses your location to track your hikes and rides.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Minga records your route while you're moving so we can save distance, elevation and pace."
+      }
+    },
+    "android": {
+      "package": "co.minga.expeditions",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ED8B00"
+      },
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Minga records your route while you're moving so we can save distance, elevation and pace."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "replace-me"
+      }
+    }
+  }
+}

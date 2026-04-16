@@ -1,0 +1,34 @@
+{
+  "name": "@minga/ui",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./primitives": "./src/primitives/index.ts",
+    "./components": "./src/components/index.ts",
+    "./screens": "./src/screens/index.ts",
+    "./hooks": "./src/hooks/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@minga/logic": "*",
+    "@minga/supabase": "*",
+    "@minga/theme": "*",
+    "@minga/types": "*"
+  },
+  "peerDependencies": {
+    "@supabase/supabase-js": "^2.45.4",
+    "react": ">=18",
+    "react-native": "*"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "react": "^18.3.1",
+    "react-native": "0.74.5",
+    "typescript": "^5.5.4"
+  }
+}

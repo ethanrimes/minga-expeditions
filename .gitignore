@@ -1,0 +1,58 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build output
+dist/
+build/
+.next/
+.expo/
+.expo-shared/
+web-build/
+.vite/
+
+# Env files (keep .example)
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Supabase local
+supabase/.branches
+supabase/.temp
+supabase/.env
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Turbo
+.turbo/
+
+# Typescript
+*.tsbuildinfo
+
+# Playwright MCP screenshots at repo root (keep pastes/ which contains design refs)
+/web-*.png
+/mw-*.png
+/page-*.png
+
+# Original brief from Giovanni (contains secret keys — never commit)
+/app description.md
+/pastes/
+
+# Native
+ios/Pods/
+android/.gradle/
+android/build/
+android/app/build/
