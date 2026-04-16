@@ -106,13 +106,26 @@ export function MapScreen({ onOpenExpedition }: { onOpenExpedition: (id: string)
       } else {
         map.addSource(srcId, { type: 'geojson', data: geo });
         map.addLayer({
+          id: `${layerId}-halo`,
+          type: 'line',
+          source: srcId,
+          paint: { 'line-color': '#ffffff', 'line-width': 7, 'line-opacity': 0.9 },
+          layout: { 'line-cap': 'round', 'line-join': 'round' },
+        });
+        map.addLayer({
           id: layerId,
           type: 'line',
           source: srcId,
-          paint: { 'line-color': theme.primary, 'line-width': 3, 'line-opacity': 0.85 },
+          paint: { 'line-color': theme.primary, 'line-width': 4, 'line-opacity': 1 },
           layout: { 'line-cap': 'round', 'line-join': 'round' },
         });
       }
+
+      const b = new maplibregl.LngLatBounds();
+      for (const f of features) {
+        for (const c of f.geometry.coordinates) b.extend(c as [number, number]);
+      }
+      if (!b.isEmpty()) map.fitBounds(b, { padding: 40, maxZoom: 13, duration: 800 });
     })();
 
     return () => {

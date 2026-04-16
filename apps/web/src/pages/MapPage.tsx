@@ -153,16 +153,28 @@ export function MapPage() {
       } else {
         map.addSource(trackSourceId, { type: 'geojson', data: geo });
         map.addLayer({
+          id: `${trackLayerId}-halo`,
+          type: 'line',
+          source: trackSourceId,
+          paint: { 'line-color': '#ffffff', 'line-width': 8, 'line-opacity': 0.9 },
+          layout: { 'line-cap': 'round', 'line-join': 'round' },
+        });
+        map.addLayer({
           id: trackLayerId,
           type: 'line',
           source: trackSourceId,
-          paint: {
-            'line-color': theme.primary,
-            'line-width': 4,
-            'line-opacity': 0.85,
-          },
+          paint: { 'line-color': theme.primary, 'line-width': 5, 'line-opacity': 1 },
           layout: { 'line-cap': 'round', 'line-join': 'round' },
         });
+      }
+
+      // Auto-fit to the combined track bounds so the routes are visible.
+      const b = new maplibregl.LngLatBounds();
+      for (const f of features) {
+        for (const c of f.geometry.coordinates) b.extend(c as [number, number]);
+      }
+      if (!b.isEmpty()) {
+        map.fitBounds(b, { padding: 80, maxZoom: 13, duration: 800 });
       }
     })();
 

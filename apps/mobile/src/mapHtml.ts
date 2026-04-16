@@ -133,25 +133,45 @@ export function buildMapHtml(p: MapPayload): string {
           }
           return acc;
         }, []);
-        if (features.length === 0) return;
+        if (features.length === 0) return null;
         var data = { type: 'FeatureCollection', features: features };
         if (map.getSource('my-tracks')) {
           map.getSource('my-tracks').setData(data);
         } else {
           map.addSource('my-tracks', { type: 'geojson', data: data });
+          // Halo line so tracks stand out against the raster base map,
+          // then the primary colored line on top.
+          map.addLayer({
+            id: 'my-tracks-halo',
+            type: 'line',
+            source: 'my-tracks',
+            paint: { 'line-color': '#ffffff', 'line-width': 7, 'line-opacity': 0.85 },
+            layout: { 'line-cap': 'round', 'line-join': 'round' }
+          });
           map.addLayer({
             id: 'my-tracks-line',
             type: 'line',
             source: 'my-tracks',
-            paint: { 'line-color': color, 'line-width': 3, 'line-opacity': 0.9 },
+            paint: { 'line-color': color, 'line-width': 4, 'line-opacity': 1 },
             layout: { 'line-cap': 'round', 'line-join': 'round' }
           });
         }
+        // Return combined LngLatBounds so the caller can fit the camera.
+        var b = new maplibregl.LngLatBounds();
+        features.forEach(function (f) {
+          f.geometry.coordinates.forEach(function (c) { b.extend(c); });
+        });
+        return b;
       }
 
       map.on('load', function () {
         renderMarkers(initial.expeditions);
-        renderTracks(initial.tracks, initial.primary);
+        var trackBounds = renderTracks(initial.tracks, initial.primary);
+        // Auto-zoom: if the signed-in user has any tracks, fit to them so
+        // routes are actually visible (not lost at country-level zoom).
+        if (trackBounds && !trackBounds.isEmpty()) {
+          map.fitBounds(trackBounds, { padding: 60, maxZoom: 13, duration: 800 });
+        }
         var l = document.getElementById('loading');
         if (l) l.classList.add('hidden');
         post({ type: 'ready' });
