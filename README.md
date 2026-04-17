@@ -38,6 +38,24 @@ Windows contributors: run the scripts from **Git Bash** or **WSL**. Each script 
 
 ---
 
+## Demo login
+
+A pre-populated account ships with the seed — four GPS-tracked activities
+(Chingaza run, Cocora loop, El Peñón de Guatapé, Monserrate), 122 track points,
+likes / ratings / Spanish comments on the attended expeditions, and a profile
+that reads as **680.4 km · 31,800 m elevation · Gold tier**.
+
+| Field    | Value               |
+| -------- | ------------------- |
+| Email    | `demo@minga.co`     |
+| Password | `MingaDemo2026!`    |
+
+The account is (re)created by `scripts/seed-demo-user.mjs`. Idempotent — safe
+to re-run; the script reads `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and
+`SUPABASE_DB_URL` from env.
+
+---
+
 ## What's working
 
 - ✅ **Auth** — email+password via Supabase auth. Google & Meta login are stubbed (API keys pending).
