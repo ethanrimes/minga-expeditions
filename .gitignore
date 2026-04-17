@@ -52,6 +52,11 @@ Thumbs.db
 /pastes/
 pastes
 
+# EAS build profile — contains baked Supabase env vars per environment.
+# Each dev keeps their own copy; see apps/mobile/eas.example.json for the
+# template and fill in from your Supabase dashboard.
+apps/mobile/eas.json
+
 # Native
 ios/Pods/
 android/.gradle/
