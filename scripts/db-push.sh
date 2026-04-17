@@ -15,7 +15,7 @@ if [[ -z "${SUPABASE_DB_URL:-}" && -z "${SUPABASE_DB_PASSWORD:-}" ]]; then
   exit 1
 fi
 
-DB_URL="${SUPABASE_DB_URL:-postgresql://postgres.dgkmvoteliomghoctwrd:${SUPABASE_DB_PASSWORD}@aws-1-us-west-2.pooler.supabase.com:5432/postgres}"
+DB_URL="${SUPABASE_DB_URL:-postgresql://postgres.<your-project>:${SUPABASE_DB_PASSWORD}@aws-1-us-west-2.pooler.supabase.com:5432/postgres}"
 
 echo "▶ pushing schema migrations to Supabase"
 supabase db push --db-url "$DB_URL"

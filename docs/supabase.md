@@ -1,6 +1,6 @@
 # Supabase backend
 
-Project ref: `dgkmvoteliomghoctwrd` · URL: `https://dgkmvoteliomghoctwrd.supabase.co`
+Project ref: `<your-project>` · URL: `https://<your-project>.supabase.co`
 
 ## Schema
 

@@ -17,7 +17,7 @@ if ! command -v psql >/dev/null 2>&1; then
   cat <<MSG
 ✘ psql not found on PATH.
 
-Alternative: open Supabase Studio → SQL Editor (https://app.supabase.com/project/dgkmvoteliomghoctwrd/sql/new)
+Alternative: open Supabase Studio → SQL Editor (https://app.supabase.com/project/<your-project>/sql/new)
 and paste the contents of supabase/seed.sql there.
 MSG
   exit 1

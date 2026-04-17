@@ -3,7 +3,7 @@
 // tracks, comments, likes, and ratings. Safe to re-run — everything upserts.
 //
 // Requires these env vars:
-//   SUPABASE_URL                 e.g. https://dgkmvoteliomghoctwrd.supabase.co
+//   SUPABASE_URL                 e.g. https://<your-project>.supabase.co
 //   SUPABASE_SERVICE_ROLE_KEY    the sb_secret_... key (never commit this)
 //   SUPABASE_DB_URL              session-pooler URL for DDL/DML
 //
