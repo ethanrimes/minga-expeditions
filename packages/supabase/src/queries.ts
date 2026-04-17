@@ -222,6 +222,96 @@ export async function saveActivity(
   return activity as DbActivity;
 }
 
+// --- activity detail ------------------------------------------------------
+
+export async function fetchActivityById(
+  client: SupabaseClient,
+  id: string,
+): Promise<DbActivity | null> {
+  const { data, error } = await client.from('activities').select('*').eq('id', id).maybeSingle();
+  if (error) throw error;
+  return (data as DbActivity | null) ?? null;
+}
+
+export async function fetchActivityTrack(
+  client: SupabaseClient,
+  activityId: string,
+): Promise<[number, number][]> {
+  const { data, error } = await client
+    .from('activity_tracks')
+    .select('lat, lng, sequence')
+    .eq('activity_id', activityId)
+    .order('sequence', { ascending: true });
+  if (error) throw error;
+  return ((data as { lat: number; lng: number }[] | null) ?? []).map((r) => [r.lng, r.lat]);
+}
+
+export async function fetchActivityComments(
+  client: SupabaseClient,
+  activityId: string,
+): Promise<import('@minga/types').DbActivityComment[]> {
+  const { data, error } = await client
+    .from('activity_comments')
+    .select('*')
+    .eq('activity_id', activityId)
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as import('@minga/types').DbActivityComment[];
+}
+
+export async function postActivityComment(
+  client: SupabaseClient,
+  input: { activity_id: string; body: string },
+): Promise<import('@minga/types').DbActivityComment> {
+  const { data: user } = await client.auth.getUser();
+  if (!user.user) throw new Error('Sign in to comment');
+  const { data, error } = await client
+    .from('activity_comments')
+    .insert({ activity_id: input.activity_id, body: input.body, author_id: user.user.id })
+    .select('*')
+    .single();
+  if (error) throw error;
+  return data as import('@minga/types').DbActivityComment;
+}
+
+export async function deleteActivityComment(client: SupabaseClient, id: string): Promise<void> {
+  const { error } = await client.from('activity_comments').delete().eq('id', id);
+  if (error) throw error;
+}
+
+export async function fetchActivityRating(
+  client: SupabaseClient,
+  activityId: string,
+): Promise<import('@minga/types').DbActivityRating | null> {
+  const { data: user } = await client.auth.getUser();
+  if (!user.user) return null;
+  const { data, error } = await client
+    .from('activity_ratings')
+    .select('*')
+    .eq('activity_id', activityId)
+    .eq('user_id', user.user.id)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as import('@minga/types').DbActivityRating | null) ?? null;
+}
+
+export async function upsertActivityRating(
+  client: SupabaseClient,
+  input: { activity_id: string; stars: 1 | 2 | 3 | 4 | 5; review?: string | null },
+): Promise<void> {
+  const { data: user } = await client.auth.getUser();
+  if (!user.user) throw new Error('Sign in to rate');
+  const { error } = await client.from('activity_ratings').upsert({
+    activity_id: input.activity_id,
+    user_id: user.user.id,
+    stars: input.stars,
+    review: input.review ?? null,
+  });
+  if (error) throw error;
+}
+
+// --------------------------------------------------------------------------
+
 export async function fetchExpeditionCategories(
   client: SupabaseClient,
 ): Promise<{ category: DbExpedition['category']; count: number }[]> {

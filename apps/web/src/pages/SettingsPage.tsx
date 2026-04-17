@@ -1,5 +1,5 @@
 import React from 'react';
-import { useTheme } from '@minga/theme';
+import { useTheme, type FontScaleLevel } from '@minga/theme';
 import { useT } from '@minga/i18n';
 import type { ThemeName } from '@minga/types';
 
@@ -9,8 +9,23 @@ const META: Record<ThemeName, { title: string; subtitle: string; swatch: string 
   midnight: { title: 'Midnight', subtitle: 'Dark mode for late rides', swatch: '#161B22' },
 };
 
+const FONT_LABEL_KEY: Record<FontScaleLevel, any> = {
+  sm: 'settings.fontSizeSm',
+  md: 'settings.fontSizeMd',
+  lg: 'settings.fontSizeLg',
+  xl: 'settings.fontSizeXl',
+};
+
 export function SettingsPage() {
-  const { theme, themeName, setTheme, available } = useTheme();
+  const {
+    theme,
+    themeName,
+    setTheme,
+    available,
+    fontScale,
+    setFontScale,
+    availableFontScales,
+  } = useTheme();
   const { t, language, setLanguage, available: langs } = useT();
 
   return (
@@ -18,37 +33,15 @@ export function SettingsPage() {
       <h1 style={{ color: theme.text }}>{t('settings.title')}</h1>
 
       <h2 style={{ color: theme.text, marginTop: 32 }}>{t('settings.language')}</h2>
-      <div
-        style={{
-          display: 'inline-flex',
-          background: theme.surfaceAlt,
-          borderRadius: 999,
-          padding: 4,
-          border: `1px solid ${theme.border}`,
-        }}
-      >
-        {langs.map((l) => {
-          const active = l === language;
-          const label = l === 'en' ? t('settings.languageEn') : t('settings.languageEs');
-          return (
-            <button
-              key={l}
-              onClick={() => setLanguage(l)}
-              style={{
-                background: active ? theme.primary : 'transparent',
-                color: active ? theme.onPrimary : theme.text,
-                border: 0,
-                padding: '8px 20px',
-                borderRadius: 999,
-                fontWeight: 700,
-                fontSize: 14,
-              }}
-            >
-              {label}
-            </button>
-          );
-        })}
-      </div>
+      <Pill theme={theme} options={langs.map((l) => ({ key: l, label: l === 'en' ? t('settings.languageEn') : t('settings.languageEs') }))} value={language} onChange={(v) => setLanguage(v as any)} />
+
+      <h2 style={{ color: theme.text, marginTop: 40 }}>{t('settings.fontSize')}</h2>
+      <Pill
+        theme={theme}
+        options={availableFontScales.map((l) => ({ key: l, label: t(FONT_LABEL_KEY[l]) }))}
+        value={fontScale}
+        onChange={(v) => setFontScale(v as FontScaleLevel)}
+      />
 
       <h2 style={{ color: theme.text, marginTop: 40 }}>{t('settings.theme')}</h2>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
@@ -82,6 +75,52 @@ export function SettingsPage() {
 
       <h2 style={{ color: theme.text, marginTop: 40 }}>{t('settings.about')}</h2>
       <p style={{ color: theme.textMuted, lineHeight: 1.6 }}>{t('settings.aboutBody')}</p>
+    </div>
+  );
+}
+
+function Pill({
+  theme,
+  options,
+  value,
+  onChange,
+}: {
+  theme: any;
+  options: { key: string; label: string }[];
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div
+      style={{
+        display: 'inline-flex',
+        background: theme.surfaceAlt,
+        borderRadius: 999,
+        padding: 4,
+        border: `1px solid ${theme.border}`,
+        flexWrap: 'wrap',
+      }}
+    >
+      {options.map((opt) => {
+        const active = opt.key === value;
+        return (
+          <button
+            key={opt.key}
+            onClick={() => onChange(opt.key)}
+            style={{
+              background: active ? theme.primary : 'transparent',
+              color: active ? theme.onPrimary : theme.text,
+              border: 0,
+              padding: '8px 20px',
+              borderRadius: 999,
+              fontWeight: 700,
+              fontSize: 14,
+            }}
+          >
+            {opt.label}
+          </button>
+        );
+      })}
     </div>
   );
 }

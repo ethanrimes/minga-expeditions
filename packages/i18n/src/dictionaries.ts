@@ -159,7 +159,19 @@ export type TranslationKey =
   | 'auth.demoBody'
   | 'profile.avatarAlt'
   | 'map.official'
-  | 'detail.photoBy';
+  | 'detail.photoBy'
+  | 'settings.fontSize'
+  | 'settings.fontSizeSm'
+  | 'settings.fontSizeMd'
+  | 'settings.fontSizeLg'
+  | 'settings.fontSizeXl'
+  | 'activity.detailBack'
+  | 'activity.commentsHeading'
+  | 'activity.commentPlaceholder'
+  | 'activity.rateHeading'
+  | 'activity.openExpedition'
+  | 'activity.noLinkedExpedition'
+  | 'activity.notFound';
 
 export const en: Record<TranslationKey, string> = {
   'app.tagline': 'Every trail in Colombia, in one happy app.',
@@ -320,6 +332,18 @@ export const en: Record<TranslationKey, string> = {
   'profile.avatarAlt': 'Avatar',
   'map.official': 'MINGA OFFICIAL',
   'detail.photoBy': 'Photo',
+  'settings.fontSize': 'Text size',
+  'settings.fontSizeSm': 'Small',
+  'settings.fontSizeMd': 'Normal',
+  'settings.fontSizeLg': 'Large',
+  'settings.fontSizeXl': 'Extra large',
+  'activity.detailBack': '← Back',
+  'activity.commentsHeading': 'Your notes',
+  'activity.commentPlaceholder': 'Log a thought about this outing…',
+  'activity.rateHeading': 'How was it?',
+  'activity.openExpedition': 'Open the expedition',
+  'activity.noLinkedExpedition': 'No linked expedition.',
+  'activity.notFound': 'Activity not found',
 };
 
 export const es: Record<TranslationKey, string> = {
@@ -482,6 +506,18 @@ export const es: Record<TranslationKey, string> = {
   'profile.avatarAlt': 'Avatar',
   'map.official': 'OFICIAL DE MINGA',
   'detail.photoBy': 'Foto',
+  'settings.fontSize': 'Tamaño de texto',
+  'settings.fontSizeSm': 'Pequeño',
+  'settings.fontSizeMd': 'Normal',
+  'settings.fontSizeLg': 'Grande',
+  'settings.fontSizeXl': 'Extra grande',
+  'activity.detailBack': '← Volver',
+  'activity.commentsHeading': 'Tus notas',
+  'activity.commentPlaceholder': 'Anota una reflexión sobre esta salida…',
+  'activity.rateHeading': '¿Qué tal estuvo?',
+  'activity.openExpedition': 'Abrir la expedición',
+  'activity.noLinkedExpedition': 'Sin expedición vinculada.',
+  'activity.notFound': 'Actividad no encontrada',
 };
 
 export const dictionaries: Record<LanguageCode, Record<TranslationKey, string>> = { en, es };

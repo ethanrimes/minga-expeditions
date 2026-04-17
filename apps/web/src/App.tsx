@@ -11,6 +11,7 @@ import { AuthPage } from './pages/AuthPage';
 import { TrackPage } from './pages/TrackPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { MapPage } from './pages/MapPage';
+import { ActivityPage } from './pages/ActivityPage';
 
 export function App() {
   const { theme } = useTheme();
@@ -41,6 +42,7 @@ export function App() {
           <Route path="/expeditions/:id" element={<ExpeditionPage />} />
           <Route path="/map" element={<MapPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/activities/:id" element={<ActivityPage />} />
           <Route path="/track" element={<TrackPage />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/settings" element={<SettingsPage />} />

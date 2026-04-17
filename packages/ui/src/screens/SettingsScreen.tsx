@@ -1,6 +1,6 @@
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { useTheme, spacing, fontSizes, fontWeights, radii } from '@minga/theme';
+import { useTheme, spacing, fontSizes, fontWeights, radii, type FontScaleLevel } from '@minga/theme';
 import { useT } from '@minga/i18n';
 import type { ThemeName } from '@minga/types';
 import { Screen } from '../primitives/Screen';
@@ -12,8 +12,23 @@ const THEME_META: Record<ThemeName, { title: string; subtitle: string; swatch: s
   midnight: { title: 'Midnight', subtitle: 'Dark mode for late rides', swatch: '#161B22' },
 };
 
+const FONT_LABEL_KEY: Record<FontScaleLevel, any> = {
+  sm: 'settings.fontSizeSm',
+  md: 'settings.fontSizeMd',
+  lg: 'settings.fontSizeLg',
+  xl: 'settings.fontSizeXl',
+};
+
 export function SettingsScreen() {
-  const { theme, themeName, setTheme, available } = useTheme();
+  const {
+    theme,
+    themeName,
+    setTheme,
+    available,
+    fontScale,
+    setFontScale,
+    availableFontScales,
+  } = useTheme();
   const { t, language, setLanguage, available: langs } = useT();
 
   return (
@@ -25,44 +40,23 @@ export function SettingsScreen() {
       </View>
 
       <SectionHeader title={t('settings.language')} />
-      <View
-        style={{
-          alignSelf: 'flex-start',
-          flexDirection: 'row',
-          backgroundColor: theme.surfaceAlt,
-          borderRadius: radii.pill,
-          padding: 4,
-          borderWidth: 1,
-          borderColor: theme.border,
-        }}
-      >
-        {langs.map((l) => {
-          const active = l === language;
-          const label = l === 'en' ? t('settings.languageEn') : t('settings.languageEs');
-          return (
-            <Pressable
-              key={l}
-              onPress={() => setLanguage(l)}
-              style={{
-                backgroundColor: active ? theme.primary : 'transparent',
-                paddingHorizontal: spacing.lg,
-                paddingVertical: spacing.sm,
-                borderRadius: radii.pill,
-              }}
-            >
-              <Text
-                style={{
-                  color: active ? theme.onPrimary : theme.text,
-                  fontWeight: fontWeights.bold,
-                  fontSize: fontSizes.sm,
-                }}
-              >
-                {label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+      <PillToggle
+        options={langs.map((l) => ({
+          key: l,
+          label: l === 'en' ? t('settings.languageEn') : t('settings.languageEs'),
+        }))}
+        value={language}
+        onChange={(v) => setLanguage(v as any)}
+        theme={theme}
+      />
+
+      <SectionHeader title={t('settings.fontSize')} />
+      <PillToggle
+        options={availableFontScales.map((l) => ({ key: l, label: t(FONT_LABEL_KEY[l]) }))}
+        value={fontScale}
+        onChange={(v) => setFontScale(v as FontScaleLevel)}
+        theme={theme}
+      />
 
       <SectionHeader title={t('settings.theme')} />
       <View style={{ gap: spacing.sm }}>
@@ -101,5 +95,59 @@ export function SettingsScreen() {
       <SectionHeader title={t('settings.about')} />
       <Text style={{ color: theme.textMuted, fontSize: fontSizes.sm, lineHeight: 22 }}>{t('settings.aboutBody')}</Text>
     </Screen>
+  );
+}
+
+function PillToggle({
+  options,
+  value,
+  onChange,
+  theme,
+}: {
+  options: { key: string; label: string }[];
+  value: string;
+  onChange: (v: string) => void;
+  theme: any;
+}) {
+  return (
+    <View
+      style={{
+        alignSelf: 'flex-start',
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        backgroundColor: theme.surfaceAlt,
+        borderRadius: radii.pill,
+        padding: 4,
+        borderWidth: 1,
+        borderColor: theme.border,
+        maxWidth: '100%',
+      }}
+    >
+      {options.map((opt) => {
+        const active = opt.key === value;
+        return (
+          <Pressable
+            key={opt.key}
+            onPress={() => onChange(opt.key)}
+            style={{
+              backgroundColor: active ? theme.primary : 'transparent',
+              paddingHorizontal: spacing.lg,
+              paddingVertical: spacing.sm,
+              borderRadius: radii.pill,
+            }}
+          >
+            <Text
+              style={{
+                color: active ? theme.onPrimary : theme.text,
+                fontWeight: fontWeights.bold,
+                fontSize: fontSizes.sm,
+              }}
+            >
+              {opt.label}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
   );
 }

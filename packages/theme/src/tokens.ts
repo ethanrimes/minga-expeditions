@@ -21,7 +21,8 @@ export const radii = {
   pill: 999,
 } as const;
 
-export const fontSizes = {
+// Raw base-size font tokens.
+const BASE_FONT_SIZES = {
   xs: 12,
   sm: 14,
   md: 16,
@@ -31,6 +32,33 @@ export const fontSizes = {
   '3xl': 36,
   display: 48,
 } as const;
+
+export type FontSize = keyof typeof BASE_FONT_SIZES;
+
+// Runtime-mutable font scale multiplier. The Proxy below multiplies every
+// fontSizes.* read by this value, so every existing `fontSizes.md` call site
+// picks up the user's selected size on the next render — no refactor needed.
+// ThemeProvider owns the writer; see `_setFontScale` below.
+let _fontScale = 1;
+
+export function _setFontScale(v: number) {
+  _fontScale = v;
+}
+export function _getFontScale() {
+  return _fontScale;
+}
+
+export const fontSizes: Record<FontSize, number> = new Proxy(
+  { ...BASE_FONT_SIZES },
+  {
+    get(target, key: string) {
+      if (key in target) {
+        return Math.round(target[key as FontSize] * _fontScale);
+      }
+      return undefined as unknown as number;
+    },
+  },
+) as unknown as Record<FontSize, number>;
 
 export const fontWeights = {
   regular: '400',
@@ -49,4 +77,3 @@ export const tierColors = {
 
 export type Spacing = keyof typeof spacing;
 export type Radius = keyof typeof radii;
-export type FontSize = keyof typeof fontSizes;

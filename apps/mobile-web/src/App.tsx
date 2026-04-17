@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTheme } from '@minga/theme';
 import type { ExpeditionCategory } from '@minga/types';
 import {
+  ActivityDetailScreen,
   AuthScreen,
   ExpeditionDetailScreen,
   ExploreScreen,
@@ -13,22 +14,33 @@ import {
 import { startLocationStream } from './locationAdapter';
 import { MobileShell, type TabKey } from './MobileShell';
 import { MapScreen } from './MapScreen';
+import { ActivityMap } from './ActivityMap';
 
 type Route =
   | { kind: 'tab'; tab: TabKey }
-  | { kind: 'expedition'; id: string };
+  | { kind: 'expedition'; id: string }
+  | { kind: 'activity'; id: string };
 
 export function App() {
   const { theme } = useTheme();
   const [route, setRoute] = useState<Route>({ kind: 'tab', tab: 'feed' });
   const [authVisible, setAuthVisible] = useState(false);
 
-  // Route-to-screen dispatch keeps the shell dumb and the stack single-frame.
+  const goBackToProfile = () => setRoute({ kind: 'tab', tab: 'profile' });
+
   const renderScreen = () => {
     if (authVisible) return <AuthScreen onAuthenticated={() => setAuthVisible(false)} />;
     if (route.kind === 'expedition') {
+      return <ExpeditionDetailScreen id={route.id} onBack={() => setRoute({ kind: 'tab', tab: 'feed' })} />;
+    }
+    if (route.kind === 'activity') {
       return (
-        <ExpeditionDetailScreen id={route.id} onBack={() => setRoute({ kind: 'tab', tab: 'feed' })} />
+        <ActivityDetailScreen
+          id={route.id}
+          MapComponent={ActivityMap}
+          onBack={goBackToProfile}
+          onOpenExpedition={(eid) => setRoute({ kind: 'expedition', id: eid })}
+        />
       );
     }
     switch (route.tab) {
@@ -43,7 +55,12 @@ export function App() {
       case 'track':
         return <TrackScreen startLocationStream={startLocationStream} />;
       case 'profile':
-        return <ProfileScreen onSignIn={() => setAuthVisible(true)} />;
+        return (
+          <ProfileScreen
+            onSignIn={() => setAuthVisible(true)}
+            onOpenActivity={(id) => setRoute({ kind: 'activity', id })}
+          />
+        );
       case 'settings':
         return <SettingsScreen />;
     }
@@ -51,7 +68,7 @@ export function App() {
 
   return (
     <MobileShell
-      activeTab={route.kind === 'tab' ? route.tab : 'feed'}
+      activeTab={route.kind === 'tab' ? route.tab : route.kind === 'activity' ? 'profile' : 'feed'}
       onChangeTab={(t) => {
         setAuthVisible(false);
         setRoute({ kind: 'tab', tab: t });

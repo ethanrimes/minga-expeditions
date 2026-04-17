@@ -17,7 +17,13 @@ import { TierProgress } from '../components/TierProgress';
 import { useAuth } from '../hooks/useAuth';
 import { useMyActivities } from '../hooks/useMyActivities';
 
-export function ProfileScreen({ onSignIn }: { onSignIn?: () => void }) {
+export function ProfileScreen({
+  onSignIn,
+  onOpenActivity,
+}: {
+  onSignIn?: () => void;
+  onOpenActivity?: (activityId: string) => void;
+}) {
   const { theme } = useTheme();
   const { t } = useT();
   const { user, signOut, loading: authLoading } = useAuth();
@@ -96,7 +102,11 @@ export function ProfileScreen({ onSignIn }: { onSignIn?: () => void }) {
       ) : (
         <View style={{ gap: spacing.md }}>
           {activities.slice(0, 10).map((a) => (
-            <ActivityCard key={a.id} activity={a} />
+            <ActivityCard
+              key={a.id}
+              activity={a}
+              onPress={onOpenActivity ? () => onOpenActivity(a.id) : undefined}
+            />
           ))}
         </View>
       )}

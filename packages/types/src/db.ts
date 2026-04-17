@@ -119,3 +119,19 @@ export interface DbRating {
   review: string | null;
   created_at: string;
 }
+
+export interface DbActivityComment {
+  id: string;
+  activity_id: string;
+  author_id: string;
+  body: string;
+  created_at: string;
+}
+
+export interface DbActivityRating {
+  user_id: string;
+  activity_id: string;
+  stars: 1 | 2 | 3 | 4 | 5;
+  review: string | null;
+  created_at: string;
+}

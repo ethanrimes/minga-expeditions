@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { useTheme, radii, spacing, fontSizes, fontWeights } from '@minga/theme';
 import { formatDistanceKm, formatDuration, formatElevation } from '@minga/logic';
 import { useT } from '@minga/i18n';
@@ -12,21 +12,19 @@ const ACTIVITY_ICON: Record<DbActivity['activity_type'], string> = {
   walk: '🚶',
 };
 
-export function ActivityCard({ activity }: { activity: DbActivity }) {
+export function ActivityCard({
+  activity,
+  onPress,
+}: {
+  activity: DbActivity;
+  onPress?: () => void;
+}) {
   const { theme } = useTheme();
   const { t, language } = useT();
   const locale = language === 'es' ? 'es-CO' : 'en-US';
-  return (
-    <View
-      style={{
-        backgroundColor: theme.surface,
-        borderRadius: radii.md,
-        borderWidth: 1,
-        borderColor: theme.border,
-        padding: spacing.lg,
-        gap: spacing.sm,
-      }}
-    >
+
+  const body = (
+    <>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
         <Text style={{ fontSize: fontSizes.xl }}>{ACTIVITY_ICON[activity.activity_type]}</Text>
         <Text style={{ color: theme.text, fontSize: fontSizes.md, fontWeight: fontWeights.semibold, flex: 1 }}>
@@ -41,8 +39,26 @@ export function ActivityCard({ activity }: { activity: DbActivity }) {
         <Stat theme={theme} label={t('stats.duration')} value={formatDuration(activity.duration_seconds)} />
         <Stat theme={theme} label={t('stats.elevation')} value={formatElevation(activity.elevation_gain_m)} />
       </View>
-    </View>
+    </>
   );
+
+  const style = {
+    backgroundColor: theme.surface,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: theme.border,
+    padding: spacing.lg,
+    gap: spacing.sm,
+  };
+
+  if (onPress) {
+    return (
+      <Pressable onPress={onPress} style={style}>
+        {body}
+      </Pressable>
+    );
+  }
+  return <View style={style}>{body}</View>;
 }
 
 function Stat({ theme, label, value }: { theme: any; label: string; value: string }) {

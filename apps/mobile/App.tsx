@@ -7,6 +7,7 @@ import { ThemeProvider, useTheme } from '@minga/theme';
 import { LanguageProvider, useT } from '@minga/i18n';
 import type { ExpeditionCategory } from '@minga/types';
 import {
+  ActivityDetailScreen,
   AuthScreen,
   ExpeditionDetailScreen,
   ExploreScreen,
@@ -18,9 +19,13 @@ import {
 import './src/supabase';
 import { startLocationStream } from './src/locationAdapter';
 import { MapScreen } from './src/MapScreen';
+import { ActivityMap } from './src/ActivityMap';
 
 type Tab = 'feed' | 'explore' | 'map' | 'track' | 'profile' | 'settings';
-type Route = { kind: 'tab'; tab: Tab } | { kind: 'expedition'; id: string };
+type Route =
+  | { kind: 'tab'; tab: Tab }
+  | { kind: 'expedition'; id: string }
+  | { kind: 'activity'; id: string };
 
 const asyncStoragePersist = {
   get: (k: string) => AsyncStorage.getItem(k),
@@ -59,6 +64,16 @@ function Root() {
     if (route.kind === 'expedition') {
       return <ExpeditionDetailScreen id={route.id} onBack={() => setRoute({ kind: 'tab', tab: 'feed' })} />;
     }
+    if (route.kind === 'activity') {
+      return (
+        <ActivityDetailScreen
+          id={route.id}
+          MapComponent={ActivityMap}
+          onBack={() => setRoute({ kind: 'tab', tab: 'profile' })}
+          onOpenExpedition={(eid) => setRoute({ kind: 'expedition', id: eid })}
+        />
+      );
+    }
     switch (route.tab) {
       case 'feed':
         return <FeedScreen onOpenExpedition={(id) => setRoute({ kind: 'expedition', id })} />;
@@ -71,7 +86,12 @@ function Root() {
       case 'track':
         return <TrackScreen startLocationStream={startLocationStream} />;
       case 'profile':
-        return <ProfileScreen onSignIn={() => setAuth(true)} />;
+        return (
+          <ProfileScreen
+            onSignIn={() => setAuth(true)}
+            onOpenActivity={(id) => setRoute({ kind: 'activity', id })}
+          />
+        );
       case 'settings':
         return <SettingsScreen />;
     }

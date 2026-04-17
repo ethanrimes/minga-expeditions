@@ -180,9 +180,11 @@ export function ProfilePage() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {activities.map((a) => (
-            <div
+            <Link
               key={a.id}
+              to={`/activities/${a.id}`}
               style={{
+                textDecoration: 'none',
                 background: theme.surface,
                 border: `1px solid ${theme.border}`,
                 borderRadius: 14,
@@ -191,6 +193,15 @@ export function ProfilePage() {
                 gridTemplateColumns: '2fr 1fr 1fr 1fr',
                 gap: 12,
                 alignItems: 'center',
+                transition: 'transform 120ms ease, box-shadow 120ms ease',
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLAnchorElement).style.transform = 'translateY(-2px)';
+                (e.currentTarget as HTMLAnchorElement).style.boxShadow = '0 8px 18px rgba(0,0,0,0.06)';
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLAnchorElement).style.transform = 'translateY(0)';
+                (e.currentTarget as HTMLAnchorElement).style.boxShadow = 'none';
               }}
             >
               <div>
@@ -202,7 +213,7 @@ export function ProfilePage() {
               <Stat theme={theme} label={t('stats.distance')} value={formatDistanceKm(a.distance_km)} small />
               <Stat theme={theme} label={t('stats.elevation')} value={formatElevation(a.elevation_gain_m)} small />
               <Stat theme={theme} label={t('stats.duration')} value={formatDuration(a.duration_seconds)} small />
-            </div>
+            </Link>
           ))}
         </div>
       )}

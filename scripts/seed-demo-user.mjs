@@ -190,7 +190,7 @@ async function main() {
         userId,
         USERNAME,
         DISPLAY_NAME,
-        'https://api.dicebear.com/9.x/adventurer/svg?seed=ethan&backgroundColor=FFE3B8',
+        'https://images.unsplash.com/photo-1504593811423-6dd665756598?auto=format&fit=facearea&facepad=2.5&w=400&h=400&q=80',
         'PoC demo traveler — hikes, climbs, late-night rides.',
         'Colombia',
       ],
