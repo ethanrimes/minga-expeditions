@@ -56,6 +56,24 @@ to re-run; the script reads `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and
 
 ---
 
+## Guest mode (use the app without signing in)
+
+The app auto-calls `supabase.auth.signInAnonymously()` on boot so every
+visitor gets a throwaway session and can like, comment, rate and record
+activities without filling in a signup form. A real sign-in later
+"upgrades" that anonymous account.
+
+This requires one dashboard toggle on the Supabase project:
+
+1. Go to **Supabase → your project → Auth → Providers**
+2. Enable **Allow anonymous sign-ins**
+3. Save
+
+If you leave it off, the code fails silently (no crash) and the old
+"sign in to comment / like / track" gates remain in place.
+
+---
+
 ## What's working
 
 - ✅ **Auth** — email+password via Supabase auth. Google & Meta login are stubbed (API keys pending).

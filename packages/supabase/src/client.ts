@@ -5,14 +5,13 @@ export interface SupabaseEnv {
   anonKey: string;
   // Optional storage adapter — RN provides AsyncStorage, browsers default to localStorage.
   storage?: SupabaseClientOptions<'public'>['auth']['storage'];
+  // Opt out of automatic anonymous sign-in (true by default). If the Supabase
+  // project has `Allow anonymous sign-ins` disabled, the call fails silently.
+  autoAnonymous?: boolean;
 }
 
 let cached: SupabaseClient | null = null;
 
-// Recognize refresh / jwt failures so we can silently log the user out instead of
-// repeatedly throwing `Invalid Refresh Token`. Happens after the auth server is
-// re-seeded (our demo user script wipes & recreates) or a signed-out session
-// lingers in AsyncStorage/localStorage.
 function isStaleAuthError(err: unknown): boolean {
   const msg = (err as { message?: string } | null)?.message?.toLowerCase() ?? '';
   return (
@@ -39,14 +38,35 @@ export function createMingaClient(env: SupabaseEnv): SupabaseClient {
     },
   });
 
-  // On boot: if the stored session references a user/token the server no
-  // longer recognizes, wipe the local session quietly so the app falls back
-  // to the signed-out UI instead of spamming console errors.
+  // Boot-time auth housekeeping:
+  //   1. If the stored session is stale (user re-seeded, key rotated, etc.)
+  //      sign out silently so the UI lands on a fresh state instead of
+  //      spamming "Invalid Refresh Token".
+  //   2. If there's no session at all and the caller hasn't opted out, try
+  //      `signInAnonymously()` so every visitor gets a session and can like,
+  //      comment, rate, and track activities without a sign-up flow. Fails
+  //      silently if the project has anonymous sign-ins disabled — in that
+  //      case the user simply sees the sign-in prompts they had before.
+  const autoAnon = env.autoAnonymous !== false;
   void (async () => {
     try {
-      const { error } = await client.auth.getSession();
+      const { data, error } = await client.auth.getSession();
       if (error && isStaleAuthError(error)) {
-        await client.auth.signOut({ scope: 'local' });
+        await client.auth.signOut({ scope: 'local' }).catch(() => undefined);
+      }
+      if (autoAnon && !data?.session) {
+        // supabase-js >= 2.43 ships `signInAnonymously`. If the user is on an
+        // older version, the method is missing; guard so we don't crash.
+        const anon = (client.auth as unknown as {
+          signInAnonymously?: () => Promise<{ error: unknown }>;
+        }).signInAnonymously;
+        if (typeof anon === 'function') {
+          try {
+            await anon.call(client.auth);
+          } catch {
+            /* feature disabled on the project — leave session null */
+          }
+        }
       }
     } catch (e) {
       if (isStaleAuthError(e)) {
@@ -55,20 +75,16 @@ export function createMingaClient(env: SupabaseEnv): SupabaseClient {
     }
   })();
 
-  // Also clear on the background auto-refresh failure (SDK fires SIGNED_OUT
-  // when it gives up). Belt-and-suspenders because some refresh paths swallow
-  // the error before it reaches the caller.
   client.auth.onAuthStateChange((event) => {
     if (event === 'SIGNED_OUT') {
-      // no-op — Supabase already cleared. Hook exists so consumers can subscribe
-      // downstream without re-implementing the stale-session reset.
+      // no-op — hook exists so downstream consumers can subscribe without
+      // re-implementing the stale-session reset.
     }
   });
 
   return client;
 }
 
-// Convenience singleton factory — each app calls initSupabase once with its own env adapters.
 export function initSupabase(env: SupabaseEnv): SupabaseClient {
   if (!cached) cached = createMingaClient(env);
   return cached;
