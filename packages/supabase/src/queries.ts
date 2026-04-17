@@ -1,6 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type {
   DbActivity,
+  DbActivityComment,
+  DbActivityRating,
   DbActivityTrackPoint,
   DbComment,
   DbExpedition,
@@ -249,20 +251,20 @@ export async function fetchActivityTrack(
 export async function fetchActivityComments(
   client: SupabaseClient,
   activityId: string,
-): Promise<import('@minga/types').DbActivityComment[]> {
+): Promise<DbActivityComment[]> {
   const { data, error } = await client
     .from('activity_comments')
     .select('*')
     .eq('activity_id', activityId)
     .order('created_at', { ascending: true });
   if (error) throw error;
-  return (data ?? []) as import('@minga/types').DbActivityComment[];
+  return (data ?? []) as DbActivityComment[];
 }
 
 export async function postActivityComment(
   client: SupabaseClient,
   input: { activity_id: string; body: string },
-): Promise<import('@minga/types').DbActivityComment> {
+): Promise<DbActivityComment> {
   const { data: user } = await client.auth.getUser();
   if (!user.user) throw new Error('Sign in to comment');
   const { data, error } = await client
@@ -271,7 +273,7 @@ export async function postActivityComment(
     .select('*')
     .single();
   if (error) throw error;
-  return data as import('@minga/types').DbActivityComment;
+  return data as DbActivityComment;
 }
 
 export async function deleteActivityComment(client: SupabaseClient, id: string): Promise<void> {
@@ -282,7 +284,7 @@ export async function deleteActivityComment(client: SupabaseClient, id: string):
 export async function fetchActivityRating(
   client: SupabaseClient,
   activityId: string,
-): Promise<import('@minga/types').DbActivityRating | null> {
+): Promise<DbActivityRating | null> {
   const { data: user } = await client.auth.getUser();
   if (!user.user) return null;
   const { data, error } = await client
@@ -292,7 +294,7 @@ export async function fetchActivityRating(
     .eq('user_id', user.user.id)
     .maybeSingle();
   if (error) throw error;
-  return (data as import('@minga/types').DbActivityRating | null) ?? null;
+  return (data as DbActivityRating | null) ?? null;
 }
 
 export async function upsertActivityRating(

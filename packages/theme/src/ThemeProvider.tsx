@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import type { ThemeName } from '@minga/types';
 import { themes, defaultThemeName, type ThemePalette } from './themes';
 import { _setFontScale } from './tokens';
@@ -57,10 +57,13 @@ export function ThemeProvider({
   const [themeName, setThemeName] = useState<ThemeName>(initial ?? defaultThemeName);
   const [fontScale, setFontScaleState] = useState<FontScaleLevel>(defaultFontScale);
 
-  // Keep the proxy in sync with state on every change, not just on first load.
-  // Without this, the initial render of <App /> would use _fontScale = 1
-  // until the stored value comes back from AsyncStorage.
-  _setFontScale(FONT_SCALES[fontScale]);
+  // Keep the proxy in sync with state. Using useLayoutEffect (not a bare call
+  // during render) — React 19 strict-mode double-invokes renders and warns if
+  // module-level state is mutated mid-render. Layout effect runs before paint
+  // so text renders with the right size on first frame.
+  useLayoutEffect(() => {
+    _setFontScale(FONT_SCALES[fontScale]);
+  }, [fontScale]);
 
   useEffect(() => {
     (async () => {
