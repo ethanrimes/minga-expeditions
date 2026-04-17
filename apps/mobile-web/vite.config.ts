@@ -14,6 +14,12 @@ const pkg = (name: string) => fileURLToPath(new URL(`../../packages/${name}/src/
 const rnwPkgJson = require.resolve('react-native-web/package.json');
 const rnwPath = path.dirname(rnwPkgJson);
 
+// lucide-react-native + react-native-svg may be installed per-app instead of
+// hoisted to the monorepo root. Resolve from this file's location so imports
+// inside packages/ui (which has no local node_modules) still find them.
+const lucidePath = path.dirname(require.resolve('lucide-react-native/package.json'));
+const rnsvgPath = path.dirname(require.resolve('react-native-svg/package.json'));
+
 export default defineConfig({
   plugins: [react()],
   define: {
@@ -24,6 +30,10 @@ export default defineConfig({
     alias: [
       { find: /^react-native$/, replacement: rnwPath },
       { find: /^react-native\/(.+)$/, replacement: `${rnwPath}/$1` },
+      { find: /^lucide-react-native$/, replacement: lucidePath },
+      { find: /^lucide-react-native\/(.+)$/, replacement: `${lucidePath}/$1` },
+      { find: /^react-native-svg$/, replacement: rnsvgPath },
+      { find: /^react-native-svg\/(.+)$/, replacement: `${rnsvgPath}/$1` },
       { find: '@minga/types', replacement: pkg('types') },
       { find: '@minga/supabase', replacement: pkg('supabase') },
       { find: '@minga/theme', replacement: pkg('theme') },
@@ -37,7 +47,7 @@ export default defineConfig({
     dedupe: ['react', 'react-dom', 'react-native-web'],
   },
   optimizeDeps: {
-    include: ['react-native-web'],
+    include: ['react-native-web', 'lucide-react-native', 'react-native-svg'],
   },
   server: {
     port: 5174,
