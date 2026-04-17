@@ -50,6 +50,7 @@ Thumbs.db
 # Original brief from Giovanni (contains secret keys — never commit)
 /app description.md
 /pastes/
+pastes
 
 # Native
 ios/Pods/

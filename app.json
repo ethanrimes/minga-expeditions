@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "a547593f-ab3d-4fd9-a197-37faa0044ac6"
+      }
+    },
+    "android": {
+      "package": "com.ethanrimes.mingaexpeditions"
+    }
+  }
+}
