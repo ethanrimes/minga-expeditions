@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { Heart } from 'lucide-react';
 import { useTheme, tierColors } from '@minga/theme';
 import { useT } from '@minga/i18n';
 import {
@@ -152,7 +153,9 @@ export function ExpeditionPage() {
                 fontWeight: 700,
               }}
             >
-              ♥ {expedition.likes_count}
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                <Heart size={16} strokeWidth={2.2} /> {expedition.likes_count}
+              </span>
             </button>
             <StarPicker value={Math.max(myStars, Math.round(expedition.avg_rating ?? 0))} onPick={rate} color={theme.accent} muted={theme.textMuted} />
             <span style={{ color: theme.textMuted, fontSize: 14 }}>

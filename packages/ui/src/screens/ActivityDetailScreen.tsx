@@ -24,6 +24,7 @@ import { Button } from '../primitives/Button';
 import { Input } from '../primitives/Input';
 import { StarRating } from '../primitives/StarRating';
 import { StatBlock } from '../primitives/StatBlock';
+import { Icon, type IconName } from '../primitives/Icon';
 import { EmptyState } from '../components/EmptyState';
 
 const ACT_LABEL_KEY: Record<ActivityType, any> = {
@@ -33,7 +34,12 @@ const ACT_LABEL_KEY: Record<ActivityType, any> = {
   walk: 'track.actType.walk',
 };
 
-const ICON: Record<ActivityType, string> = { hike: '🥾', ride: '🚴', run: '🏃', walk: '🚶' };
+const ACT_ICON: Record<ActivityType, IconName> = {
+  hike: 'mountain',
+  ride: 'bike',
+  run: 'footprints',
+  walk: 'person',
+};
 
 // Props: the app injects its own map component because MapLibre GL JS runs
 // differently on each platform (native via WebView, web directly). The
@@ -106,7 +112,7 @@ export function ActivityDetailScreen({
   if (!activity) {
     return (
       <Screen>
-        <EmptyState icon="🗺️" title={t('activity.notFound')} body={error ?? undefined} />
+        <EmptyState iconName="map" title={t('activity.notFound')} body={error ?? undefined} />
         {onBack ? <Button label={t('common.back')} onPress={onBack} variant="secondary" /> : null}
       </Screen>
     );
@@ -158,7 +164,18 @@ export function ActivityDetailScreen({
       ) : null}
 
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-        <Text style={{ fontSize: fontSizes['2xl'] }}>{ICON[activity.activity_type]}</Text>
+        <View
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: radii.md,
+            backgroundColor: theme.primaryMuted,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Icon name={ACT_ICON[activity.activity_type]} size={24} color={theme.primary} strokeWidth={2.2} />
+        </View>
         <View style={{ flex: 1 }}>
           <Text style={{ color: theme.text, fontSize: fontSizes['2xl'], fontWeight: fontWeights.heavy }}>
             {activity.title}
@@ -253,9 +270,7 @@ export function ActivityDetailScreen({
                   {relativeTime(c.created_at, language)}
                 </Text>
                 <Pressable onPress={() => remove(c.id)}>
-                  <Text style={{ color: theme.danger, fontSize: fontSizes.xs, fontWeight: fontWeights.semibold }}>
-                    ✕
-                  </Text>
+                  <Icon name="x" size={14} color={theme.danger} strokeWidth={2.5} />
                 </Pressable>
               </View>
               <Text style={{ color: theme.text, fontSize: fontSizes.md, lineHeight: 22 }}>{c.body}</Text>

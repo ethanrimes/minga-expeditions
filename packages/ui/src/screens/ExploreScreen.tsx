@@ -1,20 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { useTheme, spacing, fontSizes, fontWeights, radii } from '@minga/theme';
 import { fetchExpeditionCategories, getSupabase } from '@minga/supabase';
 import { useT } from '@minga/i18n';
 import type { ExpeditionCategory } from '@minga/types';
 import { Screen } from '../primitives/Screen';
+import { Icon, type IconName } from '../primitives/Icon';
 import { SectionHeader } from '../components/SectionHeader';
 
-const CATEGORY_META: Record<ExpeditionCategory, { emoji: string; key: any }> = {
-  hiking: { emoji: '🥾', key: 'cat.hiking' },
-  cycling: { emoji: '🚴', key: 'cat.cycling' },
-  running: { emoji: '🏃', key: 'cat.running' },
-  trekking: { emoji: '⛰️', key: 'cat.trekking' },
-  cultural: { emoji: '🎭', key: 'cat.cultural' },
-  wildlife: { emoji: '🦋', key: 'cat.wildlife' },
-  other: { emoji: '✨', key: 'cat.other' },
+const CATEGORY_META: Record<ExpeditionCategory, { icon: IconName; key: any }> = {
+  hiking: { icon: 'mountain', key: 'cat.hiking' },
+  cycling: { icon: 'bike', key: 'cat.cycling' },
+  running: { icon: 'footprints', key: 'cat.running' },
+  trekking: { icon: 'mountain-snow', key: 'cat.trekking' },
+  cultural: { icon: 'drama', key: 'cat.cultural' },
+  wildlife: { icon: 'leaf', key: 'cat.wildlife' },
+  other: { icon: 'sparkles', key: 'cat.other' },
 };
 
 export function ExploreScreen({ onPickCategory }: { onPickCategory: (cat: ExpeditionCategory) => void }) {
@@ -40,23 +41,34 @@ export function ExploreScreen({ onPickCategory }: { onPickCategory: (cat: Expedi
         {(Object.keys(CATEGORY_META) as ExpeditionCategory[]).map((k) => {
           const count = cats.find((c) => c.category === k)?.count ?? 0;
           return (
-            <View
+            <Pressable
               key={k}
+              onPress={() => onPickCategory(k)}
               style={{
                 width: '47%',
                 backgroundColor: theme.surfaceAlt,
                 borderRadius: radii.lg,
                 padding: spacing.lg,
-                gap: spacing.xs,
+                gap: spacing.sm,
               }}
-              onTouchEnd={() => onPickCategory(k)}
             >
-              <Text style={{ fontSize: 32 }}>{CATEGORY_META[k].emoji}</Text>
+              <View
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: radii.md,
+                  backgroundColor: theme.primaryMuted,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Icon name={CATEGORY_META[k].icon} size={24} color={theme.primary} strokeWidth={2.2} />
+              </View>
               <Text style={{ color: theme.text, fontWeight: fontWeights.bold }}>{t(CATEGORY_META[k].key)}</Text>
               <Text style={{ color: theme.textMuted, fontSize: fontSizes.sm }}>
                 {count} {count === 1 ? t('common.expeditionCountOne') : t('common.expeditionCount')}
               </Text>
-            </View>
+            </Pressable>
           );
         })}
       </View>

@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Bike, Footprints, Mountain, PersonStanding, X as XIcon } from 'lucide-react';
 import { useTheme } from '@minga/theme';
 import { useT } from '@minga/i18n';
 import {
@@ -18,7 +19,12 @@ import type { ActivityType, DbActivity, DbActivityComment, DbActivityRating } fr
 import { supabase } from '../supabase';
 import { buildOsmStyle, COLOMBIA_BOUNDS } from '../map/style';
 
-const ICON: Record<ActivityType, string> = { hike: '🥾', ride: '🚴', run: '🏃', walk: '🚶' };
+const ICON: Record<ActivityType, React.ComponentType<{ size?: number; strokeWidth?: number }>> = {
+  hike: Mountain,
+  ride: Bike,
+  run: Footprints,
+  walk: PersonStanding,
+};
 const ACT_KEY: Record<ActivityType, any> = {
   hike: 'track.actType.hike',
   ride: 'track.actType.ride',
@@ -174,7 +180,20 @@ export function ActivityPage() {
       </Link>
 
       <header style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '12px 0 24px' }}>
-        <div style={{ fontSize: 40 }}>{ICON[activity.activity_type]}</div>
+        <div
+          style={{
+            width: 56,
+            height: 56,
+            borderRadius: 14,
+            background: theme.primaryMuted,
+            color: theme.primary,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          {React.createElement(ICON[activity.activity_type], { size: 28, strokeWidth: 2.2 })}
+        </div>
         <div>
           <h1 style={{ margin: 0, color: theme.text, fontSize: 36, fontWeight: 800 }}>{activity.title}</h1>
           <div style={{ color: theme.textMuted }}>
@@ -296,16 +315,18 @@ export function ActivityPage() {
                 <span style={{ color: theme.textMuted, fontSize: 12 }}>{relativeTime(c.created_at, language)}</span>
                 <button
                   onClick={() => remove(c.id)}
+                  aria-label="delete"
                   style={{
                     background: 'transparent',
                     border: 0,
                     color: theme.danger,
-                    fontWeight: 700,
-                    fontSize: 12,
                     cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    padding: 2,
                   }}
                 >
-                  ✕
+                  <XIcon size={14} strokeWidth={2.5} />
                 </button>
               </div>
               <div style={{ color: theme.text, lineHeight: 1.5 }}>{c.body}</div>

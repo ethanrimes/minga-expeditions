@@ -12,9 +12,11 @@ import {
   ExpeditionDetailScreen,
   ExploreScreen,
   FeedScreen,
+  Icon,
   ProfileScreen,
   SettingsScreen,
   TrackScreen,
+  type IconName,
 } from '@minga/ui';
 import './src/supabase';
 import { startLocationStream } from './src/locationAdapter';
@@ -50,13 +52,13 @@ function Root() {
   const [route, setRoute] = useState<Route>({ kind: 'tab', tab: 'feed' });
   const [auth, setAuth] = useState(false);
 
-  const tabs: { key: Tab; label: string; icon: string }[] = [
-    { key: 'feed', label: t('tab.feed'), icon: '🏔' },
-    { key: 'explore', label: t('tab.explore'), icon: '🧭' },
-    { key: 'map', label: t('tab.map'), icon: '🗺️' },
-    { key: 'track', label: t('tab.track'), icon: '⏱' },
-    { key: 'profile', label: t('tab.profile'), icon: '👤' },
-    { key: 'settings', label: t('tab.settings'), icon: '⚙️' },
+  const tabs: { key: Tab; label: string; icon: IconName }[] = [
+    { key: 'feed', label: t('tab.feed'), icon: 'mountain' },
+    { key: 'explore', label: t('tab.explore'), icon: 'compass' },
+    { key: 'map', label: t('tab.map'), icon: 'map' },
+    { key: 'track', label: t('tab.track'), icon: 'activity' },
+    { key: 'profile', label: t('tab.profile'), icon: 'user' },
+    { key: 'settings', label: t('tab.settings'), icon: 'settings' },
   ];
 
   const screen = () => {
@@ -116,7 +118,12 @@ function Root() {
                 }}
                 style={styles.tab}
               >
-                <Text style={{ fontSize: 20, opacity: active ? 1 : 0.6 }}>{tab.icon}</Text>
+                <Icon
+                  name={tab.icon}
+                  size={22}
+                  color={active ? theme.primary : theme.textMuted}
+                  strokeWidth={active ? 2.4 : 2}
+                />
                 <Text
                   style={{
                     fontSize: 10,

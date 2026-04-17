@@ -8,3 +8,4 @@ export * from './StatBlock';
 export * from './Input';
 export * from './Screen';
 export * from './StarRating';
+export * from './Icon';

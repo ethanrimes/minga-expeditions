@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Activity, CircleDollarSign, MessageCircle, Medal } from 'lucide-react';
 import { useTheme } from '@minga/theme';
 import { useT } from '@minga/i18n';
 import { fetchFeedExpeditions } from '@minga/supabase';
@@ -129,20 +130,44 @@ export function HomePage() {
             gap: 32,
           }}
         >
-          <Pillar icon="📍" title={t('home.pillarTrackingTitle')} body={t('home.pillarTrackingBody')} theme={theme} />
-          <Pillar icon="🏅" title={t('home.pillarTierTitle')} body={t('home.pillarTierBody')} theme={theme} />
-          <Pillar icon="💬" title={t('home.pillarCommunityTitle')} body={t('home.pillarCommunityBody')} theme={theme} />
-          <Pillar icon="💸" title={t('home.pillarMonetizeTitle')} body={t('home.pillarMonetizeBody')} theme={theme} />
+          <Pillar Icon={Activity} title={t('home.pillarTrackingTitle')} body={t('home.pillarTrackingBody')} theme={theme} />
+          <Pillar Icon={Medal} title={t('home.pillarTierTitle')} body={t('home.pillarTierBody')} theme={theme} />
+          <Pillar Icon={MessageCircle} title={t('home.pillarCommunityTitle')} body={t('home.pillarCommunityBody')} theme={theme} />
+          <Pillar Icon={CircleDollarSign} title={t('home.pillarMonetizeTitle')} body={t('home.pillarMonetizeBody')} theme={theme} />
         </div>
       </section>
     </>
   );
 }
 
-function Pillar({ icon, title, body, theme }: { icon: string; title: string; body: string; theme: any }) {
+function Pillar({
+  Icon,
+  title,
+  body,
+  theme,
+}: {
+  Icon: React.ComponentType<{ size?: number; strokeWidth?: number; color?: string }>;
+  title: string;
+  body: string;
+  theme: any;
+}) {
   return (
     <div>
-      <div style={{ fontSize: 40 }}>{icon}</div>
+      <div
+        style={{
+          width: 56,
+          height: 56,
+          borderRadius: 16,
+          background: theme.primaryMuted,
+          color: theme.primary,
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: 14,
+        }}
+      >
+        <Icon size={28} strokeWidth={2.2} />
+      </div>
       <h3 style={{ color: theme.text, marginBottom: 6 }}>{title}</h3>
       <p style={{ color: theme.textMuted, lineHeight: 1.5 }}>{body}</p>
     </div>

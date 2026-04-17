@@ -4,6 +4,7 @@ import { useTheme, spacing, fontSizes, fontWeights, radii, type FontScaleLevel }
 import { useT } from '@minga/i18n';
 import type { ThemeName } from '@minga/types';
 import { Screen } from '../primitives/Screen';
+import { Icon } from '../primitives/Icon';
 import { SectionHeader } from '../components/SectionHeader';
 
 const THEME_META: Record<ThemeName, { title: string; subtitle: string; swatch: string }> = {
@@ -86,7 +87,7 @@ export function SettingsScreen() {
                   {THEME_META[name].subtitle}
                 </Text>
               </View>
-              {active ? <Text style={{ color: theme.primary, fontWeight: fontWeights.bold }}>✓</Text> : null}
+              {active ? <Icon name="check" size={18} color={theme.primary} strokeWidth={3} /> : null}
             </Pressable>
           );
         })}

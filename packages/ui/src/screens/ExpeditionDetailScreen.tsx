@@ -51,7 +51,7 @@ export function ExpeditionDetailScreen({
   if (error || !expedition) {
     return (
       <Screen>
-        <EmptyState icon="⚠️" title={t('empty.notFound')} body={error ?? undefined} />
+        <EmptyState iconName="flag" title={t('empty.notFound')} body={error ?? undefined} />
         {onBack ? <Button label={t('common.back')} onPress={onBack} variant="secondary" /> : null}
       </Screen>
     );
@@ -181,7 +181,12 @@ export function ExpeditionDetailScreen({
       <Text style={{ color: theme.text, fontSize: fontSizes.md, lineHeight: 24 }}>{expedition.description}</Text>
 
       <View style={{ flexDirection: 'row', gap: spacing.md, alignItems: 'center' }}>
-        <Button label={`♥ ${expedition.likes_count}`} variant="secondary" onPress={() => void like()} />
+        <Button
+          label={`${expedition.likes_count}`}
+          variant="secondary"
+          leftIcon={<Icon name="heart" size={14} color={theme.text} strokeWidth={2.2} />}
+          onPress={() => void like()}
+        />
         <View style={{ flexDirection: 'row', gap: spacing.xs, alignItems: 'center' }}>
           <StarRating value={expedition.avg_rating ?? 0} />
           <Text style={{ color: theme.textMuted }}>

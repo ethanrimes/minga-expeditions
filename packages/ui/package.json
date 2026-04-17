@@ -23,8 +23,10 @@
   },
   "peerDependencies": {
     "@supabase/supabase-js": "^2.45.4",
+    "lucide-react-native": "*",
     "react": ">=19",
-    "react-native": "*"
+    "react-native": "*",
+    "react-native-svg": "*"
   },
   "devDependencies": {
     "@types/react": "~19.1.0",

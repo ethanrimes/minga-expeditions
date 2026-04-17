@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { User as UserIcon } from 'lucide-react';
 import { useTheme, tierColors } from '@minga/theme';
 import { useT } from '@minga/i18n';
 import { fetchMyActivities, fetchProfile } from '@minga/supabase';
@@ -48,7 +49,21 @@ export function ProfilePage() {
   if (!signedIn) {
     return (
       <div style={{ maxWidth: 600, margin: '80px auto', padding: '0 24px', textAlign: 'center' }}>
-        <div style={{ fontSize: 60 }}>👤</div>
+        <div
+          style={{
+            width: 80,
+            height: 80,
+            borderRadius: 999,
+            background: theme.primaryMuted,
+            color: theme.primary,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 16px',
+          }}
+        >
+          <UserIcon size={44} strokeWidth={2} />
+        </div>
         <h1 style={{ color: theme.text }}>{t('profile.signInTitle')}</h1>
         <p style={{ color: theme.textMuted }}>{t('profile.signInBody')}</p>
         <Link

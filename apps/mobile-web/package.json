@@ -17,9 +17,11 @@
     "@minga/types": "*",
     "@minga/ui": "*",
     "@supabase/supabase-js": "^2.45.4",
+    "lucide-react-native": "^1.8.0",
     "maplibre-gl": "^4.7.1",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "react-native-svg": "^15.12.1",
     "react-native-web": "^0.21.0"
   },
   "devDependencies": {

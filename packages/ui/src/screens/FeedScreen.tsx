@@ -55,9 +55,9 @@ export function FeedScreen({ onOpenExpedition }: { onOpenExpedition: (id: string
       {loading ? (
         <ActivityIndicator />
       ) : error ? (
-        <EmptyState icon="⚠️" title={t('empty.couldNotLoad')} body={error} />
+        <EmptyState iconName="flag" title={t('empty.couldNotLoad')} body={error} />
       ) : expeditions.length === 0 ? (
-        <EmptyState icon="🏔️" title={t('empty.noExpeditions')} body={t('feed.empty')} />
+        <EmptyState iconName="mountain" title={t('empty.noExpeditions')} body={t('feed.empty')} />
       ) : (
         <View style={{ gap: spacing.lg }}>
           {expeditions.map((exp) => (

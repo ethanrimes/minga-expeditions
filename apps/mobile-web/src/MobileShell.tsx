@@ -1,5 +1,7 @@
 import React from 'react';
 import { useT } from '@minga/i18n';
+import { Icon, type IconName } from '@minga/ui';
+import { Battery, SignalHigh } from 'lucide-react-native';
 
 export type TabKey = 'feed' | 'explore' | 'map' | 'track' | 'profile' | 'settings';
 
@@ -70,9 +72,8 @@ function StatusBar({ theme }: { theme: any }) {
     >
       <span>{time}</span>
       <span style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-        <span>●●●</span>
-        <span>📶</span>
-        <span>🔋</span>
+        <SignalHigh size={14} color={theme.text} strokeWidth={2.5} />
+        <Battery size={14} color={theme.text} strokeWidth={2.5} />
       </span>
     </div>
   );
@@ -88,13 +89,13 @@ function TabBar({
   onChangeTab: (t: TabKey) => void;
 }) {
   const { t } = useT();
-  const tabs: { key: TabKey; icon: string; label: string }[] = [
-    { key: 'feed', icon: '🏔', label: t('tab.feed') },
-    { key: 'explore', icon: '🧭', label: t('tab.explore') },
-    { key: 'map', icon: '🗺️', label: t('tab.map') },
-    { key: 'track', icon: '⏱', label: t('tab.track') },
-    { key: 'profile', icon: '👤', label: t('tab.profile') },
-    { key: 'settings', icon: '⚙️', label: t('tab.settings') },
+  const tabs: { key: TabKey; icon: IconName; label: string }[] = [
+    { key: 'feed', icon: 'mountain', label: t('tab.feed') },
+    { key: 'explore', icon: 'compass', label: t('tab.explore') },
+    { key: 'map', icon: 'map', label: t('tab.map') },
+    { key: 'track', icon: 'activity', label: t('tab.track') },
+    { key: 'profile', icon: 'user', label: t('tab.profile') },
+    { key: 'settings', icon: 'settings', label: t('tab.settings') },
   ];
 
   return (
@@ -124,9 +125,15 @@ function TabBar({
               color: active ? theme.primary : theme.textMuted,
               fontWeight: 700,
               fontSize: 10,
+              cursor: 'pointer',
             }}
           >
-            <span style={{ fontSize: 20, filter: active ? 'none' : 'grayscale(0.4)' }}>{tab.icon}</span>
+            <Icon
+              name={tab.icon}
+              size={22}
+              color={active ? theme.primary : theme.textMuted}
+              strokeWidth={active ? 2.4 : 2}
+            />
             {tab.label}
           </button>
         );

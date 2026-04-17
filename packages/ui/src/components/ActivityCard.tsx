@@ -4,12 +4,13 @@ import { useTheme, radii, spacing, fontSizes, fontWeights } from '@minga/theme';
 import { formatDistanceKm, formatDuration, formatElevation } from '@minga/logic';
 import { useT } from '@minga/i18n';
 import type { DbActivity } from '@minga/types';
+import { Icon, type IconName } from '../primitives/Icon';
 
-const ACTIVITY_ICON: Record<DbActivity['activity_type'], string> = {
-  hike: '🥾',
-  ride: '🚴',
-  run: '🏃',
-  walk: '🚶',
+const ACTIVITY_ICON: Record<DbActivity['activity_type'], IconName> = {
+  hike: 'mountain',
+  ride: 'bike',
+  run: 'footprints',
+  walk: 'person',
 };
 
 export function ActivityCard({
@@ -26,7 +27,18 @@ export function ActivityCard({
   const body = (
     <>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-        <Text style={{ fontSize: fontSizes.xl }}>{ACTIVITY_ICON[activity.activity_type]}</Text>
+        <View
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: radii.md,
+            backgroundColor: theme.primaryMuted,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Icon name={ACTIVITY_ICON[activity.activity_type]} size={20} color={theme.primary} strokeWidth={2.2} />
+        </View>
         <Text style={{ color: theme.text, fontSize: fontSizes.md, fontWeight: fontWeights.semibold, flex: 1 }}>
           {activity.title}
         </Text>

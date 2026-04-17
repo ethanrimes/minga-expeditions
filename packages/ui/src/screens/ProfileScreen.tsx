@@ -46,7 +46,7 @@ export function ProfileScreen({
   if (!user) {
     return (
       <Screen>
-        <EmptyState icon="👤" title={t('profile.signInTitle')} body={t('profile.signInBody')} />
+        <EmptyState iconName="user" title={t('profile.signInTitle')} body={t('profile.signInBody')} />
         <Button label={t('auth.signIn')} onPress={onSignIn} />
       </Screen>
     );
@@ -98,7 +98,7 @@ export function ProfileScreen({
       {actsLoading ? (
         <ActivityIndicator />
       ) : activities.length === 0 ? (
-        <EmptyState icon="🥾" title={t('profile.emptyActivitiesCta')} body={t('profile.emptyActivities')} />
+        <EmptyState iconName="footprints" title={t('profile.emptyActivitiesCta')} body={t('profile.emptyActivities')} />
       ) : (
         <View style={{ gap: spacing.md }}>
           {activities.slice(0, 10).map((a) => (

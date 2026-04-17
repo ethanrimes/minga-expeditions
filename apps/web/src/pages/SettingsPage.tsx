@@ -1,4 +1,5 @@
 import React from 'react';
+import { Check } from 'lucide-react';
 import { useTheme, type FontScaleLevel } from '@minga/theme';
 import { useT } from '@minga/i18n';
 import type { ThemeName } from '@minga/types';
@@ -67,7 +68,7 @@ export function SettingsPage() {
                 <div style={{ color: theme.text, fontWeight: 800 }}>{META[name].title}</div>
                 <div style={{ color: theme.textMuted, fontSize: 13 }}>{META[name].subtitle}</div>
               </div>
-              {active ? <span style={{ color: theme.primary, fontWeight: 800 }}>✓</span> : null}
+              {active ? <Check size={18} color={theme.primary} strokeWidth={3} /> : null}
             </button>
           );
         })}

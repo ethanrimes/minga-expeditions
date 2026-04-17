@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Mountain, TrendingUp } from 'lucide-react';
 import { useTheme, tierColors } from '@minga/theme';
 import { formatDistanceKm, formatElevation, formatPriceCents } from '@minga/logic';
 import { useT } from '@minga/i18n';
@@ -92,8 +93,16 @@ export function ExpeditionTile({ expedition }: { expedition: ExpeditionWithAutho
           {expedition.region ? `, ${expedition.region}` : ''}
         </div>
         <div style={{ display: 'flex', gap: 16, color: theme.text, fontSize: 14 }}>
-          {expedition.distance_km ? <span>🥾 {formatDistanceKm(expedition.distance_km)}</span> : null}
-          {expedition.elevation_gain_m ? <span>⛰ {formatElevation(expedition.elevation_gain_m)}</span> : null}
+          {expedition.distance_km ? (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <Mountain size={14} strokeWidth={2.2} /> {formatDistanceKm(expedition.distance_km)}
+            </span>
+          ) : null}
+          {expedition.elevation_gain_m ? (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <TrendingUp size={14} strokeWidth={2.2} /> {formatElevation(expedition.elevation_gain_m)}
+            </span>
+          ) : null}
           <span title={`${expedition.difficulty}/5`}>
             {'●'.repeat(expedition.difficulty)}
             {'○'.repeat(5 - expedition.difficulty)}

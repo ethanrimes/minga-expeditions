@@ -8,6 +8,7 @@ import { Avatar } from '../primitives/Avatar';
 import { TierBadge } from '../primitives/TierBadge';
 import { CategoryChip } from '../primitives/CategoryChip';
 import { StarRating } from '../primitives/StarRating';
+import { Icon } from '../primitives/Icon';
 
 const CATEGORY_KEY: Record<ExpeditionCategory, any> = {
   hiking: 'cat.hiking',
@@ -120,9 +121,16 @@ export function ExpeditionCard({
               {expedition.avg_rating ? expedition.avg_rating.toFixed(1) : '—'}
             </Text>
           </View>
-          <Text style={{ color: theme.textMuted, fontSize: fontSizes.xs }}>
-            ♥ {expedition.likes_count}  💬 {expedition.comments_count}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Icon name="heart" size={14} color={theme.textMuted} strokeWidth={2.2} />
+              <Text style={{ color: theme.textMuted, fontSize: fontSizes.xs }}>{expedition.likes_count}</Text>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Icon name="message" size={14} color={theme.textMuted} strokeWidth={2.2} />
+              <Text style={{ color: theme.textMuted, fontSize: fontSizes.xs }}>{expedition.comments_count}</Text>
+            </View>
+          </View>
           <View style={{ flex: 1 }} />
           <Text style={{ color: theme.primary, fontWeight: fontWeights.bold, fontSize: fontSizes.sm }}>
             {formatPriceCents(expedition.price_cents, { currency: expedition.currency, freeLabel: t('common.free') })}
