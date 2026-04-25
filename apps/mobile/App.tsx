@@ -22,6 +22,26 @@ import './src/supabase';
 import { startLocationStream } from './src/locationAdapter';
 import { MapScreen } from './src/MapScreen';
 import { ActivityMap } from './src/ActivityMap';
+import * as Sentry from '@sentry/react-native';
+
+Sentry.init({
+  dsn: 'https://b2238c466b4d6f64f9ee3625d97b116f@o4511277462388736.ingest.us.sentry.io/4511277463699456',
+
+  // Adds more context data to events (IP address, cookies, user, etc.)
+  // For more information, visit: https://docs.sentry.io/platforms/react-native/data-management/data-collected/
+  sendDefaultPii: true,
+
+  // Enable Logs
+  enableLogs: true,
+
+  // Configure Session Replay
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1,
+  integrations: [Sentry.mobileReplayIntegration(), Sentry.feedbackIntegration()],
+
+  // uncomment the line below to enable Spotlight (https://spotlightjs.com)
+  // spotlight: __DEV__,
+});
 
 type Tab = 'feed' | 'explore' | 'map' | 'track' | 'profile' | 'settings';
 type Route =
@@ -34,7 +54,7 @@ const asyncStoragePersist = {
   set: (k: string, v: string) => AsyncStorage.setItem(k, v),
 };
 
-export default function App() {
+export default Sentry.wrap(function App() {
   return (
     <SafeAreaProvider>
       <LanguageProvider persist={asyncStoragePersist}>
@@ -44,7 +64,7 @@ export default function App() {
       </LanguageProvider>
     </SafeAreaProvider>
   );
-}
+});
 
 function Root() {
   const { theme } = useTheme();

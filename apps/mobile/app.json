@@ -5,13 +5,16 @@
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "co.minga.expeditions",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Minga uses your location to track your hikes and rides.",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "Minga records your route while you're moving so we can save distance, elevation and pace."
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Minga records your route while you're moving so we can save distance, elevation and pace.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -19,7 +22,9 @@
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
-        "ACCESS_BACKGROUND_LOCATION"
+        "ACCESS_BACKGROUND_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
       ]
     },
     "plugins": [
@@ -28,7 +33,20 @@
         {
           "locationAlwaysAndWhenInUsePermission": "Minga records your route while you're moving so we can save distance, elevation and pace."
         }
+      ],
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "minga-expeditions",
+          "organization": "independent-60"
+        }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "a547593f-ab3d-4fd9-a197-37faa0044ac6"
+      }
+    }
   }
 }

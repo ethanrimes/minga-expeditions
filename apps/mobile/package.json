@@ -18,6 +18,7 @@
     "@minga/types": "*",
     "@minga/ui": "*",
     "@react-native-async-storage/async-storage": "2.2.0",
+    "@sentry/react-native": "^8.9.1",
     "@supabase/supabase-js": "^2.45.4",
     "expo": "~54.0.0",
     "expo-image": "~3.0.11",
