@@ -13,6 +13,7 @@ import {
 import { formatDistanceKm, formatElevation, formatPriceCents, relativeTime } from '@minga/logic';
 import type { CommentWithAuthor, ExpeditionWithAuthor, TierLevel } from '@minga/types';
 import { supabase } from '../supabase';
+import { CheckoutDrawer } from '../components/CheckoutDrawer';
 
 const TIER_KEY: Record<TierLevel, any> = {
   bronze: 'tier.bronze',
@@ -30,6 +31,7 @@ export function ExpeditionPage() {
   const [draft, setDraft] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [myStars, setMyStars] = useState<number>(0);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
 
   const load = async () => {
     if (!id) return;
@@ -141,6 +143,25 @@ export function ExpeditionPage() {
             {expedition.description}
           </p>
 
+          {expedition.price_cents > 0 ? (
+            <button
+              onClick={() => setCheckoutOpen(true)}
+              style={{
+                background: theme.primary,
+                color: theme.onPrimary,
+                border: 0,
+                borderRadius: 999,
+                padding: '14px 28px',
+                fontWeight: 800,
+                fontSize: 16,
+                marginTop: 16,
+                cursor: 'pointer',
+              }}
+            >
+              Book this expedition · {formatPriceCents(expedition.price_cents, { currency: expedition.currency, freeLabel: t('common.free') })}
+            </button>
+          ) : null}
+
           <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginTop: 20 }}>
             <button
               onClick={like}
@@ -246,6 +267,16 @@ export function ExpeditionPage() {
           </div>
         </aside>
       </div>
+
+      {checkoutOpen ? (
+        <CheckoutDrawer
+          expeditionId={expedition.id}
+          expeditionTitle={expedition.title}
+          priceCents={expedition.price_cents}
+          currency={expedition.currency}
+          onClose={() => setCheckoutOpen(false)}
+        />
+      ) : null}
     </div>
   );
 }

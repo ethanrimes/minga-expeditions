@@ -53,6 +53,35 @@ export function AuthPage() {
       </h1>
       <div style={{ color: theme.textMuted, marginBottom: 24 }}>{t('auth.oauthNote')}</div>
 
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 18 }}>
+        <OAuthButton
+          provider="google"
+          label="Continue with Google"
+          theme={theme}
+          onError={setError}
+        />
+        <OAuthButton
+          provider="facebook"
+          label="Continue with Facebook"
+          theme={theme}
+          onError={setError}
+        />
+      </div>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          color: theme.textMuted,
+          fontSize: 12,
+          margin: '4px 0 16px',
+        }}
+      >
+        <div style={{ flex: 1, height: 1, background: theme.border }} />
+        OR
+        <div style={{ flex: 1, height: 1, background: theme.border }} />
+      </div>
+
       <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         {mode === 'signup' ? (
           <>
@@ -88,6 +117,56 @@ export function AuthPage() {
         </button>
       </form>
     </div>
+  );
+}
+
+function OAuthButton({
+  provider,
+  label,
+  theme,
+  onError,
+}: {
+  provider: 'google' | 'facebook';
+  label: string;
+  theme: any;
+  onError: (msg: string) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const click = async () => {
+    setBusy(true);
+    try {
+      // Supabase handles the redirect to /auth/v1/callback?... and then back
+      // to redirectTo. The provider must be enabled in the Supabase dashboard.
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo: `${window.location.origin}/profile` },
+      });
+      if (error) throw error;
+    } catch (e: any) {
+      onError(e?.message ?? 'OAuth sign-in failed');
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <button
+      type="button"
+      onClick={click}
+      disabled={busy}
+      style={{
+        background: theme.surface,
+        color: theme.text,
+        border: `1px solid ${theme.border}`,
+        borderRadius: 12,
+        padding: '12px 16px',
+        fontWeight: 700,
+        fontSize: 15,
+        cursor: busy ? 'wait' : 'pointer',
+        opacity: busy ? 0.7 : 1,
+      }}
+    >
+      {label}
+    </button>
   );
 }
 

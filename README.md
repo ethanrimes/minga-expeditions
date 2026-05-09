@@ -4,13 +4,14 @@ Cross-platform traveler community and activity-tracking app for **Colombia**, bu
 
 > **The pitch.** Travelers sign up, follow Minga's official expeditions, start their own, track GPS-recorded hikes and rides, rack up kilometers to earn tier badges (Bronze → Diamond), and discuss every expedition with threaded comments, likes, and 5-star ratings. Anyone can list their own expedition and charge a small access fee.
 
-This repository is a **monorepo** with one Supabase backend and three clients:
+This repository is a **monorepo** with one Supabase backend and four clients:
 
 | App                 | Location          | Purpose                                                                                                                              |
 | ------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
 | **Website**         | `apps/web`        | Desktop-first React + Vite marketing + full app site. What visitors see at `minga.co`.                                              |
 | **Mobile debug UI** | `apps/mobile-web` | React + Vite + `react-native-web`. Renders the mobile screens inside a phone frame in a desktop browser, so we can iterate fast.    |
 | **Mobile app**      | `apps/mobile`     | Expo / React Native. Real iOS + Android app that runs on device and uses `expo-location` for Strava-style GPS tracking.            |
+| **Admin console**   | `apps/admin`      | Next.js 15 admin site for Minga staff. Manages categories, expeditions, vendor proposals, and (future) Wompi orders.                |
 
 All three share a single Supabase project (auth, Postgres, storage) and **five shared TypeScript packages** (see [docs/architecture.md](docs/architecture.md)).
 
@@ -32,7 +33,11 @@ All three share a single Supabase project (auth, Postgres, storage) and **five s
 ./scripts/dev-web.sh          # desktop site on http://localhost:5173
 ./scripts/dev-mobile-web.sh   # mobile-frame debug UI on http://localhost:5174
 ./scripts/dev-mobile.sh       # Expo — press i/a/w for iOS/Android/web
+npm run dev:admin             # admin console on http://localhost:3100
 ```
+
+For handover prep — env vars, account swap-out steps, and how to promote a
+user to admin — see [HANDOVER.md](HANDOVER.md).
 
 Windows contributors: run the scripts from **Git Bash** or **WSL**. Each script just wraps an `npm run dev:*` command, so `npm run dev:web` etc. work identically from PowerShell.
 

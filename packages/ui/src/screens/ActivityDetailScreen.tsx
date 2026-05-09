@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Image, Pressable, Text, View } from 'react-native';
 import { useTheme, spacing, fontSizes, fontWeights, radii } from '@minga/theme';
 import { useT } from '@minga/i18n';
 import {
   deleteActivityComment,
   fetchActivityById,
   fetchActivityComments,
+  fetchActivityPhotos,
   fetchActivityRating,
   fetchActivityTrack,
   getSupabase,
   postActivityComment,
+  uploadActivityPhoto,
   upsertActivityRating,
 } from '@minga/supabase';
 import { formatDistanceKm, formatDuration, formatElevation, formatSpeedKmh, relativeTime } from '@minga/logic';
@@ -17,6 +19,7 @@ import type {
   ActivityType,
   DbActivity,
   DbActivityComment,
+  DbActivityPhoto,
   DbActivityRating,
 } from '@minga/types';
 import { Screen } from '../primitives/Screen';
@@ -52,16 +55,42 @@ export interface ActivityMapProps {
   loadingLabel: string;
 }
 
+// Photo picker is also platform-injected: native uses expo-image-picker, web
+// uses an <input type="file"> hidden behind the Add Photo button. The shape
+// is the same — return a Blob (or null on cancel) plus an optional filename
+// and capture metadata.
+export interface ActivityPhotoPicker {
+  pickPhoto(): Promise<{ blob: Blob; filename: string; lat?: number | null; lng?: number | null; takenAt?: string | null } | null>;
+}
+
+// Share is also platform-injected. Native uses expo-sharing; web falls back
+// to navigator.share + URL copy. The screen passes the share-card image URL
+// and a fallback caption; the adapter decides what to do.
+export interface ActivityShareAdapter {
+  share(input: { activityId: string; title: string; cardUrl: string; deepLink: string; caption: string }): Promise<void>;
+}
+
 export function ActivityDetailScreen({
   id,
   onBack,
   onOpenExpedition,
   MapComponent,
+  photoPicker,
+  shareAdapter,
+  shareCardBaseUrl,
+  publicSiteUrl,
 }: {
   id: string;
   onBack?: () => void;
   onOpenExpedition?: (expeditionId: string) => void;
   MapComponent: React.ComponentType<ActivityMapProps>;
+  photoPicker?: ActivityPhotoPicker;
+  shareAdapter?: ActivityShareAdapter;
+  // Public URL of the share-card Edge Function. Mounted by the host app
+  // because each environment has a different Supabase project URL.
+  shareCardBaseUrl?: string;
+  // Public-facing site origin used to build deep links.
+  publicSiteUrl?: string;
 }) {
   const { theme } = useTheme();
   const { t, language } = useT();
@@ -71,29 +100,52 @@ export function ActivityDetailScreen({
   const [track, setTrack] = useState<[number, number][]>([]);
   const [comments, setComments] = useState<DbActivityComment[]>([]);
   const [rating, setRating] = useState<DbActivityRating | null>(null);
+  const [photos, setPhotos] = useState<DbActivityPhoto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
   const [posting, setPosting] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   const load = async () => {
     setLoading(true);
     setError(null);
     try {
-      const [act, tk, cm, rt] = await Promise.all([
+      const [act, tk, cm, rt, ph] = await Promise.all([
         fetchActivityById(getSupabase(), id),
         fetchActivityTrack(getSupabase(), id),
         fetchActivityComments(getSupabase(), id).catch(() => []),
         fetchActivityRating(getSupabase(), id).catch(() => null),
+        fetchActivityPhotos(getSupabase(), id).catch(() => []),
       ]);
       setActivity(act);
       setTrack(tk);
       setComments(cm);
       setRating(rt);
+      setPhotos(ph);
     } catch (e: any) {
       setError(e?.message ?? t('common.loadError'));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const addPhoto = async () => {
+    if (!photoPicker) return;
+    setUploadingPhoto(true);
+    try {
+      const picked = await photoPicker.pickPhoto();
+      if (!picked) return;
+      await uploadActivityPhoto(getSupabase(), id, picked.blob, picked.filename, {
+        lat: picked.lat ?? null,
+        lng: picked.lng ?? null,
+        taken_at: picked.takenAt ?? null,
+      });
+      await load();
+    } catch (e: any) {
+      setError(e?.message ?? t('common.loadError'));
+    } finally {
+      setUploadingPhoto(false);
     }
   };
 
@@ -243,6 +295,60 @@ export function ActivityDetailScreen({
           {t('activity.rateHeading')}
         </Text>
         <StarRating value={rating?.stars ?? 0} size={fontSizes['2xl']} onChange={(s) => void rate(s)} />
+      </View>
+
+      {shareAdapter && shareCardBaseUrl ? (
+        <Button
+          label={language === 'es' ? 'Compartir' : 'Share'}
+          variant="secondary"
+          onPress={() =>
+            shareAdapter.share({
+              activityId: id,
+              title: activity.title,
+              cardUrl: `${shareCardBaseUrl}?activity_id=${id}`,
+              deepLink: `${publicSiteUrl ?? 'https://minga.co'}/activities/${id}`,
+              caption:
+                language === 'es'
+                  ? `Acabo de completar ${activity.title} en Minga Expeditions 🌄`
+                  : `Just finished ${activity.title} on Minga Expeditions 🌄`,
+            })
+          }
+        />
+      ) : null}
+
+      <View style={{ gap: spacing.sm }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Text style={{ color: theme.text, fontSize: fontSizes.lg, fontWeight: fontWeights.bold }}>
+            {language === 'es' ? 'Fotos' : 'Photos'} ({photos.length})
+          </Text>
+          {photoPicker ? (
+            <Button
+              label={uploadingPhoto ? '…' : language === 'es' ? 'Añadir foto' : 'Add photo'}
+              size="sm"
+              variant="secondary"
+              onPress={addPhoto}
+              loading={uploadingPhoto}
+            />
+          ) : null}
+        </View>
+        {photos.length > 0 ? (
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+            {photos.map((p) => (
+              <Image
+                key={p.id}
+                source={{ uri: p.url }}
+                style={{ width: 110, height: 110, borderRadius: radii.md, backgroundColor: theme.surfaceAlt }}
+                resizeMode="cover"
+              />
+            ))}
+          </View>
+        ) : (
+          <Text style={{ color: theme.textMuted, fontSize: fontSizes.sm }}>
+            {language === 'es'
+              ? 'Aún no hay fotos. Añade algunas desde la cámara.'
+              : 'No photos yet — add some from your camera roll.'}
+          </Text>
+        )}
       </View>
 
       <View style={{ gap: spacing.sm }}>

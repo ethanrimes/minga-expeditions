@@ -22,6 +22,12 @@ import './src/supabase';
 import { startLocationStream } from './src/locationAdapter';
 import { MapScreen } from './src/MapScreen';
 import { ActivityMap } from './src/ActivityMap';
+import { photoPicker } from './src/photoPicker';
+import { shareAdapter } from './src/shareAdapter';
+
+const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
+const PUBLIC_SITE_URL = process.env.EXPO_PUBLIC_SITE_URL ?? 'https://minga.co';
+const SHARE_CARD_BASE_URL = SUPABASE_URL ? `${SUPABASE_URL}/functions/v1/activity-share-card` : '';
 import * as Sentry from '@sentry/react-native';
 
 Sentry.init({
@@ -91,6 +97,10 @@ function Root() {
         <ActivityDetailScreen
           id={route.id}
           MapComponent={ActivityMap}
+          photoPicker={photoPicker}
+          shareAdapter={shareAdapter}
+          shareCardBaseUrl={SHARE_CARD_BASE_URL}
+          publicSiteUrl={PUBLIC_SITE_URL}
           onBack={() => setRoute({ kind: 'tab', tab: 'profile' })}
           onOpenExpedition={(eid) => setRoute({ kind: 'expedition', id: eid })}
         />

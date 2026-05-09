@@ -12,6 +12,8 @@ import { TrackPage } from './pages/TrackPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { MapPage } from './pages/MapPage';
 import { ActivityPage } from './pages/ActivityPage';
+import { PartnersPage } from './pages/PartnersPage';
+import { OrderSuccessPage } from './pages/OrderSuccessPage';
 
 export function App() {
   const { theme } = useTheme();
@@ -45,6 +47,8 @@ export function App() {
           <Route path="/activities/:id" element={<ActivityPage />} />
           <Route path="/track" element={<TrackPage />} />
           <Route path="/auth" element={<AuthPage />} />
+          <Route path="/partners" element={<PartnersPage />} />
+          <Route path="/orders/:id/success" element={<OrderSuccessPage />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Routes>
       </main>

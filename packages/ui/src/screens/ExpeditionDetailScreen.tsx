@@ -11,6 +11,7 @@ import { TierBadge } from '../primitives/TierBadge';
 import { CategoryChip } from '../primitives/CategoryChip';
 import { Input } from '../primitives/Input';
 import { StarRating } from '../primitives/StarRating';
+import { Icon } from '../primitives/Icon';
 import { CommentThread } from '../components/CommentThread';
 import { PhotoAttribution } from '../components/PhotoAttribution';
 import { EmptyState } from '../components/EmptyState';

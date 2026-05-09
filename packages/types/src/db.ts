@@ -1,5 +1,9 @@
 // Shape of Supabase tables — hand-maintained. Regenerate with `supabase gen types typescript` once the schema stabilizes.
 
+// `ExpeditionCategory` started as a Postgres enum; the source of truth has
+// since moved to the `categories` table (see `DbCategory`). The string union
+// is preserved for the legacy `expeditions.category` column and for
+// translation-key lookups in mobile UI until the switch is complete.
 export type ExpeditionCategory =
   | 'hiking'
   | 'cycling'
@@ -13,6 +17,43 @@ export type TierLevel = 'bronze' | 'silver' | 'gold' | 'diamond';
 
 export type ActivityType = 'hike' | 'ride' | 'run' | 'walk';
 
+export type TerrainTag =
+  | 'mountain'
+  | 'flat'
+  | 'desert'
+  | 'river'
+  | 'forest'
+  | 'coast'
+  | 'urban'
+  | 'jungle'
+  | 'snow';
+
+export type AppRole = 'user' | 'admin' | 'vendor';
+
+export type VendorType =
+  | 'full_experience'
+  | 'transportation'
+  | 'lodging'
+  | 'guide'
+  | 'food'
+  | 'other';
+
+export type ProposalStatus = 'new' | 'reviewing' | 'accepted' | 'rejected' | 'archived';
+
+export type OrderStatus = 'pending' | 'approved' | 'declined' | 'voided' | 'error' | 'refunded';
+
+export interface DbCategory {
+  id: string;
+  slug: string;
+  name_en: string;
+  name_es: string;
+  icon_name: string | null;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface DbProfile {
   id: string; // uuid — matches auth.users.id
   username: string;
@@ -23,6 +64,7 @@ export interface DbProfile {
   total_distance_km: number;
   total_elevation_m: number;
   tier: TierLevel;
+  role: AppRole;
   created_at: string;
   updated_at: string;
 }
@@ -33,6 +75,7 @@ export interface DbExpedition {
   title: string;
   description: string;
   category: ExpeditionCategory;
+  category_id: string;
   location_name: string;
   region: string | null;
   country: string;
@@ -83,6 +126,20 @@ export interface DbActivity {
   avg_speed_kmh: number | null;
   cover_photo_url: string | null;
   notes: string | null;
+  terrain_tags: TerrainTag[];
+  is_independent: boolean;
+  created_at: string;
+}
+
+export interface DbActivityPhoto {
+  id: string;
+  activity_id: string;
+  url: string;
+  caption: string | null;
+  taken_at: string | null;
+  lat: number | null;
+  lng: number | null;
+  order_index: number;
   created_at: string;
 }
 
@@ -134,4 +191,53 @@ export interface DbActivityRating {
   stars: 1 | 2 | 3 | 4 | 5;
   review: string | null;
   created_at: string;
+}
+
+export interface DbGuestContact {
+  id: string;
+  email: string | null;
+  phone: string | null;
+  display_name: string | null;
+  claimed_by_profile_id: string | null;
+  claimed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DbOrder {
+  id: string;
+  expedition_id: string;
+  buyer_profile_id: string | null;
+  buyer_guest_contact_id: string | null;
+  amount_cents: number;
+  currency: string;
+  status: OrderStatus;
+  wompi_reference: string;
+  wompi_transaction_id: string | null;
+  wompi_payment_method_type: string | null;
+  wompi_status_message: string | null;
+  metadata: Record<string, unknown> | null;
+  paid_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DbVendorProposal {
+  id: string;
+  vendor_name: string;
+  contact_email: string | null;
+  contact_phone: string | null;
+  vendor_type: VendorType;
+  region: string | null;
+  title: string;
+  description: string;
+  pricing_notes: string | null;
+  attachments_url: string | null;
+  status: ProposalStatus;
+  admin_notes: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  submitter_profile_id: string | null;
+  created_at: string;
+  updated_at: string;
 }

@@ -11,10 +11,17 @@
     "dev:web": "npm -w @minga/web run dev",
     "dev:mobile-web": "npm -w @minga/mobile-web run dev",
     "dev:mobile": "npm -w @minga/mobile run start",
+    "dev:admin": "npm -w @minga/admin run dev",
     "build:web": "npm -w @minga/web run build",
     "build:mobile-web": "npm -w @minga/mobile-web run build",
+    "build:admin": "npm -w @minga/admin run build",
     "typecheck": "npm -ws --if-present run typecheck",
     "lint": "npm -ws --if-present run lint",
+    "test": "npm -ws --if-present run test",
+    "test:logic": "npm -w @minga/logic run test",
+    "test:supabase": "npm -w @minga/supabase run test",
+    "test:admin": "npm -w @minga/admin run test",
+    "test:mobile": "npm -w @minga/mobile run test",
     "db:push": "supabase db push",
     "db:reset": "supabase db reset",
     "db:seed": "psql \"$SUPABASE_DB_URL\" -f supabase/seed.sql"
@@ -23,6 +30,7 @@
     "node": ">=20"
   },
   "devDependencies": {
-    "typescript": "~5.9.0"
+    "typescript": "~5.9.0",
+    "vitest": "^2.1.4"
   }
 }

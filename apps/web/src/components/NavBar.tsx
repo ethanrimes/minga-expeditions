@@ -33,6 +33,8 @@ export function NavBar() {
     { to: '/map', label: t('nav.map') },
     { to: '/track', label: t('nav.track') },
     { to: '/profile', label: t('nav.profile') },
+    // Inline label until i18n picks it up — see HANDOVER.md.
+    { to: '/partners', label: 'Partners' },
     { to: '/settings', label: t('nav.settings') },
   ];
 

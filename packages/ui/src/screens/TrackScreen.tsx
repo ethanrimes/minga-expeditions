@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
 import { useTheme, spacing, fontSizes, fontWeights, radii } from '@minga/theme';
-import { formatDistanceKm, formatDuration, formatElevation, formatSpeedKmh } from '@minga/logic';
+import { formatDuration, formatElevation, formatSpeedKmh } from '@minga/logic';
 import { useT } from '@minga/i18n';
-import type { ActivityType } from '@minga/types';
-import { getSupabase, saveActivity } from '@minga/supabase';
+import type { ActivityType, TerrainTag } from '@minga/types';
+import { fetchMyPurchasedExpeditions, getSupabase, saveActivity } from '@minga/supabase';
 import { Screen } from '../primitives/Screen';
 import { Button } from '../primitives/Button';
 import { StatBlock } from '../primitives/StatBlock';
@@ -18,6 +18,30 @@ const ACT_KEY: Record<ActivityType, any> = {
   ride: 'track.actType.ride',
   run: 'track.actType.run',
   walk: 'track.actType.walk',
+};
+
+const TERRAIN_TAGS: TerrainTag[] = ['mountain', 'flat', 'desert', 'river', 'forest', 'coast', 'urban', 'jungle', 'snow'];
+const TERRAIN_LABEL_EN: Record<TerrainTag, string> = {
+  mountain: 'Mountain',
+  flat: 'Flat',
+  desert: 'Desert',
+  river: 'River',
+  forest: 'Forest',
+  coast: 'Coast',
+  urban: 'Urban',
+  jungle: 'Jungle',
+  snow: 'Snow',
+};
+const TERRAIN_LABEL_ES: Record<TerrainTag, string> = {
+  mountain: 'Montaña',
+  flat: 'Llano',
+  desert: 'Desierto',
+  river: 'Río',
+  forest: 'Bosque',
+  coast: 'Costa',
+  urban: 'Urbano',
+  jungle: 'Selva',
+  snow: 'Nieve',
 };
 
 // Apps inject `startLocationStream` — see apps/mobile-web/src/locationAdapter.ts and apps/mobile/src/locationAdapter.ts.
@@ -34,6 +58,19 @@ export function TrackScreen({
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
   const [savedMsg, setSavedMsg] = useState<string | null>(null);
+  const [expeditionId, setExpeditionId] = useState<string | null>(null);
+  const [purchased, setPurchased] = useState<{ id: string; title: string }[]>([]);
+  const [terrain, setTerrain] = useState<TerrainTag[]>([]);
+
+  useEffect(() => {
+    void fetchMyPurchasedExpeditions(getSupabase()).then(setPurchased).catch(() => undefined);
+  }, []);
+
+  const toggleTerrain = (tag: TerrainTag) => {
+    setTerrain((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
+  };
+
+  const terrainLabel = language === 'es' ? TERRAIN_LABEL_ES : TERRAIN_LABEL_EN;
 
   const handleSave = async () => {
     setSaving(true);
@@ -44,6 +81,9 @@ export function TrackScreen({
       await saveActivity(getSupabase(), {
         activity_type: activityType,
         title: title.trim() || fallbackTitle,
+        expedition_id: expeditionId,
+        is_independent: expeditionId == null,
+        terrain_tags: terrain,
         started_at: new Date(points[0]?.timestamp ?? Date.now() - elapsed * 1000).toISOString(),
         ended_at: new Date().toISOString(),
         distance_km: summary.distanceKm,
@@ -91,6 +131,29 @@ export function TrackScreen({
           />
         ))}
       </View>
+
+      {status === 'idle' || status === 'ended' ? (
+        <View style={{ gap: spacing.xs }}>
+          <Text style={{ color: theme.textMuted, fontSize: fontSizes.xs, letterSpacing: 1, textTransform: 'uppercase' }}>
+            {language === 'es' ? 'Vinculado a' : 'Linked to'}
+          </Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+            <CategoryChip
+              label={language === 'es' ? 'Independiente' : 'Independent'}
+              active={expeditionId == null}
+              onPress={() => setExpeditionId(null)}
+            />
+            {purchased.map((exp) => (
+              <CategoryChip
+                key={exp.id}
+                label={exp.title}
+                active={expeditionId === exp.id}
+                onPress={() => setExpeditionId(exp.id)}
+              />
+            ))}
+          </View>
+        </View>
+      ) : null}
 
       <View
         style={{
@@ -140,6 +203,23 @@ export function TrackScreen({
             multiline
             numberOfLines={3}
           />
+
+          <View style={{ gap: spacing.xs }}>
+            <Text style={{ color: theme.textMuted, fontSize: fontSizes.xs, letterSpacing: 1, textTransform: 'uppercase' }}>
+              {language === 'es' ? 'Terreno' : 'Terrain'}
+            </Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+              {TERRAIN_TAGS.map((tag) => (
+                <CategoryChip
+                  key={tag}
+                  label={terrainLabel[tag]}
+                  active={terrain.includes(tag)}
+                  onPress={() => toggleTerrain(tag)}
+                />
+              ))}
+            </View>
+          </View>
+
           <View style={{ flexDirection: 'row', gap: spacing.sm }}>
             <Button label={t('track.save')} loading={saving} onPress={handleSave} />
             <Button label={t('track.discard')} variant="ghost" onPress={reset} />

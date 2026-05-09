@@ -1,15 +1,24 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type {
+  AppRole,
   DbActivity,
   DbActivityComment,
+  DbActivityPhoto,
   DbActivityRating,
   DbActivityTrackPoint,
+  DbCategory,
   DbComment,
   DbExpedition,
+  DbOrder,
   DbProfile,
+  DbVendorProposal,
   ExpeditionWithAuthor,
   CommentWithAuthor,
+  OrderStatus,
+  ProposalStatus,
+  TerrainTag,
   TrackPoint,
+  VendorType,
 } from '@minga/types';
 
 // Columns that recur in joins — keep them in one place to keep queries terse.
@@ -175,6 +184,8 @@ export async function saveActivity(
     title: string;
     activity_type: DbActivity['activity_type'];
     expedition_id?: string | null;
+    is_independent?: boolean;
+    terrain_tags?: TerrainTag[];
     started_at: string;
     ended_at: string;
     distance_km: number;
@@ -194,6 +205,8 @@ export async function saveActivity(
     .insert({
       user_id: user.user.id,
       expedition_id: input.expedition_id ?? null,
+      is_independent: input.is_independent ?? input.expedition_id == null,
+      terrain_tags: input.terrain_tags ?? [],
       activity_type: input.activity_type,
       title: input.title,
       started_at: input.started_at,
@@ -324,4 +337,419 @@ export async function fetchExpeditionCategories(
     counts.set(r.category, (counts.get(r.category) ?? 0) + 1);
   }
   return Array.from(counts.entries()).map(([category, count]) => ({ category, count }));
+}
+
+// =============================================================================
+// Categories — managed via the admin web app, read by everyone.
+// =============================================================================
+
+export async function fetchCategories(
+  client: SupabaseClient,
+  opts: { activeOnly?: boolean } = {},
+): Promise<DbCategory[]> {
+  let q = client.from('categories').select('*').order('sort_order', { ascending: true });
+  if (opts.activeOnly) q = q.eq('is_active', true);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as DbCategory[];
+}
+
+export async function fetchCategoryById(
+  client: SupabaseClient,
+  id: string,
+): Promise<DbCategory | null> {
+  const { data, error } = await client.from('categories').select('*').eq('id', id).maybeSingle();
+  if (error) throw error;
+  return (data as DbCategory | null) ?? null;
+}
+
+export type CategoryInput = {
+  slug: string;
+  name_en: string;
+  name_es: string;
+  icon_name?: string | null;
+  sort_order?: number;
+  is_active?: boolean;
+};
+
+export async function createCategory(
+  client: SupabaseClient,
+  input: CategoryInput,
+): Promise<DbCategory> {
+  const { data, error } = await client.from('categories').insert(input).select('*').single();
+  if (error) throw error;
+  return data as DbCategory;
+}
+
+export async function updateCategory(
+  client: SupabaseClient,
+  id: string,
+  input: Partial<CategoryInput>,
+): Promise<DbCategory> {
+  const { data, error } = await client.from('categories').update(input).eq('id', id).select('*').single();
+  if (error) throw error;
+  return data as DbCategory;
+}
+
+export async function deleteCategory(client: SupabaseClient, id: string): Promise<void> {
+  // The FK on expeditions.category_id is ON DELETE RESTRICT, so this throws if
+  // any expedition still references the category. Callers should reassign or
+  // soft-disable (is_active=false) instead of hard-delete in that case.
+  const { error } = await client.from('categories').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// =============================================================================
+// Expeditions admin CRUD — separate from the public feed reads above so that
+// admin tools see drafts/unpublished rows and edit any author's row.
+// =============================================================================
+
+export type ExpeditionInput = {
+  title: string;
+  description: string;
+  category_id: string;
+  author_id: string;
+  location_name: string;
+  region?: string | null;
+  country?: string;
+  start_lat?: number | null;
+  start_lng?: number | null;
+  distance_km?: number | null;
+  elevation_gain_m?: number | null;
+  difficulty?: 1 | 2 | 3 | 4 | 5;
+  price_cents?: number;
+  currency?: string;
+  cover_photo_url?: string | null;
+  is_official?: boolean;
+  is_published?: boolean;
+};
+
+export async function adminListExpeditions(
+  client: SupabaseClient,
+  opts: { search?: string; categoryId?: string | null; limit?: number } = {},
+): Promise<DbExpedition[]> {
+  let q = client.from('expeditions').select('*').order('created_at', { ascending: false }).limit(opts.limit ?? 100);
+  if (opts.categoryId) q = q.eq('category_id', opts.categoryId);
+  if (opts.search?.trim()) q = q.ilike('title', `%${opts.search.trim()}%`);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as DbExpedition[];
+}
+
+export async function adminGetExpedition(
+  client: SupabaseClient,
+  id: string,
+): Promise<DbExpedition | null> {
+  const { data, error } = await client.from('expeditions').select('*').eq('id', id).maybeSingle();
+  if (error) throw error;
+  return (data as DbExpedition | null) ?? null;
+}
+
+export async function createExpedition(
+  client: SupabaseClient,
+  input: ExpeditionInput,
+): Promise<DbExpedition> {
+  const { data, error } = await client.from('expeditions').insert(input).select('*').single();
+  if (error) throw error;
+  return data as DbExpedition;
+}
+
+export async function updateExpedition(
+  client: SupabaseClient,
+  id: string,
+  input: Partial<ExpeditionInput>,
+): Promise<DbExpedition> {
+  const { data, error } = await client.from('expeditions').update(input).eq('id', id).select('*').single();
+  if (error) throw error;
+  return data as DbExpedition;
+}
+
+export async function deleteExpedition(client: SupabaseClient, id: string): Promise<void> {
+  const { error } = await client.from('expeditions').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// =============================================================================
+// Role helpers — used by both clients to gate admin UI.
+// =============================================================================
+
+export async function getMyRole(client: SupabaseClient): Promise<AppRole | null> {
+  const { data: u } = await client.auth.getUser();
+  if (!u.user) return null;
+  const { data, error } = await client
+    .from('profiles')
+    .select('role')
+    .eq('id', u.user.id)
+    .maybeSingle();
+  if (error) throw error;
+  return ((data as { role: AppRole } | null)?.role ?? null);
+}
+
+export async function isAdmin(client: SupabaseClient): Promise<boolean> {
+  return (await getMyRole(client)) === 'admin';
+}
+
+// =============================================================================
+// Vendor proposals — anonymous submission, admin review.
+// =============================================================================
+
+export type VendorProposalInput = {
+  vendor_name: string;
+  contact_email?: string | null;
+  contact_phone?: string | null;
+  vendor_type: VendorType;
+  region?: string | null;
+  title: string;
+  description: string;
+  pricing_notes?: string | null;
+  attachments_url?: string | null;
+};
+
+export async function submitVendorProposal(
+  client: SupabaseClient,
+  input: VendorProposalInput,
+): Promise<DbVendorProposal> {
+  if (!input.contact_email && !input.contact_phone) {
+    throw new Error('At least one contact method (email or phone) is required.');
+  }
+  const { data, error } = await client
+    .from('vendor_proposals')
+    .insert(input)
+    .select('*')
+    .single();
+  if (error) throw error;
+  return data as DbVendorProposal;
+}
+
+export async function listVendorProposals(
+  client: SupabaseClient,
+  opts: { status?: ProposalStatus | 'all'; type?: VendorType | 'all'; limit?: number } = {},
+): Promise<DbVendorProposal[]> {
+  let q = client
+    .from('vendor_proposals')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(opts.limit ?? 200);
+  if (opts.status && opts.status !== 'all') q = q.eq('status', opts.status);
+  if (opts.type && opts.type !== 'all') q = q.eq('vendor_type', opts.type);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as DbVendorProposal[];
+}
+
+export async function getVendorProposal(
+  client: SupabaseClient,
+  id: string,
+): Promise<DbVendorProposal | null> {
+  const { data, error } = await client.from('vendor_proposals').select('*').eq('id', id).maybeSingle();
+  if (error) throw error;
+  return (data as DbVendorProposal | null) ?? null;
+}
+
+export async function updateVendorProposal(
+  client: SupabaseClient,
+  id: string,
+  patch: { status?: ProposalStatus; admin_notes?: string | null },
+): Promise<DbVendorProposal> {
+  const { data, error } = await client
+    .from('vendor_proposals')
+    .update(patch)
+    .eq('id', id)
+    .select('*')
+    .single();
+  if (error) throw error;
+  return data as DbVendorProposal;
+}
+
+export async function vendorProposalCounts(
+  client: SupabaseClient,
+): Promise<Record<ProposalStatus, number>> {
+  // Single round-trip per status. Cheap because the table is small.
+  const statuses: ProposalStatus[] = ['new', 'reviewing', 'accepted', 'rejected', 'archived'];
+  const result = { new: 0, reviewing: 0, accepted: 0, rejected: 0, archived: 0 } as Record<
+    ProposalStatus,
+    number
+  >;
+  await Promise.all(
+    statuses.map(async (s) => {
+      const { count } = await client
+        .from('vendor_proposals')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', s);
+      result[s] = count ?? 0;
+    }),
+  );
+  return result;
+}
+
+// =============================================================================
+// Activity photos — uploaded post-stop.
+// =============================================================================
+
+export async function fetchActivityPhotos(
+  client: SupabaseClient,
+  activityId: string,
+): Promise<DbActivityPhoto[]> {
+  const { data, error } = await client
+    .from('activity_photos')
+    .select('*')
+    .eq('activity_id', activityId)
+    .order('order_index', { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as DbActivityPhoto[];
+}
+
+export async function uploadActivityPhoto(
+  client: SupabaseClient,
+  activityId: string,
+  file: File | Blob,
+  filename: string,
+  meta: { caption?: string | null; taken_at?: string | null; lat?: number | null; lng?: number | null } = {},
+): Promise<DbActivityPhoto> {
+  const { data: u } = await client.auth.getUser();
+  if (!u.user) throw new Error('Sign in to upload photos');
+
+  const path = `${u.user.id}/${activityId}/${Date.now()}-${filename.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+  const { error: upErr } = await client.storage.from('activity-photos').upload(path, file, {
+    cacheControl: '31536000',
+    upsert: false,
+  });
+  if (upErr) throw upErr;
+
+  const url = client.storage.from('activity-photos').getPublicUrl(path).data.publicUrl;
+
+  const { data, error } = await client
+    .from('activity_photos')
+    .insert({
+      activity_id: activityId,
+      url,
+      caption: meta.caption ?? null,
+      taken_at: meta.taken_at ?? null,
+      lat: meta.lat ?? null,
+      lng: meta.lng ?? null,
+    })
+    .select('*')
+    .single();
+  if (error) throw error;
+  return data as DbActivityPhoto;
+}
+
+export async function fetchMyPurchasedExpeditions(
+  client: SupabaseClient,
+): Promise<{ id: string; title: string }[]> {
+  // The "linked to a purchased experience" picker on the start screen lists
+  // every expedition the signed-in user has an approved order for.
+  const { data: u } = await client.auth.getUser();
+  if (!u.user) return [];
+  const { data, error } = await client
+    .from('orders')
+    .select('expedition:expeditions ( id, title )')
+    .eq('buyer_profile_id', u.user.id)
+    .eq('status', 'approved');
+  if (error) throw error;
+  const seen = new Set<string>();
+  const out: { id: string; title: string }[] = [];
+  for (const row of (data ?? []) as { expedition: { id: string; title: string } | null }[]) {
+    if (row.expedition && !seen.has(row.expedition.id)) {
+      seen.add(row.expedition.id);
+      out.push(row.expedition);
+    }
+  }
+  return out;
+}
+
+export async function updateActivityMetadata(
+  client: SupabaseClient,
+  id: string,
+  patch: {
+    title?: string;
+    activity_type?: DbActivity['activity_type'];
+    expedition_id?: string | null;
+    is_independent?: boolean;
+    terrain_tags?: TerrainTag[];
+    notes?: string | null;
+  },
+): Promise<DbActivity> {
+  const { data, error } = await client
+    .from('activities')
+    .update(patch)
+    .eq('id', id)
+    .select('*')
+    .single();
+  if (error) throw error;
+  return data as DbActivity;
+}
+
+// =============================================================================
+// Orders — read-only client helpers. Inserts happen exclusively via Edge
+// Functions using the service role.
+// =============================================================================
+
+export async function fetchOrderById(client: SupabaseClient, id: string): Promise<DbOrder | null> {
+  const { data, error } = await client.from('orders').select('*').eq('id', id).maybeSingle();
+  if (error) throw error;
+  return (data as DbOrder | null) ?? null;
+}
+
+export async function fetchOrderByReference(
+  client: SupabaseClient,
+  ref: string,
+): Promise<DbOrder | null> {
+  const { data, error } = await client
+    .from('orders')
+    .select('*')
+    .eq('wompi_reference', ref)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as DbOrder | null) ?? null;
+}
+
+export async function adminListOrders(
+  client: SupabaseClient,
+  opts: { status?: OrderStatus | 'all'; limit?: number } = {},
+): Promise<DbOrder[]> {
+  let q = client
+    .from('orders')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(opts.limit ?? 200);
+  if (opts.status && opts.status !== 'all') q = q.eq('status', opts.status);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as DbOrder[];
+}
+
+export async function orderCounts(client: SupabaseClient): Promise<Record<OrderStatus, number>> {
+  const statuses: OrderStatus[] = ['pending', 'approved', 'declined', 'voided', 'error', 'refunded'];
+  const result = { pending: 0, approved: 0, declined: 0, voided: 0, error: 0, refunded: 0 } as Record<
+    OrderStatus,
+    number
+  >;
+  await Promise.all(
+    statuses.map(async (s) => {
+      const { count } = await client
+        .from('orders')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', s);
+      result[s] = count ?? 0;
+    }),
+  );
+  return result;
+}
+
+// Storage upload helper used by the admin app for cover photos. The bucket is
+// created in the roles_and_categories migration.
+export async function uploadExpeditionPhoto(
+  client: SupabaseClient,
+  file: File | Blob,
+  filename: string,
+): Promise<{ path: string; publicUrl: string }> {
+  const path = `${Date.now()}-${filename.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+  const { error } = await client.storage.from('expedition-photos').upload(path, file, {
+    cacheControl: '31536000',
+    upsert: false,
+  });
+  if (error) throw error;
+  const { data } = client.storage.from('expedition-photos').getPublicUrl(path);
+  return { path, publicUrl: data.publicUrl };
 }
