@@ -15,6 +15,13 @@ import { startLocationStream } from './locationAdapter';
 import { MobileShell, type TabKey } from './MobileShell';
 import { MapScreen } from './MapScreen';
 import { ActivityMap } from './ActivityMap';
+import { photoPicker } from './photoPicker';
+import { shareAdapter } from './shareAdapter';
+
+const env = import.meta.env as unknown as Record<string, string>;
+const SUPABASE_URL = env.VITE_SUPABASE_URL ?? '';
+const PUBLIC_SITE_URL = env.VITE_PUBLIC_SITE_URL ?? 'https://minga.co';
+const SHARE_CARD_BASE_URL = SUPABASE_URL ? `${SUPABASE_URL}/functions/v1/activity-share-card` : '';
 
 type Route =
   | { kind: 'tab'; tab: TabKey }
@@ -38,6 +45,10 @@ export function App() {
         <ActivityDetailScreen
           id={route.id}
           MapComponent={ActivityMap}
+          photoPicker={photoPicker}
+          shareAdapter={shareAdapter}
+          shareCardBaseUrl={SHARE_CARD_BASE_URL}
+          publicSiteUrl={PUBLIC_SITE_URL}
           onBack={goBackToProfile}
           onOpenExpedition={(eid) => setRoute({ kind: 'expedition', id: eid })}
         />

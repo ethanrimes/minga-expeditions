@@ -63,3 +63,12 @@ ios/Pods/
 android/.gradle/
 android/build/
 android/app/build/
+
+# Locally downloaded dev tools (e.g. cloudflared.exe for tunnel script).
+# Each dev fetches the right binary for their OS/arch; never commit.
+/tools/
+apps/mobile/tools/
+
+# Playwright MCP debug output (console logs, snapshots) generated when
+# Claude drives the browser to debug the web build. Pure ephemera.
+.playwright-mcp/

@@ -1,24 +1,29 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath, URL } from 'node:url';
-import { createRequire } from 'node:module';
 import path from 'node:path';
-
-const require = createRequire(import.meta.url);
+import fs from 'node:fs';
 
 const pkg = (name: string) => fileURLToPath(new URL(`../../packages/${name}/src/index.ts`, import.meta.url));
 
-// react-native-web might live in apps/mobile-web/node_modules or get hoisted
-// to the monorepo root (npm decides based on version peer compatibility).
-// Use createRequire from this file's location to resolve wherever it is.
-const rnwPkgJson = require.resolve('react-native-web/package.json');
-const rnwPath = path.dirname(rnwPkgJson);
+// Locate a node_modules package directory without using require.resolve(`${pkg}/package.json`),
+// which fails on packages that don't list ./package.json in their `exports` field
+// (e.g. lucide-react-native >= 0.5).
+const here = path.dirname(fileURLToPath(import.meta.url));
+function findPkgDir(name: string): string {
+  const candidates = [
+    path.resolve(here, 'node_modules', name),
+    path.resolve(here, '../..', 'node_modules', name),
+  ];
+  for (const c of candidates) {
+    if (fs.existsSync(path.join(c, 'package.json'))) return c;
+  }
+  throw new Error(`Could not locate ${name} in node_modules`);
+}
 
-// lucide-react-native + react-native-svg may be installed per-app instead of
-// hoisted to the monorepo root. Resolve from this file's location so imports
-// inside packages/ui (which has no local node_modules) still find them.
-const lucidePath = path.dirname(require.resolve('lucide-react-native/package.json'));
-const rnsvgPath = path.dirname(require.resolve('react-native-svg/package.json'));
+const rnwPath = findPkgDir('react-native-web');
+const lucidePath = findPkgDir('lucide-react-native');
+const rnsvgPath = findPkgDir('react-native-svg');
 
 export default defineConfig({
   plugins: [react()],
@@ -28,6 +33,11 @@ export default defineConfig({
   },
   resolve: {
     alias: [
+      // react-native-svg's Fabric files import this RN-internal path; stub on web.
+      {
+        find: /^react-native\/Libraries\/Utilities\/codegenNativeComponent$/,
+        replacement: path.resolve(here, 'src/codegenNativeComponentStub.js'),
+      },
       { find: /^react-native$/, replacement: rnwPath },
       { find: /^react-native\/(.+)$/, replacement: `${rnwPath}/$1` },
       { find: /^lucide-react-native$/, replacement: lucidePath },
@@ -48,6 +58,12 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ['react-native-web', 'lucide-react-native', 'react-native-svg'],
+    esbuildOptions: {
+      // react-native-svg ships .web.js shims for index/ReactNativeSVG/elements
+      // that bypass the Fabric/TurboModule-only files. Make esbuild's prebundle
+      // pass prefer them, mirroring the resolve.extensions order above.
+      resolveExtensions: ['.web.tsx', '.web.ts', '.web.jsx', '.web.js', '.tsx', '.ts', '.jsx', '.js', '.json'],
+    },
   },
   server: {
     port: 5174,

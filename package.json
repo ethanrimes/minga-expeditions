@@ -24,12 +24,14 @@
     "test:mobile": "npm -w @minga/mobile run test",
     "db:push": "supabase db push",
     "db:reset": "supabase db reset",
-    "db:seed": "psql \"$SUPABASE_DB_URL\" -f supabase/seed.sql"
+    "db:seed": "psql \"$SUPABASE_DB_URL\" -f supabase/seed.sql",
+    "postinstall": "node scripts/postinstall-ngrok-arm64.mjs"
   },
   "engines": {
     "node": ">=20"
   },
   "devDependencies": {
+    "@expo/ngrok-bin-win32-x64": "^2.3.42",
     "typescript": "~5.9.0",
     "vitest": "^2.1.4"
   }

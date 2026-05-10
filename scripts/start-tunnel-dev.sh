@@ -82,9 +82,54 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
+# ---------- pick a cloudflared binary ---------------------------------------
+# Resolution order:
+#   1. ./tools/cloudflared(.exe) — gitignored, auto-downloaded on Windows if
+#      missing (the npm wrapper has no Windows ARM64 binary and silently
+#      exits, so we sidestep it). The amd64 build runs fine on Windows-on-ARM
+#      via Prism emulation.
+#   2. cloudflared on PATH        — system-wide install (winget, brew, apt).
+#   3. npx -y cloudflared         — last-resort fallback for non-Windows.
+#
+# If Windows Defender keeps quarantining tools/cloudflared.exe, run once
+# (admin PowerShell):
+#   Add-MpPreference -ExclusionPath "$PWD\tools"
+ensure_local_cf_bin_windows() {
+  # Only auto-download on Windows hosts (where MSYS exposes /c/...).
+  [[ "$(uname -s 2>/dev/null)" == MINGW* || "$(uname -s 2>/dev/null)" == MSYS* || "$(uname -s 2>/dev/null)" == CYGWIN* ]] || return 1
+  mkdir -p tools
+  if [[ ! -x "./tools/cloudflared.exe" ]]; then
+    echo "    fetching cloudflared-windows-amd64.exe (one-time, ~64MB) ..."
+    if ! curl -fL --retry 3 -o tools/cloudflared.exe \
+         https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe; then
+      echo "ERROR: failed to download cloudflared. Check network/proxy or download manually." >&2
+      return 1
+    fi
+    chmod +x tools/cloudflared.exe
+  fi
+  return 0
+}
+
+CF_BIN=""
+if [[ -x "./tools/cloudflared.exe" ]]; then
+  CF_BIN="./tools/cloudflared.exe"
+elif [[ -x "./tools/cloudflared" ]]; then
+  CF_BIN="./tools/cloudflared"
+elif command -v cloudflared >/dev/null 2>&1; then
+  CF_BIN="cloudflared"
+elif ensure_local_cf_bin_windows && [[ -x "./tools/cloudflared.exe" ]]; then
+  CF_BIN="./tools/cloudflared.exe"
+fi
+
 # ---------- cloudflare tunnel ----------------------------------------------
 echo "▶ Starting Cloudflare tunnel on http://localhost:$PORT ..."
-npx -y cloudflared tunnel --url "http://localhost:$PORT" >"$TUNNEL_LOG" 2>&1 &
+if [[ -n "$CF_BIN" ]]; then
+  echo "    using $CF_BIN"
+  "$CF_BIN" tunnel --url "http://localhost:$PORT" >"$TUNNEL_LOG" 2>&1 &
+else
+  echo "    using npx -y cloudflared (no local binary found)"
+  npx -y cloudflared tunnel --url "http://localhost:$PORT" >"$TUNNEL_LOG" 2>&1 &
+fi
 TUNNEL_PID=$!
 
 TUNNEL_URL=""

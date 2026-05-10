@@ -53,27 +53,55 @@ export function formatPriceCents(cents: number, opts: FormatPriceOpts | string =
   }
 }
 
+type RelUnit = 'second' | 'minute' | 'hour' | 'day' | 'week' | 'month' | 'year';
+
+const REL_UNITS: { limit: number; div: number; unit: RelUnit }[] = [
+  { limit: 60, div: 1, unit: 'second' },
+  { limit: 3600, div: 60, unit: 'minute' },
+  { limit: 86400, div: 3600, unit: 'hour' },
+  { limit: 604800, div: 86400, unit: 'day' },
+  { limit: 2629800, div: 604800, unit: 'week' },
+  { limit: 31557600, div: 2629800, unit: 'month' },
+  { limit: Number.POSITIVE_INFINITY, div: 31557600, unit: 'year' },
+];
+
+const REL_WORDS: Record<'en' | 'es', Record<RelUnit, [string, string]>> = {
+  en: {
+    second: ['second', 'seconds'],
+    minute: ['minute', 'minutes'],
+    hour: ['hour', 'hours'],
+    day: ['day', 'days'],
+    week: ['week', 'weeks'],
+    month: ['month', 'months'],
+    year: ['year', 'years'],
+  },
+  es: {
+    second: ['segundo', 'segundos'],
+    minute: ['minuto', 'minutos'],
+    hour: ['hora', 'horas'],
+    day: ['día', 'días'],
+    week: ['semana', 'semanas'],
+    month: ['mes', 'meses'],
+    year: ['año', 'años'],
+  },
+};
+
+// Hand-rolled because Hermes on iOS does not implement Intl.RelativeTimeFormat.
 export function relativeTime(from: string | Date, locale = 'en', now: Date = new Date()): string {
   const then = typeof from === 'string' ? new Date(from) : from;
   const diffSec = Math.round((now.getTime() - then.getTime()) / 1000);
+  const past = diffSec >= 0;
   const abs = Math.abs(diffSec);
-  const units: [number, Intl.RelativeTimeFormatUnit][] = [
-    [60, 'second'],
-    [3600, 'minute'],
-    [86400, 'hour'],
-    [604800, 'day'],
-    [2629800, 'week'],
-    [31557600, 'month'],
-    [Number.POSITIVE_INFINITY, 'year'],
-  ];
-  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
-  let prev = 1;
-  for (const [limit, unit] of units) {
+
+  for (const { limit, div, unit } of REL_UNITS) {
     if (abs < limit) {
-      const value = Math.round(-diffSec / prev);
-      return rtf.format(value, unit);
+      const value = Math.max(1, Math.round(abs / div));
+      const lang: 'en' | 'es' = locale.startsWith('es') ? 'es' : 'en';
+      const [singular, plural] = REL_WORDS[lang][unit];
+      const word = value === 1 ? singular : plural;
+      if (lang === 'es') return past ? `hace ${value} ${word}` : `en ${value} ${word}`;
+      return past ? `${value} ${word} ago` : `in ${value} ${word}`;
     }
-    prev = limit;
   }
   return then.toLocaleDateString(locale);
 }
