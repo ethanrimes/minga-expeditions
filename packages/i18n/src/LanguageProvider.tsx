@@ -18,7 +18,7 @@ const defaultPersist: Persist = {
 interface Ctx {
   language: LanguageCode;
   setLanguage: (lang: LanguageCode) => void;
-  t: (key: TranslationKey) => string;
+  t: (key: TranslationKey, vars?: Record<string, string | number>) => string;
   available: LanguageCode[];
 }
 
@@ -51,7 +51,15 @@ export function LanguageProvider({
     () => ({
       language,
       setLanguage,
-      t: (key) => dictionaries[language][key] ?? dictionaries.en[key] ?? key,
+      t: (key, vars) => {
+        let s = dictionaries[language][key] ?? dictionaries.en[key] ?? key;
+        if (vars) {
+          for (const [k, v] of Object.entries(vars)) {
+            s = s.split(`{${k}}`).join(String(v));
+          }
+        }
+        return s;
+      },
       available: Object.keys(dictionaries) as LanguageCode[],
     }),
     [language],

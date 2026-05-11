@@ -28,6 +28,7 @@ import {
   Timer,
   Gauge,
   Flag,
+  Share2,
 } from 'lucide-react-native';
 
 // Name union — keep it tight so callers can't typo a nonexistent icon, and so
@@ -61,7 +62,8 @@ export type IconName =
   | 'timer'
   | 'gauge'
   | 'flag'
-  | 'dollar';
+  | 'dollar'
+  | 'share';
 
 const MAP: Record<IconName, React.ComponentType<any>> = {
   activity: Activity,
@@ -92,6 +94,7 @@ const MAP: Record<IconName, React.ComponentType<any>> = {
   gauge: Gauge,
   flag: Flag,
   dollar: CircleDollarSign,
+  share: Share2,
 };
 
 export interface IconProps {
