@@ -147,21 +147,7 @@ export function ExpeditionPage() {
         {expedition.region ? `, ${expedition.region}` : ''}, {expedition.country}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16, marginBottom: 32 }}>
-        {expedition.photos.map((p) => (
-          <figure key={p.id} style={{ margin: 0, borderRadius: 16, overflow: 'hidden', background: theme.surfaceAlt }}>
-            <img src={p.url} alt={p.caption ?? ''} style={{ width: '100%', aspectRatio: '4/3', objectFit: 'cover' }} />
-            {p.attribution ? (
-              <figcaption style={{ padding: '8px 12px', fontSize: 12, color: theme.textMuted }}>
-                {t('detail.photoBy')} © {p.attribution.photographer_name} ·{' '}
-                <a href={p.attribution.source_url} target="_blank" rel="noopener" style={{ color: theme.primary }}>
-                  {p.attribution.license}
-                </a>
-              </figcaption>
-            ) : null}
-          </figure>
-        ))}
-      </div>
+      <PhotoCarousel photos={expedition.photos} theme={theme} t={t} />
 
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 32 }}>
         <div>
@@ -595,4 +581,184 @@ function Stat({ theme, label, value }: { theme: any; label: string; value: strin
 
 function Msg({ children }: { children: React.ReactNode }) {
   return <div style={{ maxWidth: 900, margin: '0 auto', padding: '40px 24px' }}>{children}</div>;
+}
+
+// Photo carousel — large hero on the left, vertical thumbnail strip on the
+// right for desktop. On narrow viewports it falls back to a horizontal snap
+// scroller. Driven by local state since the gallery is small (3-5 photos)
+// and doesn't justify a carousel library.
+function PhotoCarousel({
+  photos,
+  theme,
+  t,
+}: {
+  photos: ExpeditionWithAuthor['photos'];
+  theme: ReturnType<typeof useTheme>['theme'];
+  t: (key: any) => string;
+}) {
+  const [active, setActive] = useState(0);
+  if (photos.length === 0) return null;
+  const hero = photos[Math.min(active, photos.length - 1)];
+  return (
+    <section data-testid="photo-carousel" style={{ marginBottom: 32 }}>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: photos.length > 1 ? 'minmax(0, 1fr) 110px' : '1fr',
+          gap: 12,
+        }}
+      >
+        <figure
+          style={{
+            margin: 0,
+            borderRadius: 18,
+            overflow: 'hidden',
+            background: theme.surfaceAlt,
+            position: 'relative',
+            aspectRatio: '4 / 3',
+          }}
+        >
+          <img
+            data-testid="photo-carousel-hero"
+            src={hero.url}
+            alt={hero.caption ?? ''}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          />
+          {hero.attribution ? (
+            <figcaption
+              style={{
+                position: 'absolute',
+                left: 12,
+                bottom: 12,
+                background: 'rgba(0,0,0,0.55)',
+                color: '#fff',
+                padding: '6px 10px',
+                borderRadius: 8,
+                fontSize: 11,
+              }}
+            >
+              {t('detail.photoBy')} © {hero.attribution.photographer_name} ·{' '}
+              <a
+                href={hero.attribution.source_url}
+                target="_blank"
+                rel="noopener"
+                style={{ color: '#fff', textDecoration: 'underline' }}
+              >
+                {hero.attribution.license}
+              </a>
+            </figcaption>
+          ) : null}
+          {photos.length > 1 ? (
+            <>
+              <CarouselArrow
+                direction="prev"
+                onClick={() => setActive((a) => (a - 1 + photos.length) % photos.length)}
+                theme={theme}
+              />
+              <CarouselArrow
+                direction="next"
+                onClick={() => setActive((a) => (a + 1) % photos.length)}
+                theme={theme}
+              />
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: 12,
+                  right: 12,
+                  display: 'flex',
+                  gap: 4,
+                  background: 'rgba(0,0,0,0.45)',
+                  padding: '4px 8px',
+                  borderRadius: 999,
+                }}
+              >
+                {photos.map((_, i) => (
+                  <span
+                    key={i}
+                    aria-hidden
+                    style={{
+                      width: i === active ? 18 : 6,
+                      height: 6,
+                      borderRadius: 999,
+                      background: i === active ? '#fff' : 'rgba(255,255,255,0.55)',
+                      transition: 'width 200ms',
+                    }}
+                  />
+                ))}
+              </div>
+            </>
+          ) : null}
+        </figure>
+
+        {photos.length > 1 ? (
+          <div
+            data-testid="photo-carousel-thumbs"
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 8,
+              overflowY: 'auto',
+              maxHeight: 'min(500px, 60vh)',
+            }}
+          >
+            {photos.map((p, i) => (
+              <button
+                key={p.id}
+                onClick={() => setActive(i)}
+                aria-label={`Photo ${i + 1}`}
+                aria-current={i === active}
+                style={{
+                  border: i === active ? `2px solid ${theme.primary}` : `1px solid ${theme.border}`,
+                  borderRadius: 12,
+                  overflow: 'hidden',
+                  padding: 0,
+                  background: 'transparent',
+                  cursor: 'pointer',
+                  aspectRatio: '4 / 3',
+                  width: '100%',
+                }}
+              >
+                <img src={p.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
+function CarouselArrow({
+  direction,
+  onClick,
+  theme,
+}: {
+  direction: 'prev' | 'next';
+  onClick: () => void;
+  theme: ReturnType<typeof useTheme>['theme'];
+}) {
+  const isPrev = direction === 'prev';
+  return (
+    <button
+      onClick={onClick}
+      aria-label={isPrev ? 'Previous photo' : 'Next photo'}
+      data-testid={`photo-carousel-${direction}`}
+      style={{
+        position: 'absolute',
+        top: '50%',
+        [isPrev ? 'left' : 'right']: 12,
+        transform: 'translateY(-50%)',
+        background: 'rgba(0,0,0,0.45)',
+        color: '#fff',
+        border: 0,
+        width: 40,
+        height: 40,
+        borderRadius: 999,
+        cursor: 'pointer',
+        fontSize: 20,
+      }}
+    >
+      {isPrev ? '‹' : '›'}
+    </button>
+  );
 }

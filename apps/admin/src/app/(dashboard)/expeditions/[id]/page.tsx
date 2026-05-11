@@ -1,18 +1,20 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { CalendarRange } from 'lucide-react';
-import { adminGetExpedition, fetchCategories } from '@minga/supabase';
+import { adminGetExpedition, adminListExpeditionPhotos, fetchCategories } from '@minga/supabase';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getT } from '@/lib/i18n/server';
 import { ExpeditionForm } from '../ExpeditionForm';
 import { updateExpeditionAction } from '../actions';
+import { PhotoGallery } from './PhotoGallery';
 
 export default async function EditExpeditionPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createSupabaseServerClient();
-  const [expedition, categories] = await Promise.all([
+  const [expedition, categories, photos] = await Promise.all([
     adminGetExpedition(supabase, id),
     fetchCategories(supabase),
+    adminListExpeditionPhotos(supabase, id),
   ]);
   if (!expedition) notFound();
   const { t, locale } = await getT();
@@ -68,6 +70,22 @@ export default async function EditExpeditionPage({ params }: { params: Promise<{
           }}
         />
       </div>
+
+      <PhotoGallery
+        expeditionId={id}
+        photos={photos}
+        labels={{
+          heading: t('photoGallery.heading'),
+          subtitle: t('photoGallery.subtitle'),
+          upload: t('photoGallery.upload'),
+          uploadHelp: t('photoGallery.uploadHelp'),
+          empty: t('photoGallery.empty'),
+          moveUp: t('photoGallery.moveUp'),
+          moveDown: t('photoGallery.moveDown'),
+          delete: t('photoGallery.delete'),
+          coverBadge: t('photoGallery.coverBadge'),
+        }}
+      />
     </div>
   );
 }

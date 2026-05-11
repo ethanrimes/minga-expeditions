@@ -291,7 +291,17 @@ export type Key =
   | 'comms.template.saved'
   | 'comms.template.placeholdersHelp'
   | 'comms.channel.email'
-  | 'comms.channel.whatsapp';
+  | 'comms.channel.whatsapp'
+  // photo gallery
+  | 'photoGallery.heading'
+  | 'photoGallery.subtitle'
+  | 'photoGallery.upload'
+  | 'photoGallery.uploadHelp'
+  | 'photoGallery.empty'
+  | 'photoGallery.moveUp'
+  | 'photoGallery.moveDown'
+  | 'photoGallery.delete'
+  | 'photoGallery.coverBadge';
 
 export const dict: Record<Locale, Record<Key, string>> = {
   en: {
@@ -593,6 +603,17 @@ export const dict: Record<Locale, Record<Key, string>> = {
       'Use {display_name}, {expedition_title}, {salida_starts_at}, {distance_km}, {elevation_m}, {new_tier}, {total_distance_km}.',
     'comms.channel.email': 'Email',
     'comms.channel.whatsapp': 'WhatsApp',
+
+    'photoGallery.heading': 'Photo gallery',
+    'photoGallery.subtitle':
+      'Reorder, add, or remove gallery photos. The first photo is used as the card cover and the leading slide of the carousel.',
+    'photoGallery.upload': 'Add photos',
+    'photoGallery.uploadHelp': 'Select one or more files; they upload in order and append to the end.',
+    'photoGallery.empty': 'No photos yet — drop a few in below to enable the carousel on the detail page.',
+    'photoGallery.moveUp': 'Move up',
+    'photoGallery.moveDown': 'Move down',
+    'photoGallery.delete': 'Delete photo',
+    'photoGallery.coverBadge': 'Cover',
   },
   es: {
     'login.title': 'Minga Admin',
@@ -899,6 +920,19 @@ export const dict: Record<Locale, Record<Key, string>> = {
       'Usa {display_name}, {expedition_title}, {salida_starts_at}, {distance_km}, {elevation_m}, {new_tier}, {total_distance_km}.',
     'comms.channel.email': 'Correo',
     'comms.channel.whatsapp': 'WhatsApp',
+
+    'photoGallery.heading': 'Galería de fotos',
+    'photoGallery.subtitle':
+      'Reordena, agrega o elimina fotos. La primera foto se usa como portada de la tarjeta y como primera diapositiva del carrusel.',
+    'photoGallery.upload': 'Agregar fotos',
+    'photoGallery.uploadHelp':
+      'Selecciona uno o más archivos; se suben en orden y se agregan al final.',
+    'photoGallery.empty':
+      'Aún no hay fotos — sube algunas abajo para habilitar el carrusel en el detalle.',
+    'photoGallery.moveUp': 'Subir',
+    'photoGallery.moveDown': 'Bajar',
+    'photoGallery.delete': 'Eliminar foto',
+    'photoGallery.coverBadge': 'Portada',
   },
 };
 

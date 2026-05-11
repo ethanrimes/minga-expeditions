@@ -13,6 +13,7 @@ import type {
   DbCommEventType,
   DbCommTemplate,
   DbExpedition,
+  DbExpeditionPhoto,
   DbExpeditionSalida,
   DbOrder,
   DbParticipation,
@@ -849,6 +850,77 @@ export async function uploadExpeditionPhoto(
   if (error) throw error;
   const { data } = client.storage.from('expedition-photos').getPublicUrl(path);
   return { path, publicUrl: data.publicUrl };
+}
+
+// =============================================================================
+// Expedition photo gallery — multi-photo admin management. The user-facing
+// detail screen reads via fetchExpeditionById (which already nests photos);
+// these helpers power the admin reorder / add / delete UI.
+// =============================================================================
+
+export async function adminListExpeditionPhotos(
+  client: SupabaseClient,
+  expeditionId: string,
+): Promise<DbExpeditionPhoto[]> {
+  const { data, error } = await client
+    .from('expedition_photos')
+    .select('*')
+    .eq('expedition_id', expeditionId)
+    .order('order_index', { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as DbExpeditionPhoto[];
+}
+
+export async function createExpeditionPhoto(
+  client: SupabaseClient,
+  input: { expedition_id: string; url: string; caption?: string | null; order_index?: number },
+): Promise<DbExpeditionPhoto> {
+  const { data, error } = await client
+    .from('expedition_photos')
+    .insert(input)
+    .select('*')
+    .single();
+  if (error) throw error;
+  return data as DbExpeditionPhoto;
+}
+
+export async function deleteExpeditionPhoto(client: SupabaseClient, id: string): Promise<void> {
+  const { error } = await client.from('expedition_photos').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// Swaps the order_index of two photos so the admin can move one up or down by
+// a single position. Done in two writes — fine for a small gallery and keeps
+// the RPC surface area to zero.
+export async function swapExpeditionPhotoOrder(
+  client: SupabaseClient,
+  a: { id: string; order_index: number },
+  b: { id: string; order_index: number },
+): Promise<void> {
+  // Two-phase to dodge any unique constraints if one is ever added: park `a`
+  // at a sentinel value first, then settle both.
+  const sentinel = 99999;
+  const r1 = await client.from('expedition_photos').update({ order_index: sentinel }).eq('id', a.id);
+  if (r1.error) throw r1.error;
+  const r2 = await client.from('expedition_photos').update({ order_index: a.order_index }).eq('id', b.id);
+  if (r2.error) throw r2.error;
+  const r3 = await client.from('expedition_photos').update({ order_index: b.order_index }).eq('id', a.id);
+  if (r3.error) throw r3.error;
+}
+
+// Bulk-set order_index from a desired sequence. Used by the admin form's
+// drag-style reorder; for now the UI just emits up/down clicks but this
+// helper is here for the future drag-and-drop pass.
+export async function setExpeditionPhotoOrder(
+  client: SupabaseClient,
+  expeditionId: string,
+  orderedIds: string[],
+): Promise<void> {
+  await Promise.all(
+    orderedIds.map((id, i) =>
+      client.from('expedition_photos').update({ order_index: i }).eq('id', id).eq('expedition_id', expeditionId),
+    ),
+  );
 }
 
 // =============================================================================
