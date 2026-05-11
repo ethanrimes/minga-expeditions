@@ -61,7 +61,16 @@ export function ProfilePage() {
   const [identityProviders, setIdentityProviders] = useState<string[]>([]);
   const [phoneCode, setPhoneCode] = useState<string>('+57');
   const [phoneNumber, setPhoneNumber] = useState<string>('');
-  const [phoneSaveState, setPhoneSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  // Snapshot of what's currently saved (verified) on the profile. Lets us
+  // compare against the input to know if the user is still on the verified
+  // number or has edited away from it.
+  const [savedPhoneE164, setSavedPhoneE164] = useState<string | null>(null);
+  const [phoneVerifiedAt, setPhoneVerifiedAt] = useState<string | null>(null);
+  // OTP flow state.
+  const [otpState, setOtpState] = useState<'idle' | 'sending' | 'code' | 'verifying'>('idle');
+  const [otpCode, setOtpCode] = useState<string>('');
+  const [otpError, setOtpError] = useState<string | null>(null);
+  const [otpSentTo, setOtpSentTo] = useState<string | null>(null);
   const locale = language === 'es' ? 'es-CO' : 'en-US';
 
   useEffect(() => {
@@ -86,33 +95,81 @@ export function ProfilePage() {
         fetchMyActivities(supabase),
         supabase
           .from('profiles')
-          .select('phone_country_code, phone_number')
+          .select('phone_country_code, phone_number, phone_verified_at')
           .eq('id', data.user.id)
           .maybeSingle(),
       ]);
       setProfile(p);
       setActivities(a);
-      const ph = phoneRow.data as { phone_country_code: string | null; phone_number: string | null } | null;
+      const ph = phoneRow.data as {
+        phone_country_code: string | null;
+        phone_number: string | null;
+        phone_verified_at: string | null;
+      } | null;
       if (ph?.phone_country_code) setPhoneCode(ph.phone_country_code);
       if (ph?.phone_number) setPhoneNumber(ph.phone_number);
+      if (ph?.phone_country_code && ph?.phone_number) {
+        setSavedPhoneE164(`${ph.phone_country_code}${ph.phone_number}`);
+      }
+      setPhoneVerifiedAt(ph?.phone_verified_at ?? null);
     })();
   }, []);
 
-  const savePhone = async () => {
+  // Compose the current input as E.164 for comparison + send.
+  const currentE164 = `${phoneCode}${phoneNumber.replace(/\D/g, '')}`;
+  const phoneIsVerified =
+    !!phoneVerifiedAt && !!savedPhoneE164 && savedPhoneE164 === currentE164;
+
+  const sendOtp = async () => {
     if (!userId) return;
-    setPhoneSaveState('saving');
-    const trimmed = phoneNumber.replace(/\D/g, '');
-    const { error } = await supabase
-      .from('profiles')
-      .update({ phone_country_code: phoneCode, phone_number: trimmed || null })
-      .eq('id', userId);
-    if (error) {
-      setPhoneSaveState('error');
+    setOtpError(null);
+    setOtpState('sending');
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData.session?.access_token;
+    const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/whatsapp-otp-send`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({ phone_e164: currentE164 }),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setOtpError(json.error ?? 'Could not send verification code.');
+      setOtpState('idle');
       return;
     }
-    setPhoneNumber(trimmed);
-    setPhoneSaveState('saved');
-    setTimeout(() => setPhoneSaveState('idle'), 2000);
+    setOtpSentTo(currentE164);
+    setOtpCode('');
+    setOtpState('code');
+  };
+
+  const verifyOtp = async () => {
+    if (!userId || !otpSentTo) return;
+    setOtpError(null);
+    setOtpState('verifying');
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData.session?.access_token;
+    const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/whatsapp-otp-verify`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({ phone_e164: otpSentTo, code: otpCode }),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setOtpError(json.error ?? 'Could not verify code.');
+      setOtpState('code');
+      return;
+    }
+    setPhoneVerifiedAt(json.phone_verified_at ?? new Date().toISOString());
+    setSavedPhoneE164(otpSentTo);
+    setOtpState('idle');
+    setOtpSentTo(null);
+    setOtpCode('');
   };
 
   if (!signedIn) {
@@ -286,7 +343,7 @@ export function ProfilePage() {
             style={{
               display: 'flex',
               flexDirection: 'column',
-              gap: 8,
+              gap: 10,
               padding: '12px 0',
               borderTop: `1px solid ${theme.border}`,
             }}
@@ -294,16 +351,40 @@ export function ProfilePage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <span style={{ fontSize: 20, lineHeight: 1 }}>💬</span>
               <div style={{ flex: 1 }}>
-                <div style={{ color: theme.text, fontWeight: 700 }}>WhatsApp</div>
+                <div style={{ color: theme.text, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  WhatsApp
+                  {phoneIsVerified ? (
+                    <span
+                      style={{
+                        background: '#10b981',
+                        color: '#fff',
+                        fontSize: 11,
+                        fontWeight: 700,
+                        padding: '2px 8px',
+                        borderRadius: 999,
+                        letterSpacing: 0.3,
+                      }}
+                    >
+                      ✓ VERIFIED
+                    </span>
+                  ) : null}
+                </div>
                 <div style={{ color: theme.textMuted, fontSize: 12 }}>
-                  Used to send booking confirmations and trip reminders.
+                  {phoneIsVerified
+                    ? `Verified ${new Date(phoneVerifiedAt!).toLocaleDateString(locale)}. Used for booking confirmations.`
+                    : 'Verify your number to receive WhatsApp booking confirmations.'}
                 </div>
               </div>
             </div>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <select
                 value={phoneCode}
-                onChange={(e) => setPhoneCode(e.target.value)}
+                onChange={(e) => {
+                  setPhoneCode(e.target.value);
+                  setOtpState('idle');
+                  setOtpSentTo(null);
+                }}
+                disabled={otpState !== 'idle'}
                 style={{
                   background: theme.surfaceAlt,
                   color: theme.text,
@@ -312,6 +393,7 @@ export function ProfilePage() {
                   padding: '10px',
                   fontSize: 14,
                   minWidth: 110,
+                  opacity: otpState === 'idle' ? 1 : 0.6,
                 }}
               >
                 {COUNTRY_CODES.map((c) => (
@@ -320,7 +402,12 @@ export function ProfilePage() {
               </select>
               <input
                 value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
+                onChange={(e) => {
+                  setPhoneNumber(e.target.value.replace(/\D/g, ''));
+                  setOtpState('idle');
+                  setOtpSentTo(null);
+                }}
+                disabled={otpState !== 'idle'}
                 type="tel"
                 placeholder="3001234567"
                 style={{
@@ -331,26 +418,116 @@ export function ProfilePage() {
                   padding: '10px 12px',
                   fontSize: 14,
                   flex: 1,
+                  opacity: otpState === 'idle' ? 1 : 0.6,
                 }}
               />
-              <button
-                type="button"
-                onClick={() => void savePhone()}
-                disabled={phoneSaveState === 'saving'}
+              {otpState === 'idle' && !phoneIsVerified ? (
+                <button
+                  type="button"
+                  onClick={() => void sendOtp()}
+                  disabled={!phoneNumber.replace(/\D/g, '')}
+                  style={{
+                    background: theme.primary,
+                    color: theme.onPrimary,
+                    border: 0,
+                    borderRadius: 999,
+                    padding: '10px 18px',
+                    fontWeight: 700,
+                    fontSize: 13,
+                    cursor: phoneNumber.replace(/\D/g, '') ? 'pointer' : 'not-allowed',
+                    opacity: phoneNumber.replace(/\D/g, '') ? 1 : 0.5,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  Send code
+                </button>
+              ) : null}
+              {otpState === 'sending' ? (
+                <span style={{ color: theme.textMuted, fontSize: 13 }}>Sending…</span>
+              ) : null}
+            </div>
+            {otpState === 'code' ? (
+              <div
                 style={{
-                  background: phoneSaveState === 'saved' ? theme.surface : theme.primary,
-                  color: phoneSaveState === 'saved' ? theme.text : theme.onPrimary,
-                  border: phoneSaveState === 'saved' ? `1px solid ${theme.border}` : 0,
-                  borderRadius: 999,
-                  padding: '10px 18px',
-                  fontWeight: 700,
-                  fontSize: 13,
-                  cursor: phoneSaveState === 'saving' ? 'wait' : 'pointer',
+                  background: theme.surfaceAlt,
+                  border: `1px solid ${theme.border}`,
+                  borderRadius: 12,
+                  padding: 14,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 10,
                 }}
               >
-                {phoneSaveState === 'saving' ? 'Saving…' : phoneSaveState === 'saved' ? 'Saved ✓' : phoneSaveState === 'error' ? 'Retry' : 'Save'}
-              </button>
-            </div>
+                <div style={{ color: theme.text, fontSize: 13 }}>
+                  We sent a 6-digit code to <strong>{otpSentTo}</strong>. Enter it below to verify the number.
+                </div>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <input
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    type="tel"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    placeholder="123456"
+                    autoFocus
+                    style={{
+                      background: theme.surface,
+                      color: theme.text,
+                      border: `1px solid ${theme.border}`,
+                      borderRadius: 10,
+                      padding: '10px 12px',
+                      fontSize: 18,
+                      letterSpacing: 6,
+                      width: 130,
+                      fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => void verifyOtp()}
+                    disabled={otpCode.length < 6}
+                    style={{
+                      background: theme.primary,
+                      color: theme.onPrimary,
+                      border: 0,
+                      borderRadius: 999,
+                      padding: '10px 18px',
+                      fontWeight: 700,
+                      fontSize: 13,
+                      cursor: otpCode.length >= 6 ? 'pointer' : 'not-allowed',
+                      opacity: otpCode.length >= 6 ? 1 : 0.5,
+                    }}
+                  >
+                    Verify
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOtpState('idle');
+                      setOtpSentTo(null);
+                      setOtpCode('');
+                      setOtpError(null);
+                    }}
+                    style={{
+                      background: 'transparent',
+                      color: theme.textMuted,
+                      border: 0,
+                      fontSize: 13,
+                      cursor: 'pointer',
+                      textDecoration: 'underline',
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : null}
+            {otpState === 'verifying' ? (
+              <div style={{ color: theme.textMuted, fontSize: 13 }}>Verifying…</div>
+            ) : null}
+            {otpError ? (
+              <div style={{ color: theme.danger, fontSize: 13 }}>{otpError}</div>
+            ) : null}
           </div>
         </div>
       </section>
