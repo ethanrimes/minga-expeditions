@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useActionState, useState } from 'react';
 import type { DbCategory, DbExpedition } from '@minga/types';
+import { LocationPicker } from '@/components/LocationPicker';
 import type { ExpeditionFormState } from './actions';
 
 interface Labels {
@@ -16,6 +17,11 @@ interface Labels {
   country: string;
   startLat: string;
   startLng: string;
+  locationSearch: string;
+  locationSearchPlaceholder: string;
+  locationSearching: string;
+  locationNoResults: string;
+  locationHelp: string;
   distance: string;
   elevation: string;
   currency: string;
@@ -116,36 +122,29 @@ export function ExpeditionForm({ action, categories, initial, labels, locale }: 
         </label>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <label className="field">
-          <span className="field-label">{labels.country}</span>
-          <input
-            name="country"
-            defaultValue={initial?.country ?? 'Colombia'}
-            className="field-input"
-          />
-        </label>
-        <label className="field">
-          <span className="field-label">{labels.startLat}</span>
-          <input
-            name="start_lat"
-            type="number"
-            step="0.000001"
-            defaultValue={initial?.start_lat ?? ''}
-            className="field-input"
-          />
-        </label>
-        <label className="field">
-          <span className="field-label">{labels.startLng}</span>
-          <input
-            name="start_lng"
-            type="number"
-            step="0.000001"
-            defaultValue={initial?.start_lng ?? ''}
-            className="field-input"
-          />
-        </label>
-      </div>
+      <label className="field max-w-xs">
+        <span className="field-label">{labels.country}</span>
+        <input
+          name="country"
+          defaultValue={initial?.country ?? 'Colombia'}
+          className="field-input"
+        />
+      </label>
+
+      <LocationPicker
+        initialLat={initial?.start_lat ?? null}
+        initialLng={initial?.start_lng ?? null}
+        locale={locale}
+        labels={{
+          search: labels.locationSearch,
+          searchPlaceholder: labels.locationSearchPlaceholder,
+          searching: labels.locationSearching,
+          noResults: labels.locationNoResults,
+          latitude: labels.startLat,
+          longitude: labels.startLng,
+          help: labels.locationHelp,
+        }}
+      />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <label className="field">

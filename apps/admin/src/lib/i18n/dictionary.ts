@@ -108,6 +108,11 @@ export type Key =
   | 'expForm.country'
   | 'expForm.startLat'
   | 'expForm.startLng'
+  | 'expForm.locationSearch'
+  | 'expForm.locationSearchPlaceholder'
+  | 'expForm.locationSearching'
+  | 'expForm.locationNoResults'
+  | 'expForm.locationHelp'
   | 'expForm.distance'
   | 'expForm.elevation'
   | 'expForm.currency'
@@ -315,6 +320,12 @@ export const dict: Record<Locale, Record<Key, string>> = {
     'expForm.country': 'Country',
     'expForm.startLat': 'Start latitude',
     'expForm.startLng': 'Start longitude',
+    'expForm.locationSearch': 'Search for a place',
+    'expForm.locationSearchPlaceholder': 'Search a place, town or natural landmark…',
+    'expForm.locationSearching': 'Searching…',
+    'expForm.locationNoResults': 'No matches — try a broader name.',
+    'expForm.locationHelp':
+      'Click the map or drag the marker to fine-tune. The lat/lng below stay editable.',
     'expForm.distance': 'Distance (km)',
     'expForm.elevation': 'Elevation gain (m)',
     'expForm.currency': 'Currency',
@@ -530,6 +541,13 @@ export const dict: Record<Locale, Record<Key, string>> = {
     'expForm.country': 'País',
     'expForm.startLat': 'Latitud de inicio',
     'expForm.startLng': 'Longitud de inicio',
+    'expForm.locationSearch': 'Buscar un lugar',
+    'expForm.locationSearchPlaceholder':
+      'Busca un lugar, municipio o referencia natural…',
+    'expForm.locationSearching': 'Buscando…',
+    'expForm.locationNoResults': 'Sin resultados — prueba un nombre más amplio.',
+    'expForm.locationHelp':
+      'Haz clic en el mapa o arrastra el marcador para ajustar. Puedes editar la latitud/longitud abajo.',
     'expForm.distance': 'Distancia (km)',
     'expForm.elevation': 'Desnivel positivo (m)',
     'expForm.currency': 'Moneda',
