@@ -21,27 +21,16 @@ const ACT_KEY: Record<ActivityType, any> = {
 };
 
 const TERRAIN_TAGS: TerrainTag[] = ['mountain', 'flat', 'desert', 'river', 'forest', 'coast', 'urban', 'jungle', 'snow'];
-const TERRAIN_LABEL_EN: Record<TerrainTag, string> = {
-  mountain: 'Mountain',
-  flat: 'Flat',
-  desert: 'Desert',
-  river: 'River',
-  forest: 'Forest',
-  coast: 'Coast',
-  urban: 'Urban',
-  jungle: 'Jungle',
-  snow: 'Snow',
-};
-const TERRAIN_LABEL_ES: Record<TerrainTag, string> = {
-  mountain: 'Montaña',
-  flat: 'Llano',
-  desert: 'Desierto',
-  river: 'Río',
-  forest: 'Bosque',
-  coast: 'Costa',
-  urban: 'Urbano',
-  jungle: 'Selva',
-  snow: 'Nieve',
+const TERRAIN_KEY: Record<TerrainTag, any> = {
+  mountain: 'track.terrain.mountain',
+  flat: 'track.terrain.flat',
+  desert: 'track.terrain.desert',
+  river: 'track.terrain.river',
+  forest: 'track.terrain.forest',
+  coast: 'track.terrain.coast',
+  urban: 'track.terrain.urban',
+  jungle: 'track.terrain.jungle',
+  snow: 'track.terrain.snow',
 };
 
 // Apps inject `startLocationStream` — see apps/mobile-web/src/locationAdapter.ts and apps/mobile/src/locationAdapter.ts.
@@ -67,10 +56,8 @@ export function TrackScreen({
   }, []);
 
   const toggleTerrain = (tag: TerrainTag) => {
-    setTerrain((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
+    setTerrain((prev) => (prev.includes(tag) ? prev.filter((x) => x !== tag) : [...prev, tag]));
   };
-
-  const terrainLabel = language === 'es' ? TERRAIN_LABEL_ES : TERRAIN_LABEL_EN;
 
   const handleSave = async () => {
     setSaving(true);
@@ -135,11 +122,11 @@ export function TrackScreen({
       {status === 'idle' || status === 'ended' ? (
         <View style={{ gap: spacing.xs }}>
           <Text style={{ color: theme.textMuted, fontSize: fontSizes.xs, letterSpacing: 1, textTransform: 'uppercase' }}>
-            {language === 'es' ? 'Vinculado a' : 'Linked to'}
+            {t('track.linkedTo')}
           </Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
             <CategoryChip
-              label={language === 'es' ? 'Independiente' : 'Independent'}
+              label={t('track.independent')}
               active={expeditionId == null}
               onPress={() => setExpeditionId(null)}
             />
@@ -172,8 +159,8 @@ export function TrackScreen({
         </Text>
         <View style={{ flexDirection: 'row', gap: spacing.xl }}>
           <StatBlock label="km" value={summary.distanceKm.toFixed(2)} />
-          <StatBlock label={language === 'es' ? 'desnivel m' : 'elev m'} value={String(Math.round(summary.elevationGainM))} />
-          <StatBlock label={language === 'es' ? 'km/h prom' : 'avg km/h'} value={summary.avgSpeedKmh.toFixed(1)} />
+          <StatBlock label={t('track.elevShort')} value={String(Math.round(summary.elevationGainM))} />
+          <StatBlock label={t('track.avgSpeedShort')} value={summary.avgSpeedKmh.toFixed(1)} />
         </View>
       </View>
 
@@ -206,13 +193,13 @@ export function TrackScreen({
 
           <View style={{ gap: spacing.xs }}>
             <Text style={{ color: theme.textMuted, fontSize: fontSizes.xs, letterSpacing: 1, textTransform: 'uppercase' }}>
-              {language === 'es' ? 'Terreno' : 'Terrain'}
+              {t('track.terrain')}
             </Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
               {TERRAIN_TAGS.map((tag) => (
                 <CategoryChip
                   key={tag}
-                  label={terrainLabel[tag]}
+                  label={t(TERRAIN_KEY[tag])}
                   active={terrain.includes(tag)}
                   onPress={() => toggleTerrain(tag)}
                 />

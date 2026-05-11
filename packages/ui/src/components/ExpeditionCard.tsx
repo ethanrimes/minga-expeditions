@@ -1,7 +1,12 @@
 import React from 'react';
 import { Image, Pressable, Text, View } from 'react-native';
 import { useTheme, radii, spacing, fontSizes, fontWeights } from '@minga/theme';
-import { formatDistanceKm, formatElevation, formatPriceCents } from '@minga/logic';
+import {
+  formatDistanceKm,
+  formatElevation,
+  formatPriceCents,
+  formatSalidaDate,
+} from '@minga/logic';
 import { useT } from '@minga/i18n';
 import type { ExpeditionWithAuthor, ExpeditionCategory } from '@minga/types';
 import { Avatar } from '../primitives/Avatar';
@@ -79,6 +84,15 @@ export function ExpeditionCard({
           {expedition.location_name}
           {expedition.region ? `, ${expedition.region}` : ''}
         </Text>
+
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <Icon name="calendar" size={12} color={theme.textMuted} strokeWidth={2.2} />
+          <Text style={{ color: theme.text, fontSize: fontSizes.xs, fontWeight: fontWeights.semibold }}>
+            {expedition.next_salida
+              ? `${t('salida.next')}: ${formatSalidaDate(expedition.next_salida.starts_at, { tz: expedition.next_salida.timezone })}`
+              : t('salida.scheduleTba')}
+          </Text>
+        </View>
 
         <View style={{ flexDirection: 'row', gap: spacing.lg, marginTop: spacing.xs, flexWrap: 'wrap' }}>
           {expedition.distance_km != null ? (

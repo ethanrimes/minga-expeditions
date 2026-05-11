@@ -12,7 +12,9 @@ import {
   orderCounts,
   saveActivity,
   submitVendorProposal,
+  updateMyProfile,
   uploadActivityPhoto,
+  uploadAvatar,
   vendorProposalCounts,
 } from './queries';
 import { createFakeClient, queueResponse, type FakeSupabaseClient } from './test-utils';
@@ -348,6 +350,75 @@ describe('uploadActivityPhoto', () => {
     const insert = client.store.calls.find((c) => c.table === 'activity_photos')!;
     expect((insert.payload as { activity_id: string }).activity_id).toBe('a1');
     expect((insert.payload as { lat: number }).lat).toBe(4.6);
+  });
+});
+
+describe('updateMyProfile', () => {
+  it('rejects unauthenticated callers', async () => {
+    const client = createFakeClient();
+    await expect(updateMyProfile(asClient(client), { display_name: 'Sam' })).rejects.toThrow(
+      /sign in/i,
+    );
+  });
+
+  it('rejects an empty display name', async () => {
+    const client = createFakeClient({ user: { id: 'u1' } });
+    await expect(updateMyProfile(asClient(client), { display_name: '   ' })).rejects.toThrow(
+      /1.{0,3}80/,
+    );
+  });
+
+  it('rejects malformed instagram handles', async () => {
+    const client = createFakeClient({ user: { id: 'u1' } });
+    await expect(
+      updateMyProfile(asClient(client), { instagram_handle: 'has spaces!' }),
+    ).rejects.toThrow(/instagram/i);
+  });
+
+  it('normalizes instagram handle (strip @, lowercase) and writes the patch', async () => {
+    const client = createFakeClient({ user: { id: 'u1' } });
+    queueResponse(client, 'profiles.update', {
+      data: { id: 'u1', display_name: 'Sam', instagram_handle: 'mingaco' },
+      error: null,
+    });
+    const out = await updateMyProfile(asClient(client), {
+      display_name: 'Sam',
+      instagram_handle: '@MingaCo',
+    });
+    expect(out.id).toBe('u1');
+    const call = client.store.calls.find((c) => c.table === 'profiles' && c.verb === 'update')!;
+    expect(call.payload).toMatchObject({
+      display_name: 'Sam',
+      instagram_handle: 'mingaco',
+    });
+    // RLS belt-and-braces: the helper still scopes the update by auth.uid().
+    expect(call.filters).toContainEqual(['eq', 'id', 'u1']);
+  });
+
+  it('clears instagram_handle when an empty string is passed', async () => {
+    const client = createFakeClient({ user: { id: 'u1' } });
+    queueResponse(client, 'profiles.update', {
+      data: { id: 'u1', instagram_handle: null },
+      error: null,
+    });
+    await updateMyProfile(asClient(client), { instagram_handle: '' });
+    const call = client.store.calls.find((c) => c.table === 'profiles' && c.verb === 'update')!;
+    expect(call.payload).toMatchObject({ instagram_handle: null });
+  });
+});
+
+describe('uploadAvatar', () => {
+  it('rejects unauthenticated callers', async () => {
+    const client = createFakeClient();
+    await expect(
+      uploadAvatar(asClient(client), new Blob([new Uint8Array([1])]), 'me.png'),
+    ).rejects.toThrow(/sign in/i);
+  });
+
+  it('returns a public URL under the caller folder', async () => {
+    const client = createFakeClient({ user: { id: 'u1' } });
+    const url = await uploadAvatar(asClient(client), new Blob([new Uint8Array([1])]), 'me.png');
+    expect(url).toMatch(/^https:\/\/cdn\.example\/u1\//);
   });
 });
 

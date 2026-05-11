@@ -287,3 +287,74 @@ update public.profiles set total_distance_km = 640.2,  total_elevation_m = 28900
 update public.profiles set total_distance_km = 2480.0, total_elevation_m = 51200, tier = 'diamond' where id = '11111111-1111-1111-1111-111111111103';
 update public.profiles set total_distance_km = 215.7,  total_elevation_m = 7400,  tier = 'silver'  where id = '11111111-1111-1111-1111-111111111104';
 update public.profiles set total_distance_km = 88.3,   total_elevation_m = 3100,  tier = 'bronze'  where id = '11111111-1111-1111-1111-111111111105';
+
+-- ---------- expedition salidas (dated departures) --------------------------
+-- A salida is a specific scheduled instance of an expedition template. Dates
+-- are anchored relative to now() so the seed never goes stale. Each salida
+-- can override the template's capacity/price/currency.
+insert into public.expedition_salidas (id, expedition_id, starts_at, ends_at, timezone, capacity, seats_taken, price_cents, currency, is_published, notes) values
+  ('66666666-0000-0000-0000-000000000001', '22222222-0000-0000-0000-000000000001',
+    now() + interval '14 days', now() + interval '18 days', 'America/Bogota', 12, 5, null, null, true,
+    'Wiwa guides confirmed. Hammocks provided.'),
+  ('66666666-0000-0000-0000-000000000002', '22222222-0000-0000-0000-000000000001',
+    now() + interval '45 days', now() + interval '49 days', 'America/Bogota', 12, 0, null, null, true, null),
+  ('66666666-0000-0000-0000-000000000003', '22222222-0000-0000-0000-000000000001',
+    now() + interval '90 days', now() + interval '94 days', 'America/Bogota', 12, 0, 160000000, 'COP', true,
+    'Holiday departure — premium pricing.'),
+
+  ('66666666-0000-0000-0000-000000000010', '22222222-0000-0000-0000-000000000002',
+    now() + interval '7 days', now() + interval '7 days' + interval '6 hours', 'America/Bogota', 20, 3, null, null, true, null),
+  ('66666666-0000-0000-0000-000000000011', '22222222-0000-0000-0000-000000000002',
+    now() + interval '21 days', now() + interval '21 days' + interval '6 hours', 'America/Bogota', 20, 0, null, null, true, null),
+  ('66666666-0000-0000-0000-000000000012', '22222222-0000-0000-0000-000000000002',
+    now() + interval '35 days', now() + interval '35 days' + interval '6 hours', 'America/Bogota', 20, 0, null, null, true, null),
+
+  ('66666666-0000-0000-0000-000000000020', '22222222-0000-0000-0000-000000000003',
+    now() + interval '10 days', now() + interval '11 days', 'America/Bogota', 16, 8, null, null, true, null),
+  ('66666666-0000-0000-0000-000000000021', '22222222-0000-0000-0000-000000000003',
+    now() + interval '24 days', now() + interval '25 days', 'America/Bogota', 16, 2, null, null, true, null),
+
+  ('66666666-0000-0000-0000-000000000030', '22222222-0000-0000-0000-000000000004',
+    now() + interval '17 days', now() + interval '17 days' + interval '10 hours', 'America/Bogota', 8, 1, null, null, true,
+    'Group ride with support van.'),
+  ('66666666-0000-0000-0000-000000000031', '22222222-0000-0000-0000-000000000004',
+    now() + interval '58 days', now() + interval '58 days' + interval '10 hours', 'America/Bogota', 8, 0, null, null, true, null),
+
+  ('66666666-0000-0000-0000-000000000040', '22222222-0000-0000-0000-000000000005',
+    now() + interval '28 days', now() + interval '30 days', 'America/Bogota', 6, 2, null, null, true,
+    'Weather contingency window built in.'),
+
+  ('66666666-0000-0000-0000-000000000050', '22222222-0000-0000-0000-000000000006',
+    now() + interval '40 days', now() + interval '43 days', 'America/Bogota', 10, 4, null, null, true, null),
+  ('66666666-0000-0000-0000-000000000051', '22222222-0000-0000-0000-000000000006',
+    now() + interval '70 days', now() + interval '73 days', 'America/Bogota', 10, 0, null, null, true, null),
+
+  ('66666666-0000-0000-0000-000000000060', '22222222-0000-0000-0000-000000000007',
+    now() + interval '12 days', now() + interval '12 days' + interval '5 hours', 'America/Bogota', null, 0, null, null, true, null),
+  ('66666666-0000-0000-0000-000000000061', '22222222-0000-0000-0000-000000000007',
+    now() + interval '26 days', now() + interval '26 days' + interval '5 hours', 'America/Bogota', null, 0, null, null, true, null),
+
+  ('66666666-0000-0000-0000-000000000070', '22222222-0000-0000-0000-000000000008',
+    now() + interval '20 days', now() + interval '22 days', 'America/Bogota', 14, 6, null, null, true, null),
+  ('66666666-0000-0000-0000-000000000071', '22222222-0000-0000-0000-000000000008',
+    now() + interval '55 days', now() + interval '57 days', 'America/Bogota', 14, 1, null, null, true, null),
+
+  ('66666666-0000-0000-0000-000000000080', '22222222-0000-0000-0000-000000000009',
+    now() + interval '6 days', now() + interval '6 days' + interval '4 hours', 'America/Bogota', null, 0, null, null, true,
+    'Pre-dawn meet at the Chingaza entry gate.'),
+  ('66666666-0000-0000-0000-000000000081', '22222222-0000-0000-0000-000000000009',
+    now() + interval '20 days', now() + interval '20 days' + interval '4 hours', 'America/Bogota', null, 0, null, null, true, null),
+
+  ('66666666-0000-0000-0000-000000000090', '22222222-0000-0000-0000-000000000010',
+    now() + interval '3 days', now() + interval '3 days' + interval '4 hours', 'America/Bogota', 12, 9, null, null, true, null),
+  ('66666666-0000-0000-0000-000000000091', '22222222-0000-0000-0000-000000000010',
+    now() + interval '15 days', now() + interval '15 days' + interval '4 hours', 'America/Bogota', 12, 0, null, null, true, null)
+on conflict (id) do update set
+  starts_at   = excluded.starts_at,
+  ends_at     = excluded.ends_at,
+  capacity    = excluded.capacity,
+  seats_taken = excluded.seats_taken,
+  price_cents = excluded.price_cents,
+  currency    = excluded.currency,
+  is_published = excluded.is_published,
+  notes       = excluded.notes;

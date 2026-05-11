@@ -30,6 +30,7 @@ export function NavBar() {
 
   const items: { to: string; label: string }[] = [
     { to: '/expeditions', label: t('nav.expeditions') },
+    { to: '/calendar', label: t('nav.calendar') },
     { to: '/map', label: t('nav.map') },
     { to: '/track', label: t('nav.track') },
     { to: '/profile', label: t('nav.profile') },

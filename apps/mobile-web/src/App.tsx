@@ -4,6 +4,7 @@ import type { ExpeditionCategory } from '@minga/types';
 import {
   ActivityDetailScreen,
   AuthScreen,
+  CalendarScreen,
   ExpeditionDetailScreen,
   ExploreScreen,
   FeedScreen,
@@ -38,7 +39,18 @@ export function App() {
   const renderScreen = () => {
     if (authVisible) return <AuthScreen onAuthenticated={() => setAuthVisible(false)} />;
     if (route.kind === 'expedition') {
-      return <ExpeditionDetailScreen id={route.id} onBack={() => setRoute({ kind: 'tab', tab: 'feed' })} />;
+      return (
+        <ExpeditionDetailScreen
+          id={route.id}
+          onBack={() => setRoute({ kind: 'tab', tab: 'feed' })}
+          onBookSalida={(salida) => {
+            // mobile-web defers to the public web checkout so we don't
+            // duplicate the Wompi widget integration in two places.
+            const target = `${PUBLIC_SITE_URL}/expeditions/${route.id}?salida=${salida.id}`;
+            window.open(target, '_blank', 'noopener');
+          }}
+        />
+      );
     }
     if (route.kind === 'activity') {
       return (
@@ -61,6 +73,13 @@ export function App() {
         return (
           <ExploreScreen onPickCategory={(_cat: ExpeditionCategory) => setRoute({ kind: 'tab', tab: 'feed' })} />
         );
+      case 'calendar':
+        return (
+          <CalendarScreen
+            variant="grid"
+            onOpenExpedition={(id) => setRoute({ kind: 'expedition', id })}
+          />
+        );
       case 'map':
         return <MapScreen onOpenExpedition={(id) => setRoute({ kind: 'expedition', id })} />;
       case 'track':
@@ -70,6 +89,7 @@ export function App() {
           <ProfileScreen
             onSignIn={() => setAuthVisible(true)}
             onOpenActivity={(id) => setRoute({ kind: 'activity', id })}
+            photoPicker={photoPicker}
           />
         );
       case 'settings':

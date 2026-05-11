@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { OrderStatus } from '@minga/types';
-import { fetchOrderById } from '@minga/supabase';
+import { fetchOrderById, fetchSalidaById } from '@minga/supabase';
+import { formatSalidaRange } from '@minga/logic';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getT } from '@/lib/i18n/server';
 import type { Key } from '@/lib/i18n/dictionary';
@@ -29,7 +30,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   const order = await fetchOrderById(supabase, id);
   if (!order) notFound();
 
-  const [{ data: expedition }, { data: profile }, { data: guest }] = await Promise.all([
+  const [{ data: expedition }, { data: profile }, { data: guest }, salida] = await Promise.all([
     supabase.from('expeditions').select('id, title, location_name, country').eq('id', order.expedition_id).maybeSingle(),
     order.buyer_profile_id
       ? supabase.from('profiles').select('id, display_name, username').eq('id', order.buyer_profile_id).maybeSingle()
@@ -37,6 +38,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
     order.buyer_guest_contact_id
       ? supabase.from('guest_contacts').select('*').eq('id', order.buyer_guest_contact_id).maybeSingle()
       : Promise.resolve({ data: null }),
+    order.salida_id ? fetchSalidaById(supabase, order.salida_id) : Promise.resolve(null),
   ]);
 
   const { t, locale } = await getT();
@@ -77,6 +79,17 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
               </>
             ) : (
               <div className="text-ink-500 text-sm">{t('orderDetail.expeditionDeleted')}</div>
+            )}
+          </section>
+
+          <section className="card">
+            <h2 className="font-semibold mb-3">{t('orderDetail.salida')}</h2>
+            {salida ? (
+              <div className="text-sm">
+                {formatSalidaRange(salida.starts_at, salida.ends_at, { locale: dateLocale, tz: salida.timezone })}
+              </div>
+            ) : (
+              <div className="text-ink-500 text-sm">{t('orderDetail.salidaNone')}</div>
             )}
           </section>
 

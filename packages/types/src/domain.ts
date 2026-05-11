@@ -1,6 +1,7 @@
 import type {
   DbExpedition,
   DbExpeditionPhoto,
+  DbExpeditionSalida,
   DbPhotoAttribution,
   DbProfile,
   DbComment,
@@ -14,6 +15,28 @@ export interface ExpeditionWithAuthor extends DbExpedition {
   likes_count: number;
   comments_count: number;
   avg_rating: number | null;
+  // Next upcoming published salida, if any. Populated by feed/detail queries
+  // so the UI can show "Next departure: …" without an extra round-trip.
+  next_salida: DbExpeditionSalida | null;
+}
+
+export interface SalidaWithExpedition extends DbExpeditionSalida {
+  expedition: Pick<
+    DbExpedition,
+    | 'id'
+    | 'title'
+    | 'category'
+    | 'category_id'
+    | 'location_name'
+    | 'region'
+    | 'country'
+    | 'cover_photo_url'
+    | 'difficulty'
+    | 'price_cents'
+    | 'currency'
+    | 'is_official'
+    | 'is_published'
+  >;
 }
 
 export interface CommentWithAuthor extends DbComment {

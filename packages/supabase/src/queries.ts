@@ -9,6 +9,7 @@ import type {
   DbCategory,
   DbComment,
   DbExpedition,
+  DbExpeditionSalida,
   DbOrder,
   DbProfile,
   DbVendorProposal,
@@ -16,6 +17,7 @@ import type {
   CommentWithAuthor,
   OrderStatus,
   ProposalStatus,
+  SalidaWithExpedition,
   TerrainTag,
   TrackPoint,
   VendorType,
@@ -80,6 +82,29 @@ async function enrichAggregates(client: SupabaseClient, rows: ExpeditionWithAuth
       row.avg_rating = stars.length ? stars.reduce((s, r) => s + r.stars, 0) / stars.length : null;
     }),
   );
+  await attachNextSalida(client, rows);
+}
+
+// One round-trip for the whole page: pull every upcoming published salida for
+// the listed expedition IDs, then pick the earliest per expedition in JS.
+async function attachNextSalida(client: SupabaseClient, rows: ExpeditionWithAuthor[]): Promise<void> {
+  for (const r of rows) r.next_salida = null;
+  if (rows.length === 0) return;
+  const ids = rows.map((r) => r.id);
+  const nowIso = new Date().toISOString();
+  const { data, error } = await client
+    .from('expedition_salidas')
+    .select('*')
+    .in('expedition_id', ids)
+    .eq('is_published', true)
+    .gte('starts_at', nowIso)
+    .order('starts_at', { ascending: true });
+  if (error) return; // best-effort: missing salidas just means no "next" badge
+  const byExpedition = new Map<string, DbExpeditionSalida>();
+  for (const s of (data ?? []) as DbExpeditionSalida[]) {
+    if (!byExpedition.has(s.expedition_id)) byExpedition.set(s.expedition_id, s);
+  }
+  for (const r of rows) r.next_salida = byExpedition.get(r.id) ?? null;
 }
 
 export async function fetchComments(client: SupabaseClient, expeditionId: string): Promise<CommentWithAuthor[]> {
@@ -164,6 +189,72 @@ export async function fetchProfile(client: SupabaseClient, userId: string): Prom
   const { data, error } = await client.from('profiles').select('*').eq('id', userId).maybeSingle();
   if (error) throw error;
   return (data as DbProfile | null) ?? null;
+}
+
+// Patch fields users can edit on their own profile. RLS on `profiles` already
+// gates writes to `auth.uid() = id`, so callers can't escalate by hand-crafting
+// a `userId`. We restrict the shape here so we never accidentally let a user
+// rewrite tier/role/etc. through this helper.
+export type ProfileSelfPatch = {
+  display_name?: string;
+  bio?: string | null;
+  avatar_url?: string | null;
+  instagram_handle?: string | null;
+};
+
+export async function updateMyProfile(
+  client: SupabaseClient,
+  patch: ProfileSelfPatch,
+): Promise<DbProfile> {
+  const { data: u } = await client.auth.getUser();
+  if (!u.user) throw new Error('Sign in to update your profile.');
+  const clean: ProfileSelfPatch = {};
+  if (patch.display_name !== undefined) {
+    const trimmed = patch.display_name.trim();
+    if (trimmed.length < 1 || trimmed.length > 80) {
+      throw new Error('Display name must be 1–80 characters.');
+    }
+    clean.display_name = trimmed;
+  }
+  if (patch.bio !== undefined) clean.bio = patch.bio?.trim() || null;
+  if (patch.avatar_url !== undefined) clean.avatar_url = patch.avatar_url || null;
+  if (patch.instagram_handle !== undefined) {
+    const h = (patch.instagram_handle ?? '').replace(/^@+/, '').trim().toLowerCase();
+    if (h && !/^[a-z0-9._]{1,30}$/.test(h)) {
+      throw new Error('Instagram handle must be 1–30 letters, numbers, dots, or underscores.');
+    }
+    clean.instagram_handle = h || null;
+  }
+  const { data, error } = await client
+    .from('profiles')
+    .update(clean)
+    .eq('id', u.user.id)
+    .select('*')
+    .single();
+  if (error) throw error;
+  return data as DbProfile;
+}
+
+// Upload to the public `avatars` bucket under the caller's folder and return
+// the public URL. The caller then persists that URL with `updateMyProfile`.
+// The bucket has a 1 MB-ish footprint per user in practice; we don't enforce
+// a server-side size limit yet, but a short cache-control means CDN burn is
+// minimal even if a user changes it often.
+export async function uploadAvatar(
+  client: SupabaseClient,
+  file: File | Blob,
+  filename: string,
+): Promise<string> {
+  const { data: u } = await client.auth.getUser();
+  if (!u.user) throw new Error('Sign in to upload an avatar.');
+  const safe = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const path = `${u.user.id}/${Date.now()}-${safe}`;
+  const { error: upErr } = await client.storage.from('avatars').upload(path, file, {
+    cacheControl: '3600',
+    upsert: false,
+  });
+  if (upErr) throw upErr;
+  return client.storage.from('avatars').getPublicUrl(path).data.publicUrl;
 }
 
 export async function fetchMyActivities(client: SupabaseClient): Promise<DbActivity[]> {
@@ -752,4 +843,179 @@ export async function uploadExpeditionPhoto(
   if (error) throw error;
   const { data } = client.storage.from('expedition-photos').getPublicUrl(path);
   return { path, publicUrl: data.publicUrl };
+}
+
+// =============================================================================
+// Expedition salidas — dated departures for a given template.
+//   - fetchSalidasForExpedition: list (used by detail screens)
+//   - fetchSalidasInRange      : calendar view feed
+//   - admin CRUD               : add / edit / delete a salida
+// =============================================================================
+
+const SALIDA_EXPEDITION_SELECT = `
+  *,
+  expedition:expeditions!expedition_salidas_expedition_id_fkey (
+    id, title, category, category_id, location_name, region, country,
+    cover_photo_url, difficulty, price_cents, currency, is_official, is_published
+  )
+`;
+
+export async function fetchSalidasForExpedition(
+  client: SupabaseClient,
+  expeditionId: string,
+  opts: { upcomingOnly?: boolean; includeUnpublished?: boolean } = {},
+): Promise<DbExpeditionSalida[]> {
+  let q = client
+    .from('expedition_salidas')
+    .select('*')
+    .eq('expedition_id', expeditionId)
+    .order('starts_at', { ascending: true });
+  if (!opts.includeUnpublished) q = q.eq('is_published', true);
+  if (opts.upcomingOnly) q = q.gte('starts_at', new Date().toISOString());
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as DbExpeditionSalida[];
+}
+
+export async function fetchSalidaById(
+  client: SupabaseClient,
+  id: string,
+): Promise<DbExpeditionSalida | null> {
+  const { data, error } = await client
+    .from('expedition_salidas')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as DbExpeditionSalida | null) ?? null;
+}
+
+export interface CalendarSalidaFilters {
+  category?: string | null;       // matches expeditions.category enum
+  category_id?: string | null;
+  region?: string | null;
+  country?: string | null;
+  difficulty?: number | null;
+  // Price band on the EXPEDITION template's price_cents. Salida-level overrides
+  // are not currently filtered (kept simple — most departures inherit template price).
+  minPriceCents?: number | null;
+  maxPriceCents?: number | null;
+  // Only show free or only show paid expeditions. If both true or both false, no filter.
+  onlyFree?: boolean;
+  onlyPaid?: boolean;
+}
+
+export async function fetchSalidasInRange(
+  client: SupabaseClient,
+  fromIso: string,
+  toIso: string,
+  filters: CalendarSalidaFilters = {},
+): Promise<SalidaWithExpedition[]> {
+  // Pull salidas in the window plus the expedition join, then filter expedition
+  // fields client-side. We can't apply `eq` to nested columns through PostgREST.
+  const { data, error } = await client
+    .from('expedition_salidas')
+    .select(SALIDA_EXPEDITION_SELECT)
+    .eq('is_published', true)
+    .gte('starts_at', fromIso)
+    .lte('starts_at', toIso)
+    .order('starts_at', { ascending: true });
+  if (error) throw error;
+  const rows = (data ?? []) as unknown as SalidaWithExpedition[];
+
+  return rows.filter((s) => {
+    const e = s.expedition;
+    if (!e || !e.is_published) return false;
+    if (filters.category && e.category !== filters.category) return false;
+    if (filters.category_id && e.category_id !== filters.category_id) return false;
+    if (filters.region && e.region !== filters.region) return false;
+    if (filters.country && e.country !== filters.country) return false;
+    if (filters.difficulty != null && e.difficulty !== filters.difficulty) return false;
+
+    const effectivePrice = s.price_cents ?? e.price_cents;
+    if (filters.minPriceCents != null && effectivePrice < filters.minPriceCents) return false;
+    if (filters.maxPriceCents != null && effectivePrice > filters.maxPriceCents) return false;
+    if (filters.onlyFree && !filters.onlyPaid && effectivePrice > 0) return false;
+    if (filters.onlyPaid && !filters.onlyFree && effectivePrice <= 0) return false;
+    return true;
+  });
+}
+
+// ---- Admin / author CRUD --------------------------------------------------
+
+export type SalidaInput = {
+  expedition_id: string;
+  starts_at: string;
+  ends_at?: string | null;
+  timezone?: string;
+  capacity?: number | null;
+  seats_taken?: number;
+  price_cents?: number | null;
+  currency?: string | null;
+  notes?: string | null;
+  is_published?: boolean;
+};
+
+export async function adminListSalidas(
+  client: SupabaseClient,
+  opts: { expeditionId?: string | null; from?: string | null; limit?: number } = {},
+): Promise<DbExpeditionSalida[]> {
+  let q = client
+    .from('expedition_salidas')
+    .select('*')
+    .order('starts_at', { ascending: true })
+    .limit(opts.limit ?? 500);
+  if (opts.expeditionId) q = q.eq('expedition_id', opts.expeditionId);
+  if (opts.from) q = q.gte('starts_at', opts.from);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as DbExpeditionSalida[];
+}
+
+export async function adminListSalidasInRange(
+  client: SupabaseClient,
+  fromIso: string,
+  toIso: string,
+): Promise<SalidaWithExpedition[]> {
+  const { data, error } = await client
+    .from('expedition_salidas')
+    .select(SALIDA_EXPEDITION_SELECT)
+    .gte('starts_at', fromIso)
+    .lte('starts_at', toIso)
+    .order('starts_at', { ascending: true });
+  if (error) throw error;
+  return ((data ?? []) as unknown) as SalidaWithExpedition[];
+}
+
+export async function createSalida(
+  client: SupabaseClient,
+  input: SalidaInput,
+): Promise<DbExpeditionSalida> {
+  const { data, error } = await client
+    .from('expedition_salidas')
+    .insert(input)
+    .select('*')
+    .single();
+  if (error) throw error;
+  return data as DbExpeditionSalida;
+}
+
+export async function updateSalida(
+  client: SupabaseClient,
+  id: string,
+  patch: Partial<SalidaInput>,
+): Promise<DbExpeditionSalida> {
+  const { data, error } = await client
+    .from('expedition_salidas')
+    .update(patch)
+    .eq('id', id)
+    .select('*')
+    .single();
+  if (error) throw error;
+  return data as DbExpeditionSalida;
+}
+
+export async function deleteSalida(client: SupabaseClient, id: string): Promise<void> {
+  const { error } = await client.from('expedition_salidas').delete().eq('id', id);
+  if (error) throw error;
 }

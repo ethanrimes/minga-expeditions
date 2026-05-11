@@ -1,8 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Mountain, TrendingUp } from 'lucide-react';
+import { CalendarDays, Mountain, TrendingUp } from 'lucide-react';
 import { useTheme, tierColors } from '@minga/theme';
-import { formatDistanceKm, formatElevation, formatPriceCents } from '@minga/logic';
+import {
+  formatDistanceKm,
+  formatElevation,
+  formatPriceCents,
+  formatSalidaDate,
+} from '@minga/logic';
 import { useT } from '@minga/i18n';
 import type { ExpeditionWithAuthor, ExpeditionCategory, TierLevel } from '@minga/types';
 
@@ -91,6 +96,15 @@ export function ExpeditionTile({ expedition }: { expedition: ExpeditionWithAutho
         <div style={{ color: theme.textMuted, fontSize: 14 }}>
           {expedition.location_name}
           {expedition.region ? `, ${expedition.region}` : ''}
+        </div>
+        <div
+          data-testid="next-salida"
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: theme.text, fontSize: 13, fontWeight: 600 }}
+        >
+          <CalendarDays size={14} strokeWidth={2.2} />
+          {expedition.next_salida
+            ? `${t('salida.next')}: ${formatSalidaDate(expedition.next_salida.starts_at, { tz: expedition.next_salida.timezone })}`
+            : t('salida.scheduleTba')}
         </div>
         <div style={{ display: 'flex', gap: 16, color: theme.text, fontSize: 14 }}>
           {expedition.distance_km ? (

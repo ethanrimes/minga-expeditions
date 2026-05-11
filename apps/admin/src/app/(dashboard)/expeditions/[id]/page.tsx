@@ -1,4 +1,6 @@
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { CalendarRange } from 'lucide-react';
 import { adminGetExpedition, fetchCategories } from '@minga/supabase';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getT } from '@/lib/i18n/server';
@@ -19,8 +21,15 @@ export default async function EditExpeditionPage({ params }: { params: Promise<{
 
   return (
     <div>
-      <h1 className="text-2xl font-bold">{t('expeditions.editPage.title')}</h1>
-      <p className="text-ink-500 mt-1 text-sm">{expedition.title}</p>
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-bold">{t('expeditions.editPage.title')}</h1>
+          <p className="text-ink-500 mt-1 text-sm">{expedition.title}</p>
+        </div>
+        <Link href={`/expeditions/${id}/salidas`} className="btn-secondary">
+          <CalendarRange size={16} /> {t('salidas.manage')}
+        </Link>
+      </div>
       <div className="mt-8">
         <ExpeditionForm
           action={action}

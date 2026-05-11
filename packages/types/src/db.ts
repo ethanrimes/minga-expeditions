@@ -61,6 +61,9 @@ export interface DbProfile {
   avatar_url: string | null;
   bio: string | null;
   home_country: string | null;
+  // Optional connected social handle (no leading `@`, lowercased). Constraint
+  // lives in supabase/migrations/20260511_000400_profile_instagram.sql.
+  instagram_handle: string | null;
   total_distance_km: number;
   total_elevation_m: number;
   tier: TierLevel;
@@ -207,6 +210,7 @@ export interface DbGuestContact {
 export interface DbOrder {
   id: string;
   expedition_id: string;
+  salida_id: string | null;
   buyer_profile_id: string | null;
   buyer_guest_contact_id: string | null;
   amount_cents: number;
@@ -218,6 +222,23 @@ export interface DbOrder {
   wompi_status_message: string | null;
   metadata: Record<string, unknown> | null;
   paid_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DbExpeditionSalida {
+  id: string;
+  expedition_id: string;
+  starts_at: string;
+  ends_at: string | null;
+  timezone: string;
+  capacity: number | null;
+  seats_taken: number;
+  // null means "inherit template price". Resolve via priceForSalida() in @minga/logic.
+  price_cents: number | null;
+  currency: string | null;
+  notes: string | null;
+  is_published: boolean;
   created_at: string;
   updated_at: string;
 }

@@ -5,6 +5,7 @@ import { NavBar } from './components/NavBar';
 import { Footer } from './components/Footer';
 import { HomePage } from './pages/HomePage';
 import { FeedPage } from './pages/FeedPage';
+import { CalendarPage } from './pages/CalendarPage';
 import { ExpeditionPage } from './pages/ExpeditionPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { AuthPage } from './pages/AuthPage';
@@ -44,6 +45,7 @@ export function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/expeditions" element={<FeedPage />} />
+          <Route path="/calendar" element={<CalendarPage />} />
           <Route path="/expeditions/:id" element={<ExpeditionPage />} />
           <Route path="/map" element={<MapPage />} />
           <Route path="/profile" element={<ProfilePage />} />

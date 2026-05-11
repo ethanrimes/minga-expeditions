@@ -68,6 +68,17 @@ export interface ActivityPhotoPicker {
 // and a fallback caption; the adapter decides what to do.
 export interface ActivityShareAdapter {
   share(input: { activityId: string; title: string; cardUrl: string; deepLink: string; caption: string }): Promise<void>;
+  // Optional Strava-style story export. When the host app implements this,
+  // the screen shows a "Share to story" button alongside the basic share.
+  // Rasterizes the share-card SVG to PNG client-side and hands it to the
+  // platform share sheet (Instagram / Facebook / WhatsApp Stories accept PNG).
+  shareToStory?(input: {
+    activityId: string;
+    title: string;
+    cardUrl: string;
+    deepLink: string;
+    caption: string;
+  }): Promise<{ kind: 'shared' | 'downloaded' | 'unavailable' }>;
 }
 
 export function ActivityDetailScreen({
@@ -299,7 +310,7 @@ export function ActivityDetailScreen({
 
       {shareAdapter && shareCardBaseUrl ? (
         <Button
-          label={language === 'es' ? 'Compartir' : 'Share'}
+          label={t('activity.share')}
           variant="secondary"
           onPress={() =>
             shareAdapter.share({
@@ -307,10 +318,7 @@ export function ActivityDetailScreen({
               title: activity.title,
               cardUrl: `${shareCardBaseUrl}?activity_id=${id}`,
               deepLink: `${publicSiteUrl ?? 'https://minga.co'}/activities/${id}`,
-              caption:
-                language === 'es'
-                  ? `Acabo de completar ${activity.title} en Minga Expeditions 🌄`
-                  : `Just finished ${activity.title} on Minga Expeditions 🌄`,
+              caption: t('activity.shareCaption').replace('{title}', activity.title),
             })
           }
         />
@@ -319,11 +327,11 @@ export function ActivityDetailScreen({
       <View style={{ gap: spacing.sm }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <Text style={{ color: theme.text, fontSize: fontSizes.lg, fontWeight: fontWeights.bold }}>
-            {language === 'es' ? 'Fotos' : 'Photos'} ({photos.length})
+            {t('activity.photosHeading')} ({photos.length})
           </Text>
           {photoPicker ? (
             <Button
-              label={uploadingPhoto ? '…' : language === 'es' ? 'Añadir foto' : 'Add photo'}
+              label={uploadingPhoto ? '…' : t('activity.addPhoto')}
               size="sm"
               variant="secondary"
               onPress={addPhoto}
@@ -343,11 +351,7 @@ export function ActivityDetailScreen({
             ))}
           </View>
         ) : (
-          <Text style={{ color: theme.textMuted, fontSize: fontSizes.sm }}>
-            {language === 'es'
-              ? 'Aún no hay fotos. Añade algunas desde la cámara.'
-              : 'No photos yet — add some from your camera roll.'}
-          </Text>
+          <Text style={{ color: theme.textMuted, fontSize: fontSizes.sm }}>{t('activity.noPhotos')}</Text>
         )}
       </View>
 

@@ -1,17 +1,32 @@
-import React, { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { Heart } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { CalendarDays, Heart } from 'lucide-react';
 import { useTheme, tierColors } from '@minga/theme';
 import { useT } from '@minga/i18n';
 import {
   fetchComments,
   fetchExpeditionById,
+  fetchSalidasForExpedition,
   postComment,
   rateExpedition,
   toggleLike,
 } from '@minga/supabase';
-import { formatDistanceKm, formatElevation, formatPriceCents, relativeTime } from '@minga/logic';
-import type { CommentWithAuthor, ExpeditionWithAuthor, TierLevel } from '@minga/types';
+import {
+  formatDistanceKm,
+  formatElevation,
+  formatPriceCents,
+  formatSalidaRange,
+  isSoldOut,
+  priceCentsForSalida,
+  relativeTime,
+  seatsRemaining,
+} from '@minga/logic';
+import type {
+  CommentWithAuthor,
+  DbExpeditionSalida,
+  ExpeditionWithAuthor,
+  TierLevel,
+} from '@minga/types';
 import { supabase } from '../supabase';
 import { CheckoutDrawer } from '../components/CheckoutDrawer';
 
@@ -24,24 +39,29 @@ const TIER_KEY: Record<TierLevel, any> = {
 
 export function ExpeditionPage() {
   const { id } = useParams<{ id: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { theme } = useTheme();
   const { t, language } = useT();
   const [expedition, setExpedition] = useState<ExpeditionWithAuthor | null>(null);
   const [comments, setComments] = useState<CommentWithAuthor[]>([]);
+  const [salidas, setSalidas] = useState<DbExpeditionSalida[]>([]);
   const [draft, setDraft] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [myStars, setMyStars] = useState<number>(0);
+  const [checkoutSalidaId, setCheckoutSalidaId] = useState<string | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
 
   const load = async () => {
     if (!id) return;
     try {
-      const [exp, cmts] = await Promise.all([
+      const [exp, cmts, sals] = await Promise.all([
         fetchExpeditionById(supabase, id),
         fetchComments(supabase, id),
+        fetchSalidasForExpedition(supabase, id, { upcomingOnly: true }),
       ]);
       setExpedition(exp);
       setComments(cmts);
+      setSalidas(sals);
     } catch (e: any) {
       setError(e?.message ?? t('common.loadError'));
     }
@@ -50,6 +70,36 @@ export function ExpeditionPage() {
   useEffect(() => {
     void load();
   }, [id]);
+
+  // Deep-link: ?salida=<uuid> auto-opens the checkout drawer for that salida.
+  // Used by mobile / mobile-web hand-off to the web checkout. We clear the
+  // query param after acting on it so a refresh doesn't re-pop the drawer.
+  useEffect(() => {
+    const requested = searchParams.get('salida');
+    if (!requested || !salidas.length) return;
+    if (salidas.some((s) => s.id === requested)) {
+      setCheckoutSalidaId(requested);
+      setCheckoutOpen(true);
+      const next = new URLSearchParams(searchParams);
+      next.delete('salida');
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, salidas, setSearchParams]);
+
+  const bookSalida = (salida: DbExpeditionSalida) => {
+    setCheckoutSalidaId(salida.id);
+    setCheckoutOpen(true);
+  };
+
+  const openGenericCheckout = () => {
+    setCheckoutSalidaId(null);
+    setCheckoutOpen(true);
+  };
+
+  const activeSalida = useMemo(
+    () => (checkoutSalidaId ? salidas.find((s) => s.id === checkoutSalidaId) ?? null : null),
+    [checkoutSalidaId, salidas],
+  );
 
   if (error) return <Msg>{error}</Msg>;
   if (!expedition) return <Msg>{t('feed.loading')}</Msg>;
@@ -143,24 +193,96 @@ export function ExpeditionPage() {
             {expedition.description}
           </p>
 
-          {expedition.price_cents > 0 ? (
-            <button
-              onClick={() => setCheckoutOpen(true)}
+          <section style={{ marginTop: 32 }}>
+            <h2
               style={{
-                background: theme.primary,
-                color: theme.onPrimary,
-                border: 0,
-                borderRadius: 999,
-                padding: '14px 28px',
-                fontWeight: 800,
-                fontSize: 16,
-                marginTop: 16,
-                cursor: 'pointer',
+                color: theme.text,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                margin: '0 0 12px 0',
               }}
             >
-              Book this expedition · {formatPriceCents(expedition.price_cents, { currency: expedition.currency, freeLabel: t('common.free') })}
-            </button>
-          ) : null}
+              <CalendarDays size={20} strokeWidth={2.2} /> {t('salida.upcomingHeading')}
+            </h2>
+            {salidas.length === 0 ? (
+              <div style={{ color: theme.textMuted }}>{t('salida.empty')}</div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {salidas.map((s) => {
+                  const sold = isSoldOut(s);
+                  const remaining = seatsRemaining(s);
+                  const { price_cents, currency } = priceCentsForSalida(s, expedition);
+                  return (
+                    <div
+                      key={s.id}
+                      data-testid="salida-row"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 16,
+                        padding: 16,
+                        background: theme.surfaceAlt,
+                        borderRadius: 14,
+                      }}
+                    >
+                      <div style={{ flex: 1 }}>
+                        <div style={{ color: theme.text, fontWeight: 700 }}>
+                          {formatSalidaRange(s.starts_at, s.ends_at, { tz: s.timezone })}
+                        </div>
+                        <div style={{ color: theme.textMuted, fontSize: 13, marginTop: 4 }}>
+                          {sold
+                            ? t('salida.soldOut')
+                            : remaining != null
+                              ? t('salida.seatsRemaining', { n: remaining })
+                              : t('salida.openCapacity')}
+                          {' · '}
+                          {formatPriceCents(price_cents, { currency, freeLabel: t('common.free') })}
+                        </div>
+                      </div>
+                      {price_cents > 0 ? (
+                        <button
+                          onClick={() => bookSalida(s)}
+                          disabled={sold}
+                          style={{
+                            background: sold ? theme.surfaceAlt : theme.primary,
+                            color: sold ? theme.textMuted : theme.onPrimary,
+                            border: sold ? `1px solid ${theme.border}` : 0,
+                            borderRadius: 999,
+                            padding: '10px 20px',
+                            fontWeight: 700,
+                            fontSize: 14,
+                            cursor: sold ? 'not-allowed' : 'pointer',
+                          }}
+                        >
+                          {sold ? t('salida.soldOut') : t('salida.book')}
+                        </button>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            {expedition.price_cents > 0 && salidas.length === 0 ? (
+              <button
+                onClick={openGenericCheckout}
+                style={{
+                  background: theme.primary,
+                  color: theme.onPrimary,
+                  border: 0,
+                  borderRadius: 999,
+                  padding: '14px 28px',
+                  fontWeight: 800,
+                  fontSize: 16,
+                  marginTop: 16,
+                  cursor: 'pointer',
+                }}
+              >
+                Book this expedition ·{' '}
+                {formatPriceCents(expedition.price_cents, { currency: expedition.currency, freeLabel: t('common.free') })}
+              </button>
+            ) : null}
+          </section>
 
           <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginTop: 20 }}>
             <button
@@ -272,9 +394,23 @@ export function ExpeditionPage() {
         <CheckoutDrawer
           expeditionId={expedition.id}
           expeditionTitle={expedition.title}
-          priceCents={expedition.price_cents}
-          currency={expedition.currency}
-          onClose={() => setCheckoutOpen(false)}
+          salidaId={activeSalida?.id ?? null}
+          salidaStartsAt={activeSalida?.starts_at ?? null}
+          salidaTimezone={activeSalida?.timezone ?? null}
+          priceCents={
+            activeSalida
+              ? priceCentsForSalida(activeSalida, expedition).price_cents
+              : expedition.price_cents
+          }
+          currency={
+            activeSalida
+              ? priceCentsForSalida(activeSalida, expedition).currency
+              : expedition.currency
+          }
+          onClose={() => {
+            setCheckoutOpen(false);
+            setCheckoutSalidaId(null);
+          }}
         />
       ) : null}
     </div>

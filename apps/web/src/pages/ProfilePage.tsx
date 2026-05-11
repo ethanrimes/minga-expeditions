@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { User as UserIcon } from 'lucide-react';
 import { useTheme, tierColors } from '@minga/theme';
 import { useT } from '@minga/i18n';
-import { fetchMyActivities, fetchProfile } from '@minga/supabase';
+import { fetchMyActivities, fetchProfile, updateMyProfile, uploadAvatar } from '@minga/supabase';
 import { formatDistanceKm, formatDuration, formatElevation, progressToNextTier, TIER_THRESHOLDS_KM } from '@minga/logic';
 import type { ActivityType, DbActivity, DbProfile, TierLevel } from '@minga/types';
 import { supabase } from '../supabase';
@@ -59,6 +59,12 @@ export function ProfilePage() {
   // Identities the user has linked via Supabase auth providers. Order is
   // preserved from supabase-js — typically the signup provider is first.
   const [identityProviders, setIdentityProviders] = useState<string[]>([]);
+  const [displayName, setDisplayName] = useState<string>('');
+  const [nameSaveState, setNameSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [instagramHandle, setInstagramHandle] = useState<string>('');
+  const [igSaveState, setIgSaveState] = useState<'idle' | 'saving' | 'saved' | 'error' | 'invalid'>('idle');
+  const [avatarState, setAvatarState] = useState<'idle' | 'uploading' | 'error'>('idle');
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [phoneCode, setPhoneCode] = useState<string>('+57');
   const [phoneNumber, setPhoneNumber] = useState<string>('');
   // Snapshot of what's currently saved (verified) on the profile. Lets us
@@ -95,16 +101,18 @@ export function ProfilePage() {
         fetchMyActivities(supabase),
         supabase
           .from('profiles')
-          .select('phone_country_code, phone_number, phone_verified_at')
+          .select('phone_country_code, phone_number, phone_verified_at, instagram_handle')
           .eq('id', data.user.id)
           .maybeSingle(),
       ]);
       setProfile(p);
+      if (p?.display_name) setDisplayName(p.display_name);
       setActivities(a);
       const ph = phoneRow.data as {
         phone_country_code: string | null;
         phone_number: string | null;
         phone_verified_at: string | null;
+        instagram_handle: string | null;
       } | null;
       if (ph?.phone_country_code) setPhoneCode(ph.phone_country_code);
       if (ph?.phone_number) setPhoneNumber(ph.phone_number);
@@ -112,8 +120,57 @@ export function ProfilePage() {
         setSavedPhoneE164(`${ph.phone_country_code}${ph.phone_number}`);
       }
       setPhoneVerifiedAt(ph?.phone_verified_at ?? null);
+      if (ph?.instagram_handle) setInstagramHandle(ph.instagram_handle);
     })();
   }, []);
+
+  const saveDisplayName = async () => {
+    if (!userId) return;
+    const trimmed = displayName.trim();
+    if (!trimmed || trimmed === profile?.display_name) return;
+    setNameSaveState('saving');
+    try {
+      const updated = await updateMyProfile(supabase, { display_name: trimmed });
+      setProfile(updated);
+      setDisplayName(updated.display_name);
+      setNameSaveState('saved');
+      setTimeout(() => setNameSaveState('idle'), 2000);
+    } catch {
+      setNameSaveState('error');
+    }
+  };
+
+  const saveInstagram = async () => {
+    if (!userId) return;
+    const normalized = instagramHandle.replace(/^@+/, '').trim().toLowerCase();
+    if (normalized && !/^[a-z0-9._]{1,30}$/.test(normalized)) {
+      setIgSaveState('invalid');
+      return;
+    }
+    setIgSaveState('saving');
+    try {
+      const updated = await updateMyProfile(supabase, { instagram_handle: normalized });
+      setProfile(updated);
+      setInstagramHandle(normalized);
+      setIgSaveState('saved');
+      setTimeout(() => setIgSaveState('idle'), 2000);
+    } catch {
+      setIgSaveState('error');
+    }
+  };
+
+  const onAvatarFile = async (file: File) => {
+    if (!userId) return;
+    setAvatarState('uploading');
+    try {
+      const url = await uploadAvatar(supabase, file, file.name);
+      const updated = await updateMyProfile(supabase, { avatar_url: url });
+      setProfile(updated);
+      setAvatarState('idle');
+    } catch {
+      setAvatarState('error');
+    }
+  };
 
   // Compose the current input as E.164 for comparison + send.
   const currentE164 = `${phoneCode}${phoneNumber.replace(/\D/g, '')}`;
@@ -214,30 +271,65 @@ export function ProfilePage() {
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto', padding: '40px 24px' }}>
       <div style={{ display: 'flex', gap: 24, alignItems: 'center', marginBottom: 32 }}>
-        {profile?.avatar_url ? (
-          <img
-            src={profile.avatar_url}
-            alt={t('profile.avatarAlt')}
-            style={{ width: 96, height: 96, borderRadius: 999, background: theme.surfaceAlt }}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+          {profile?.avatar_url ? (
+            <img
+              src={profile.avatar_url}
+              alt={t('profile.avatarAlt')}
+              style={{ width: 96, height: 96, borderRadius: 999, background: theme.surfaceAlt, objectFit: 'cover' }}
+            />
+          ) : (
+            <div
+              style={{
+                width: 96,
+                height: 96,
+                borderRadius: 999,
+                background: theme.primaryMuted,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: theme.primary,
+                fontWeight: 800,
+                fontSize: 32,
+              }}
+            >
+              {(profile?.display_name ?? email ?? '?')[0]?.toUpperCase()}
+            </div>
+          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) void onAvatarFile(f);
+              e.currentTarget.value = '';
+            }}
           />
-        ) : (
-          <div
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={avatarState === 'uploading'}
             style={{
-              width: 96,
-              height: 96,
+              background: theme.surfaceAlt,
+              color: theme.text,
+              border: `1px solid ${theme.border}`,
               borderRadius: 999,
-              background: theme.primaryMuted,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: theme.primary,
-              fontWeight: 800,
-              fontSize: 32,
+              padding: '6px 12px',
+              fontWeight: 700,
+              fontSize: 12,
+              cursor: avatarState === 'uploading' ? 'wait' : 'pointer',
+              opacity: avatarState === 'uploading' ? 0.7 : 1,
             }}
           >
-            {(profile?.display_name ?? email ?? '?')[0]?.toUpperCase()}
-          </div>
-        )}
+            {avatarState === 'uploading'
+              ? t('profile.uploadingPhoto')
+              : avatarState === 'error'
+                ? t('profile.uploadFailed')
+                : t('profile.changePhoto')}
+          </button>
+        </div>
         <div style={{ flex: 1 }}>
           <h1 style={{ color: theme.text, margin: 0 }}>{profile?.display_name ?? email}</h1>
           <div style={{ color: theme.textMuted }}>@{profile?.username ?? email?.split('@')[0]}</div>
@@ -260,6 +352,50 @@ export function ProfilePage() {
           ) : null}
         </div>
       </div>
+
+      <section
+        style={{
+          background: theme.surface,
+          border: `1px solid ${theme.border}`,
+          borderRadius: 16,
+          padding: 24,
+          marginBottom: 32,
+        }}
+      >
+        <label style={{ display: 'block', color: theme.text, fontWeight: 700, marginBottom: 4 }}>
+          {t('profile.displayNameLabel')}
+        </label>
+        <div style={{ color: theme.textMuted, fontSize: 13, marginBottom: 10 }}>
+          {t('profile.displayNameHelp')}
+        </div>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <input
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            onBlur={() => void saveDisplayName()}
+            maxLength={80}
+            style={{
+              background: theme.surfaceAlt,
+              color: theme.text,
+              border: `1px solid ${theme.border}`,
+              borderRadius: 10,
+              padding: '10px 12px',
+              fontSize: 14,
+              flex: '1 1 240px',
+              minWidth: 200,
+            }}
+          />
+          {nameSaveState !== 'idle' ? (
+            <span style={{ color: nameSaveState === 'error' ? theme.danger : theme.textMuted, fontSize: 13 }}>
+              {nameSaveState === 'saving'
+                ? t('profile.phoneSaving')
+                : nameSaveState === 'saved'
+                  ? t('profile.phoneSaved')
+                  : t('profile.phoneRetry')}
+            </span>
+          ) : null}
+        </div>
+      </section>
 
       {profile ? (
         <section
@@ -527,6 +663,100 @@ export function ProfilePage() {
             ) : null}
             {otpError ? (
               <div style={{ color: theme.danger, fontSize: 13 }}>{otpError}</div>
+            ) : null}
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 10,
+              padding: '12px 0',
+              borderTop: `1px solid ${theme.border}`,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ fontSize: 20, lineHeight: 1 }}>📸</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ color: theme.text, fontWeight: 700 }}>{t('profile.instagramLabel')}</div>
+                <div style={{ color: theme.textMuted, fontSize: 12 }}>{t('profile.instagramHelp')}</div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'stretch', flex: '1 1 220px', minWidth: 200 }}>
+                <span
+                  style={{
+                    background: theme.surfaceAlt,
+                    color: theme.textMuted,
+                    border: `1px solid ${theme.border}`,
+                    borderRight: 'none',
+                    borderRadius: '10px 0 0 10px',
+                    padding: '10px 12px',
+                    fontSize: 14,
+                  }}
+                >
+                  @
+                </span>
+                <input
+                  value={instagramHandle}
+                  onChange={(e) => {
+                    setInstagramHandle(e.target.value.replace(/^@+/, '').toLowerCase());
+                    if (igSaveState === 'invalid') setIgSaveState('idle');
+                  }}
+                  type="text"
+                  maxLength={30}
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  placeholder={t('profile.instagramPlaceholder')}
+                  style={{
+                    background: theme.surfaceAlt,
+                    color: theme.text,
+                    border: `1px solid ${theme.border}`,
+                    borderRadius: '0 10px 10px 0',
+                    padding: '10px 12px',
+                    fontSize: 14,
+                    flex: 1,
+                  }}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => void saveInstagram()}
+                disabled={igSaveState === 'saving'}
+                style={{
+                  background: igSaveState === 'saved' ? theme.surfaceAlt : theme.primary,
+                  color: igSaveState === 'saved' ? theme.text : theme.onPrimary,
+                  border: igSaveState === 'saved' ? `1px solid ${theme.border}` : 0,
+                  borderRadius: 999,
+                  padding: '10px 18px',
+                  fontWeight: 700,
+                  fontSize: 13,
+                  cursor: igSaveState === 'saving' ? 'wait' : 'pointer',
+                  opacity: igSaveState === 'saving' ? 0.7 : 1,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {igSaveState === 'saving'
+                  ? t('profile.phoneSaving')
+                  : igSaveState === 'saved'
+                    ? t('profile.phoneSaved')
+                    : igSaveState === 'error' || igSaveState === 'invalid'
+                      ? t('profile.phoneRetry')
+                      : t('profile.phoneSave')}
+              </button>
+              {instagramHandle && profile?.instagram_handle === instagramHandle ? (
+                <a
+                  href={`https://instagram.com/${instagramHandle}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: theme.primary, fontWeight: 700, fontSize: 13 }}
+                >
+                  {t('profile.instagramOpen')}
+                </a>
+              ) : null}
+            </div>
+            {igSaveState === 'invalid' ? (
+              <div style={{ color: theme.danger, fontSize: 13 }}>{t('profile.instagramInvalid')}</div>
             ) : null}
           </div>
         </div>

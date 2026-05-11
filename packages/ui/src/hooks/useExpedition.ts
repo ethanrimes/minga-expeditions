@@ -2,16 +2,18 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   fetchComments,
   fetchExpeditionById,
+  fetchSalidasForExpedition,
   getSupabase,
   postComment,
   rateExpedition,
   toggleLike,
 } from '@minga/supabase';
-import type { CommentWithAuthor, ExpeditionWithAuthor } from '@minga/types';
+import type { CommentWithAuthor, DbExpeditionSalida, ExpeditionWithAuthor } from '@minga/types';
 
 export function useExpedition(id: string | null) {
   const [expedition, setExpedition] = useState<ExpeditionWithAuthor | null>(null);
   const [comments, setComments] = useState<CommentWithAuthor[]>([]);
+  const [salidas, setSalidas] = useState<DbExpeditionSalida[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -20,12 +22,14 @@ export function useExpedition(id: string | null) {
     setLoading(true);
     setError(null);
     try {
-      const [exp, cmts] = await Promise.all([
+      const [exp, cmts, sals] = await Promise.all([
         fetchExpeditionById(getSupabase(), id),
         fetchComments(getSupabase(), id),
+        fetchSalidasForExpedition(getSupabase(), id, { upcomingOnly: true }),
       ]);
       setExpedition(exp);
       setComments(cmts);
+      setSalidas(sals);
     } catch (e: any) {
       setError(e?.message ?? 'Failed to load expedition');
     } finally {
@@ -61,5 +65,5 @@ export function useExpedition(id: string | null) {
     await load();
   };
 
-  return { expedition, comments, loading, error, reload: load, reply, rootComment, like, rate };
+  return { expedition, comments, salidas, loading, error, reload: load, reply, rootComment, like, rate };
 }

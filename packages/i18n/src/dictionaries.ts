@@ -171,7 +171,83 @@ export type TranslationKey =
   | 'activity.rateHeading'
   | 'activity.openExpedition'
   | 'activity.noLinkedExpedition'
-  | 'activity.notFound';
+  | 'activity.notFound'
+  | 'activity.share'
+  | 'activity.shareCaption'
+  | 'activity.photosHeading'
+  | 'activity.addPhoto'
+  | 'activity.noPhotos'
+  | 'profile.connectedAccounts'
+  | 'profile.emailLabel'
+  | 'profile.signInMethodLabel'
+  | 'profile.signInMethodEmailPassword'
+  | 'profile.signInMethodGuest'
+  | 'profile.whatsappLabel'
+  | 'profile.whatsappHelp'
+  | 'profile.phoneSaving'
+  | 'profile.phoneSaved'
+  | 'profile.phoneRetry'
+  | 'profile.phoneSave'
+  | 'profile.instagramLabel'
+  | 'profile.instagramHelp'
+  | 'profile.instagramPlaceholder'
+  | 'profile.instagramInvalid'
+  | 'profile.instagramOpen'
+  | 'profile.displayNameLabel'
+  | 'profile.displayNameHelp'
+  | 'profile.changePhoto'
+  | 'profile.uploadingPhoto'
+  | 'profile.uploadFailed'
+  | 'settings.theme.livehappy.title'
+  | 'settings.theme.livehappy.subtitle'
+  | 'settings.theme.mingaGreen.title'
+  | 'settings.theme.mingaGreen.subtitle'
+  | 'settings.theme.midnight.title'
+  | 'settings.theme.midnight.subtitle'
+  | 'track.linkedTo'
+  | 'track.independent'
+  | 'track.terrain'
+  | 'track.elevShort'
+  | 'track.avgSpeedShort'
+  | 'track.terrain.mountain'
+  | 'track.terrain.flat'
+  | 'track.terrain.desert'
+  | 'track.terrain.river'
+  | 'track.terrain.forest'
+  | 'track.terrain.coast'
+  | 'track.terrain.urban'
+  | 'track.terrain.jungle'
+  | 'track.terrain.snow'
+  | 'salida.next'
+  | 'salida.scheduleTba'
+  | 'salida.upcomingHeading'
+  | 'salida.book'
+  | 'salida.soldOut'
+  | 'salida.seatsRemaining'
+  | 'salida.openCapacity'
+  | 'salida.empty'
+  | 'cal.title'
+  | 'cal.subtitle'
+  | 'cal.prev'
+  | 'cal.next'
+  | 'cal.today'
+  | 'cal.empty'
+  | 'cal.filters.category'
+  | 'cal.filters.region'
+  | 'cal.filters.difficulty'
+  | 'cal.filters.price'
+  | 'cal.filters.all'
+  | 'cal.filters.free'
+  | 'cal.filters.paid'
+  | 'cal.filters.reset'
+  | 'nav.calendar'
+  | 'tab.calendar'
+  | 'activity.shareStory'
+  | 'activity.shareDownload'
+  | 'activity.shareFallback'
+  | 'activity.sharePreparing'
+  | 'activity.shareTitle'
+  | 'activity.shareUnavailable';
 
 export const en: Record<TranslationKey, string> = {
   'app.tagline': 'Every trail in Colombia, in one happy app.',
@@ -344,6 +420,83 @@ export const en: Record<TranslationKey, string> = {
   'activity.openExpedition': 'Open the expedition',
   'activity.noLinkedExpedition': 'No linked expedition.',
   'activity.notFound': 'Activity not found',
+  'activity.share': 'Share',
+  'activity.shareCaption': 'Just finished {title} on Minga Expeditions 🌄',
+  'activity.photosHeading': 'Photos',
+  'activity.addPhoto': 'Add photo',
+  'activity.noPhotos': 'No photos yet — add some from your camera roll.',
+  'profile.connectedAccounts': 'Connected accounts',
+  'profile.emailLabel': 'Email',
+  'profile.signInMethodLabel': 'Sign-in method',
+  'profile.signInMethodEmailPassword': 'Email + password',
+  'profile.signInMethodGuest': 'Guest session',
+  'profile.whatsappLabel': 'WhatsApp',
+  'profile.whatsappHelp': 'Used to send booking confirmations and trip reminders.',
+  'profile.phoneSaving': 'Saving…',
+  'profile.phoneSaved': 'Saved ✓',
+  'profile.phoneRetry': 'Retry',
+  'profile.phoneSave': 'Save',
+  'profile.instagramLabel': 'Instagram',
+  'profile.instagramHelp': 'We tag you in trip recap posts and share-cards.',
+  'profile.instagramPlaceholder': 'yourhandle',
+  'profile.instagramInvalid': 'Use 1–30 letters, numbers, dots, or underscores.',
+  'profile.instagramOpen': 'View on Instagram',
+  'profile.displayNameLabel': 'Display name',
+  'profile.displayNameHelp': 'How other travelers see you. Your @username stays the same.',
+  'profile.changePhoto': 'Change photo',
+  'profile.uploadingPhoto': 'Uploading…',
+  'profile.uploadFailed': 'Upload failed. Try again.',
+  'settings.theme.livehappy.title': 'Live Happy',
+  'settings.theme.livehappy.subtitle': 'Bright orange · inspired by livehappy.com',
+  'settings.theme.mingaGreen.title': 'Minga Green',
+  'settings.theme.mingaGreen.subtitle': 'Outdoorsy forest palette',
+  'settings.theme.midnight.title': 'Midnight',
+  'settings.theme.midnight.subtitle': 'Dark mode for late rides',
+  'track.linkedTo': 'Linked to',
+  'track.independent': 'Independent',
+  'track.terrain': 'Terrain',
+  'track.elevShort': 'elev m',
+  'track.avgSpeedShort': 'avg km/h',
+  'track.terrain.mountain': 'Mountain',
+  'track.terrain.flat': 'Flat',
+  'track.terrain.desert': 'Desert',
+  'track.terrain.river': 'River',
+  'track.terrain.forest': 'Forest',
+  'track.terrain.coast': 'Coast',
+  'track.terrain.urban': 'Urban',
+  'track.terrain.jungle': 'Jungle',
+  'track.terrain.snow': 'Snow',
+  'salida.next': 'Next departure',
+  'salida.scheduleTba': 'Schedule TBA',
+  'salida.upcomingHeading': 'Upcoming departures',
+  'salida.book': 'Book this date',
+  'salida.soldOut': 'Sold out',
+  'salida.seatsRemaining': '{n} seats left',
+  'salida.openCapacity': 'Open capacity',
+  'salida.empty': 'No upcoming departures yet — check back soon.',
+  'cal.title': 'Calendar',
+  'cal.subtitle': 'See every scheduled departure and filter by what you’re into.',
+  'cal.prev': '← Prev',
+  'cal.next': 'Next →',
+  'cal.today': 'Today',
+  'cal.empty': 'No departures match these filters.',
+  'cal.filters.category': 'Category',
+  'cal.filters.region': 'Region',
+  'cal.filters.difficulty': 'Difficulty',
+  'cal.filters.price': 'Price',
+  'cal.filters.all': 'All',
+  'cal.filters.free': 'Free',
+  'cal.filters.paid': 'Paid',
+  'cal.filters.reset': 'Reset',
+  'nav.calendar': 'Calendar',
+  'tab.calendar': 'Calendar',
+  'activity.shareStory': 'Share to story',
+  'activity.shareDownload': 'Download image',
+  'activity.shareFallback':
+    'Sharing isn’t available here — the image was downloaded so you can post it manually.',
+  'activity.sharePreparing': 'Preparing your story…',
+  'activity.shareTitle': 'My Minga expedition',
+  'activity.shareUnavailable': 'Connect a social account on your profile to share.',
 };
 
 export const es: Record<TranslationKey, string> = {
@@ -518,6 +671,84 @@ export const es: Record<TranslationKey, string> = {
   'activity.openExpedition': 'Abrir la expedición',
   'activity.noLinkedExpedition': 'Sin expedición vinculada.',
   'activity.notFound': 'Actividad no encontrada',
+  'activity.share': 'Compartir',
+  'activity.shareCaption': 'Acabo de completar {title} en Minga Expeditions 🌄',
+  'activity.photosHeading': 'Fotos',
+  'activity.addPhoto': 'Añadir foto',
+  'activity.noPhotos': 'Aún no hay fotos. Añade algunas desde la cámara.',
+  'profile.connectedAccounts': 'Cuentas conectadas',
+  'profile.emailLabel': 'Correo',
+  'profile.signInMethodLabel': 'Método de inicio de sesión',
+  'profile.signInMethodEmailPassword': 'Correo + contraseña',
+  'profile.signInMethodGuest': 'Sesión de invitado',
+  'profile.whatsappLabel': 'WhatsApp',
+  'profile.whatsappHelp': 'Se usa para enviar confirmaciones de reserva y recordatorios de viaje.',
+  'profile.phoneSaving': 'Guardando…',
+  'profile.phoneSaved': 'Guardado ✓',
+  'profile.phoneRetry': 'Reintentar',
+  'profile.phoneSave': 'Guardar',
+  'profile.instagramLabel': 'Instagram',
+  'profile.instagramHelp': 'Te etiquetamos en los resúmenes de viaje y tarjetas para compartir.',
+  'profile.instagramPlaceholder': 'tuusuario',
+  'profile.instagramInvalid': 'Usa 1–30 letras, números, puntos o guiones bajos.',
+  'profile.instagramOpen': 'Ver en Instagram',
+  'profile.displayNameLabel': 'Nombre visible',
+  'profile.displayNameHelp': 'Lo que ven otros viajeros. Tu @usuario no cambia.',
+  'profile.changePhoto': 'Cambiar foto',
+  'profile.uploadingPhoto': 'Subiendo…',
+  'profile.uploadFailed': 'Falló la subida. Inténtalo de nuevo.',
+  'settings.theme.livehappy.title': 'Live Happy',
+  'settings.theme.livehappy.subtitle': 'Naranja vivo · inspirado en livehappy.com',
+  'settings.theme.mingaGreen.title': 'Minga Verde',
+  'settings.theme.mingaGreen.subtitle': 'Paleta de bosque al aire libre',
+  'settings.theme.midnight.title': 'Medianoche',
+  'settings.theme.midnight.subtitle': 'Modo oscuro para rodadas nocturnas',
+  'track.linkedTo': 'Vinculado a',
+  'track.independent': 'Independiente',
+  'track.terrain': 'Terreno',
+  'track.elevShort': 'desnivel m',
+  'track.avgSpeedShort': 'km/h prom',
+  'track.terrain.mountain': 'Montaña',
+  'track.terrain.flat': 'Llano',
+  'track.terrain.desert': 'Desierto',
+  'track.terrain.river': 'Río',
+  'track.terrain.forest': 'Bosque',
+  'track.terrain.coast': 'Costa',
+  'track.terrain.urban': 'Urbano',
+  'track.terrain.jungle': 'Selva',
+  'track.terrain.snow': 'Nieve',
+  'salida.next': 'Próxima salida',
+  'salida.scheduleTba': 'Fechas por confirmar',
+  'salida.upcomingHeading': 'Próximas salidas',
+  'salida.book': 'Reservar esta fecha',
+  'salida.soldOut': 'Agotada',
+  'salida.seatsRemaining': '{n} cupos disponibles',
+  'salida.openCapacity': 'Cupos abiertos',
+  'salida.empty': 'Aún no hay fechas programadas — vuelve pronto.',
+  'cal.title': 'Calendario',
+  'cal.subtitle': 'Mira todas las salidas y filtra por lo que te interese.',
+  'cal.prev': '← Anterior',
+  'cal.next': 'Siguiente →',
+  'cal.today': 'Hoy',
+  'cal.empty': 'Ninguna salida coincide con estos filtros.',
+  'cal.filters.category': 'Categoría',
+  'cal.filters.region': 'Región',
+  'cal.filters.difficulty': 'Dificultad',
+  'cal.filters.price': 'Precio',
+  'cal.filters.all': 'Todos',
+  'cal.filters.free': 'Gratis',
+  'cal.filters.paid': 'De pago',
+  'cal.filters.reset': 'Restablecer',
+  'nav.calendar': 'Calendario',
+  'tab.calendar': 'Calendario',
+  'activity.shareStory': 'Compartir en historia',
+  'activity.shareDownload': 'Descargar imagen',
+  'activity.shareFallback':
+    'No se puede compartir aquí — descargamos la imagen para que la publiques manualmente.',
+  'activity.sharePreparing': 'Preparando tu historia…',
+  'activity.shareTitle': 'Mi expedición Minga',
+  'activity.shareUnavailable':
+    'Conecta una cuenta social en tu perfil para compartir.',
 };
 
 export const dictionaries: Record<LanguageCode, Record<TranslationKey, string>> = { en, es };

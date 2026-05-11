@@ -37,6 +37,10 @@ interface GuestInput {
 
 interface RequestBody {
   expedition_id: string;
+  // Optional FK to a specific scheduled departure. Required for any expedition
+  // with salidas defined; when set, the salida's price_cents/currency override
+  // the template values.
+  salida_id?: string | null;
   guest?: GuestInput;
   return_path?: string; // e.g. "/orders/<id>/success"
 }
@@ -133,7 +137,30 @@ serve(async (req) => {
     .maybeSingle();
   if (expErr || !expedition) return bad(404, 'Expedition not found');
   if (!expedition.is_published) return bad(400, 'Expedition is not on sale');
-  if (expedition.price_cents <= 0) return bad(400, 'Expedition is free — no payment needed');
+
+  // ---- 2b. Optional salida: validates membership + applies overrides -----
+  let salidaId: string | null = null;
+  let amountCents = expedition.price_cents;
+  let currency = expedition.currency;
+  let salidaStartsAt: string | null = null;
+  if (body.salida_id) {
+    const { data: salida, error: salErr } = await supabase
+      .from('expedition_salidas')
+      .select('id, expedition_id, starts_at, price_cents, currency, is_published, capacity, seats_taken')
+      .eq('id', body.salida_id)
+      .maybeSingle();
+    if (salErr || !salida) return bad(404, 'Salida not found');
+    if (salida.expedition_id !== expedition.id) return bad(400, 'Salida does not belong to this expedition');
+    if (!salida.is_published) return bad(400, 'Salida is not on sale');
+    if (salida.capacity != null && salida.seats_taken >= salida.capacity) {
+      return bad(400, 'Salida is sold out');
+    }
+    if (salida.price_cents != null) amountCents = salida.price_cents;
+    if (salida.currency) currency = salida.currency;
+    salidaId = salida.id;
+    salidaStartsAt = salida.starts_at;
+  }
+  if (amountCents <= 0) return bad(400, 'Expedition is free — no payment needed');
 
   // ---- 3. Insert the pending order with a fresh Wompi reference ----------
   const reference = crypto.randomUUID();
@@ -141,13 +168,17 @@ serve(async (req) => {
     .from('orders')
     .insert({
       expedition_id: expedition.id,
+      salida_id: salidaId,
       buyer_profile_id: profileId,
       buyer_guest_contact_id: guestContactId,
-      amount_cents: expedition.price_cents,
-      currency: expedition.currency,
+      amount_cents: amountCents,
+      currency: currency,
       status: 'pending',
       wompi_reference: reference,
-      metadata: { expedition_title: expedition.title },
+      metadata: {
+        expedition_title: expedition.title,
+        salida_starts_at: salidaStartsAt,
+      },
     })
     .select('id')
     .single();
@@ -155,7 +186,7 @@ serve(async (req) => {
 
   // ---- 4. Sign + return the widget config --------------------------------
   const signature = await sha256Hex(
-    `${reference}${expedition.price_cents}${expedition.currency}${WOMPI_INTEGRITY_KEY}`,
+    `${reference}${amountCents}${currency}${WOMPI_INTEGRITY_KEY}`,
   );
   const returnPath = body.return_path ?? `/orders/${order.id}/success`;
   const redirectUrl = new URL(returnPath, PUBLIC_SITE_URL).toString();
@@ -164,8 +195,8 @@ serve(async (req) => {
     JSON.stringify({
       orderId: order.id,
       reference,
-      amountInCents: expedition.price_cents,
-      currency: expedition.currency,
+      amountInCents: amountCents,
+      currency: currency,
       publicKey: WOMPI_PUBLIC_KEY,
       signature,
       redirectUrl,

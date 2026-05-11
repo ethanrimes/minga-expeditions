@@ -67,17 +67,24 @@ export function MapPage() {
 
     for (const exp of expeditions) {
       if (exp.start_lat == null || exp.start_lng == null) continue;
-      const el = document.createElement('button');
-      el.type = 'button';
-      el.setAttribute('aria-label', exp.title);
-      el.style.cssText = `
+      // Wrap the button in an outer div: MapLibre writes its positioning
+      // transform onto the marker root element, so the hover scale must live
+      // on an inner node or the dot snaps to the top-left corner.
+      const el = document.createElement('div');
+      el.style.cssText = 'width: 28px; height: 28px;';
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.setAttribute('aria-label', exp.title);
+      btn.style.cssText = `
         width: 28px; height: 28px; border-radius: 999px; border: 3px solid #fff;
         background: ${exp.is_official ? theme.accent : theme.primary};
         box-shadow: 0 6px 16px rgba(0,0,0,0.25); cursor: pointer;
+        padding: 0; display: block;
         transition: transform 120ms ease;
       `;
-      el.onmouseenter = () => (el.style.transform = 'scale(1.15)');
-      el.onmouseleave = () => (el.style.transform = 'scale(1)');
+      btn.onmouseenter = () => (btn.style.transform = 'scale(1.15)');
+      btn.onmouseleave = () => (btn.style.transform = 'scale(1)');
+      el.appendChild(btn);
 
       const popup = new maplibregl.Popup({ offset: 18, closeButton: false }).setHTML(`
         <div style="font-family: Nunito, sans-serif; min-width: 200px;">
@@ -99,7 +106,7 @@ export function MapPage() {
         .setPopup(popup)
         .addTo(map);
 
-      el.addEventListener('click', (e) => {
+      btn.addEventListener('click', (e) => {
         // Left-click opens detail page; the popup still shows on right-click/drag.
         e.stopPropagation();
         nav(`/expeditions/${exp.id}`);

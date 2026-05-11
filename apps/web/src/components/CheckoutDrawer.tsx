@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTheme } from '@minga/theme';
-import { formatPriceCents } from '@minga/logic';
+import { formatPriceCents, formatSalidaDate } from '@minga/logic';
 import { useT } from '@minga/i18n';
 import { supabase } from '../supabase';
 
@@ -11,6 +11,12 @@ interface Props {
   expeditionTitle: string;
   priceCents: number;
   currency: string;
+  // Optional: specific scheduled departure being purchased. When set we carry
+  // salida_id into the wompi-create-order call so the order ties to that
+  // departure (capacity, override price, etc.).
+  salidaId?: string | null;
+  salidaStartsAt?: string | null;
+  salidaTimezone?: string | null;
   onClose: () => void;
 }
 
@@ -93,6 +99,9 @@ export function CheckoutDrawer({
   expeditionTitle,
   priceCents,
   currency,
+  salidaId,
+  salidaStartsAt,
+  salidaTimezone,
   onClose,
 }: Props) {
   const { theme } = useTheme();
@@ -196,6 +205,7 @@ export function CheckoutDrawer({
         headers,
         body: JSON.stringify({
           expedition_id: expeditionId,
+          salida_id: salidaId ?? undefined,
           guest: {
             email: email.trim() || undefined,
             phone: phoneE164 || undefined,
@@ -274,6 +284,14 @@ export function CheckoutDrawer({
               Checkout
             </div>
             <div style={{ color: theme.text, fontSize: 18, fontWeight: 700, marginTop: 4 }}>{expeditionTitle}</div>
+            {salidaStartsAt ? (
+              <div style={{ color: theme.textMuted, fontSize: 13, marginTop: 4 }}>
+                {formatSalidaDate(salidaStartsAt, {
+                  tz: salidaTimezone ?? undefined,
+                  withTime: true,
+                })}
+              </div>
+            ) : null}
           </div>
           <button
             onClick={onClose}

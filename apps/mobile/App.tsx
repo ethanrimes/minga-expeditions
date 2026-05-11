@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
@@ -9,6 +9,7 @@ import type { ExpeditionCategory } from '@minga/types';
 import {
   ActivityDetailScreen,
   AuthScreen,
+  CalendarScreen,
   ExpeditionDetailScreen,
   ExploreScreen,
   FeedScreen,
@@ -49,7 +50,7 @@ Sentry.init({
   // spotlight: __DEV__,
 });
 
-type Tab = 'feed' | 'explore' | 'map' | 'track' | 'profile' | 'settings';
+type Tab = 'feed' | 'explore' | 'calendar' | 'map' | 'track' | 'profile' | 'settings';
 type Route =
   | { kind: 'tab'; tab: Tab }
   | { kind: 'expedition'; id: string }
@@ -81,6 +82,7 @@ function Root() {
   const tabs: { key: Tab; label: string; icon: IconName }[] = [
     { key: 'feed', label: t('tab.feed'), icon: 'mountain' },
     { key: 'explore', label: t('tab.explore'), icon: 'compass' },
+    { key: 'calendar', label: t('tab.calendar'), icon: 'calendar' },
     { key: 'map', label: t('tab.map'), icon: 'map' },
     { key: 'track', label: t('tab.track'), icon: 'activity' },
     { key: 'profile', label: t('tab.profile'), icon: 'user' },
@@ -90,7 +92,19 @@ function Root() {
   const screen = () => {
     if (auth) return <AuthScreen onAuthenticated={() => setAuth(false)} />;
     if (route.kind === 'expedition') {
-      return <ExpeditionDetailScreen id={route.id} onBack={() => setRoute({ kind: 'tab', tab: 'feed' })} />;
+      return (
+        <ExpeditionDetailScreen
+          id={route.id}
+          onBack={() => setRoute({ kind: 'tab', tab: 'feed' })}
+          onBookSalida={(salida) => {
+            // Native app hands off to the web checkout — the Wompi widget
+            // can't render inside the RN runtime, and opening the same URL
+            // keeps a single payment integration to maintain.
+            const target = `${PUBLIC_SITE_URL}/expeditions/${route.id}?salida=${salida.id}`;
+            void Linking.openURL(target);
+          }}
+        />
+      );
     }
     if (route.kind === 'activity') {
       return (
@@ -113,6 +127,13 @@ function Root() {
         return (
           <ExploreScreen onPickCategory={(_c: ExpeditionCategory) => setRoute({ kind: 'tab', tab: 'feed' })} />
         );
+      case 'calendar':
+        return (
+          <CalendarScreen
+            variant="agenda"
+            onOpenExpedition={(id) => setRoute({ kind: 'expedition', id })}
+          />
+        );
       case 'map':
         return <MapScreen onOpenExpedition={(id) => setRoute({ kind: 'expedition', id })} />;
       case 'track':
@@ -122,6 +143,7 @@ function Root() {
           <ProfileScreen
             onSignIn={() => setAuth(true)}
             onOpenActivity={(id) => setRoute({ kind: 'activity', id })}
+            photoPicker={photoPicker}
           />
         );
       case 'settings':

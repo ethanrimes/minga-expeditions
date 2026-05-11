@@ -7,3 +7,4 @@ export * from './AuthScreen';
 export * from './ExploreScreen';
 export * from './MapNoticeScreen';
 export * from './ActivityDetailScreen';
+export * from './CalendarScreen';

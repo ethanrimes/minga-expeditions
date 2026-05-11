@@ -1,9 +1,17 @@
 import React, { useState } from 'react';
 import { ActivityIndicator, Image, Pressable, ScrollView, Text, View } from 'react-native';
 import { useTheme, spacing, fontSizes, fontWeights, radii } from '@minga/theme';
-import { formatDistanceKm, formatElevation, formatPriceCents } from '@minga/logic';
+import {
+  formatDistanceKm,
+  formatElevation,
+  formatPriceCents,
+  formatSalidaRange,
+  isSoldOut,
+  priceCentsForSalida,
+  seatsRemaining,
+} from '@minga/logic';
 import { useT } from '@minga/i18n';
-import type { ExpeditionCategory } from '@minga/types';
+import type { DbExpeditionSalida, ExpeditionCategory } from '@minga/types';
 import { Screen } from '../primitives/Screen';
 import { Button } from '../primitives/Button';
 import { Avatar } from '../primitives/Avatar';
@@ -30,13 +38,18 @@ const CATEGORY_KEY: Record<ExpeditionCategory, any> = {
 export function ExpeditionDetailScreen({
   id,
   onBack,
+  onBookSalida,
 }: {
   id: string;
   onBack?: () => void;
+  // Called when the user taps "Book this date" on a specific salida. Hosts
+  // wire this to their checkout — apps/web opens the CheckoutDrawer with
+  // salidaId; apps/mobile can route to a web checkout via Linking.
+  onBookSalida?: (salida: DbExpeditionSalida) => void;
 }) {
   const { theme } = useTheme();
   const { t } = useT();
-  const { expedition, comments, loading, error, reply, rootComment, like, rate } = useExpedition(id);
+  const { expedition, comments, salidas, loading, error, reply, rootComment, like, rate } = useExpedition(id);
   const [draft, setDraft] = useState('');
   const [posting, setPosting] = useState(false);
   const [myRating, setMyRating] = useState<number>(0);
@@ -180,6 +193,59 @@ export function ExpeditionDetailScreen({
       </View>
 
       <Text style={{ color: theme.text, fontSize: fontSizes.md, lineHeight: 24 }}>{expedition.description}</Text>
+
+      <View style={{ gap: spacing.sm }}>
+        <Text style={{ color: theme.text, fontWeight: fontWeights.bold, fontSize: fontSizes.lg }}>
+          {t('salida.upcomingHeading')}
+        </Text>
+        {salidas.length === 0 ? (
+          <Text style={{ color: theme.textMuted, fontSize: fontSizes.sm }}>{t('salida.empty')}</Text>
+        ) : (
+          <View style={{ gap: spacing.sm }}>
+            {salidas.map((s) => {
+              const sold = isSoldOut(s);
+              const remaining = seatsRemaining(s);
+              const { price_cents, currency } = priceCentsForSalida(s, expedition);
+              return (
+                <View
+                  key={s.id}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: spacing.md,
+                    backgroundColor: theme.surfaceAlt,
+                    borderRadius: radii.lg,
+                    padding: spacing.md,
+                  }}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: theme.text, fontWeight: fontWeights.semibold }}>
+                      {formatSalidaRange(s.starts_at, s.ends_at, { tz: s.timezone })}
+                    </Text>
+                    <Text style={{ color: theme.textMuted, fontSize: fontSizes.xs, marginTop: 2 }}>
+                      {sold
+                        ? t('salida.soldOut')
+                        : remaining != null
+                          ? t('salida.seatsRemaining', { n: remaining })
+                          : t('salida.openCapacity')}
+                      {' · '}
+                      {formatPriceCents(price_cents, { currency, freeLabel: t('common.free') })}
+                    </Text>
+                  </View>
+                  {onBookSalida ? (
+                    <Button
+                      label={t('salida.book')}
+                      onPress={() => onBookSalida(s)}
+                      disabled={sold}
+                      variant={sold ? 'secondary' : 'primary'}
+                    />
+                  ) : null}
+                </View>
+              );
+            })}
+          </View>
+        )}
+      </View>
 
       <View style={{ flexDirection: 'row', gap: spacing.md, alignItems: 'center' }}>
         <Button

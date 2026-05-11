@@ -25,6 +25,7 @@ export type Key =
   | 'sidebar.dashboard'
   | 'sidebar.categories'
   | 'sidebar.expeditions'
+  | 'sidebar.calendar'
   | 'sidebar.vendorProposals'
   | 'sidebar.orders'
   | 'sidebar.signOut'
@@ -213,7 +214,68 @@ export type Key =
   | 'orderDetail.guestSignedIn'
   | 'orderDetail.guestClaimed'
   | 'orderDetail.guestUnclaimed'
-  | 'orderDetail.buyerNone';
+  | 'orderDetail.buyerNone'
+  | 'orderDetail.salida'
+  | 'orderDetail.salidaNone'
+  // salidas (admin list under expedition)
+  | 'salidas.title'
+  | 'salidas.subtitle'
+  | 'salidas.new'
+  | 'salidas.back'
+  | 'salidas.manage'
+  | 'salidas.col.starts'
+  | 'salidas.col.ends'
+  | 'salidas.col.capacity'
+  | 'salidas.col.seats'
+  | 'salidas.col.price'
+  | 'salidas.col.status'
+  | 'salidas.col.actions'
+  | 'salidas.status.published'
+  | 'salidas.status.draft'
+  | 'salidas.status.soldOut'
+  | 'salidas.inheritsPrice'
+  | 'salidas.unlimited'
+  | 'salidas.empty'
+  | 'salidas.newPage.title'
+  | 'salidas.newPage.submit'
+  | 'salidas.editPage.title'
+  | 'salidas.editPage.submit'
+  // salida form
+  | 'salidaForm.starts'
+  | 'salidaForm.ends'
+  | 'salidaForm.timezone'
+  | 'salidaForm.capacity'
+  | 'salidaForm.capacityHelp'
+  | 'salidaForm.seatsTaken'
+  | 'salidaForm.seatsHelp'
+  | 'salidaForm.priceCents'
+  | 'salidaForm.priceHelp'
+  | 'salidaForm.currency'
+  | 'salidaForm.notes'
+  | 'salidaForm.published'
+  | 'salidaForm.saving'
+  | 'salidaForm.cancel'
+  | 'error.salida.required'
+  | 'error.salida.invalidWindow'
+  // expedition calendar (admin)
+  | 'calendar.title'
+  | 'calendar.subtitle'
+  | 'calendar.prev'
+  | 'calendar.next'
+  | 'calendar.today'
+  | 'calendar.empty'
+  | 'calendar.filters.title'
+  | 'calendar.filters.category'
+  | 'calendar.filters.region'
+  | 'calendar.filters.difficulty'
+  | 'calendar.filters.price'
+  | 'calendar.filters.all'
+  | 'calendar.filters.free'
+  | 'calendar.filters.paid'
+  | 'calendar.filters.reset'
+  | 'calendar.legend.published'
+  | 'calendar.legend.draft'
+  | 'calendar.legend.soldOut';
 
 export const dict: Record<Locale, Record<Key, string>> = {
   en: {
@@ -232,6 +294,7 @@ export const dict: Record<Locale, Record<Key, string>> = {
     'sidebar.dashboard': 'Dashboard',
     'sidebar.categories': 'Categories',
     'sidebar.expeditions': 'Expeditions',
+    'sidebar.calendar': 'Calendar',
     'sidebar.vendorProposals': 'Vendor proposals',
     'sidebar.orders': 'Orders',
     'sidebar.signOut': 'Sign out',
@@ -433,6 +496,69 @@ export const dict: Record<Locale, Record<Key, string>> = {
     'orderDetail.guestClaimed': 'Claimed',
     'orderDetail.guestUnclaimed': 'Unclaimed guest',
     'orderDetail.buyerNone': 'No buyer linked.',
+    'orderDetail.salida': 'Salida (departure)',
+    'orderDetail.salidaNone': 'No specific salida — template-level order.',
+
+    'salidas.title': 'Salidas',
+    'salidas.subtitle':
+      'Scheduled departures for this expedition template. Buyers pick a specific salida at checkout.',
+    'salidas.new': 'New salida',
+    'salidas.back': '← Back to expedition',
+    'salidas.manage': 'Manage salidas',
+    'salidas.col.starts': 'Starts',
+    'salidas.col.ends': 'Ends',
+    'salidas.col.capacity': 'Capacity',
+    'salidas.col.seats': 'Booked',
+    'salidas.col.price': 'Price',
+    'salidas.col.status': 'Status',
+    'salidas.col.actions': 'Actions',
+    'salidas.status.published': 'Published',
+    'salidas.status.draft': 'Draft',
+    'salidas.status.soldOut': 'Sold out',
+    'salidas.inheritsPrice': 'Template price',
+    'salidas.unlimited': 'Open',
+    'salidas.empty': 'No salidas yet — add the first scheduled departure.',
+    'salidas.newPage.title': 'New salida',
+    'salidas.newPage.submit': 'Create salida',
+    'salidas.editPage.title': 'Edit salida',
+    'salidas.editPage.submit': 'Save changes',
+
+    'salidaForm.starts': 'Starts at',
+    'salidaForm.ends': 'Ends at (optional)',
+    'salidaForm.timezone': 'Time zone',
+    'salidaForm.capacity': 'Capacity',
+    'salidaForm.capacityHelp': 'Leave blank for open capacity (no cap).',
+    'salidaForm.seatsTaken': 'Seats booked',
+    'salidaForm.seatsHelp': 'Manual override — Wompi webhooks bump this automatically.',
+    'salidaForm.priceCents': 'Price override (cents)',
+    'salidaForm.priceHelp':
+      'Leave blank to inherit the template price. Match the cents-in-currency format Wompi expects.',
+    'salidaForm.currency': 'Currency override',
+    'salidaForm.notes': 'Internal notes',
+    'salidaForm.published': 'Published (sellable & visible in calendar)',
+    'salidaForm.saving': 'Saving…',
+    'salidaForm.cancel': 'Cancel',
+    'error.salida.required': 'Start date and time are required.',
+    'error.salida.invalidWindow': 'End time must be after start time.',
+
+    'calendar.title': 'Calendar',
+    'calendar.subtitle': 'All scheduled salidas across every expedition template.',
+    'calendar.prev': '← Prev',
+    'calendar.next': 'Next →',
+    'calendar.today': 'Today',
+    'calendar.empty': 'No salidas match these filters.',
+    'calendar.filters.title': 'Filters',
+    'calendar.filters.category': 'Category',
+    'calendar.filters.region': 'Region',
+    'calendar.filters.difficulty': 'Difficulty',
+    'calendar.filters.price': 'Price',
+    'calendar.filters.all': 'All',
+    'calendar.filters.free': 'Free only',
+    'calendar.filters.paid': 'Paid only',
+    'calendar.filters.reset': 'Reset filters',
+    'calendar.legend.published': 'Published',
+    'calendar.legend.draft': 'Draft',
+    'calendar.legend.soldOut': 'Sold out',
   },
   es: {
     'login.title': 'Minga Admin',
@@ -451,6 +577,7 @@ export const dict: Record<Locale, Record<Key, string>> = {
     'sidebar.dashboard': 'Panel',
     'sidebar.categories': 'Categorías',
     'sidebar.expeditions': 'Expediciones',
+    'sidebar.calendar': 'Calendario',
     'sidebar.vendorProposals': 'Propuestas de proveedores',
     'sidebar.orders': 'Pedidos',
     'sidebar.signOut': 'Cerrar sesión',
@@ -656,6 +783,70 @@ export const dict: Record<Locale, Record<Key, string>> = {
     'orderDetail.guestClaimed': 'Reclamado',
     'orderDetail.guestUnclaimed': 'Invitado sin reclamar',
     'orderDetail.buyerNone': 'Sin comprador vinculado.',
+    'orderDetail.salida': 'Salida (fecha)',
+    'orderDetail.salidaNone': 'Sin salida específica — pedido a nivel de plantilla.',
+
+    'salidas.title': 'Salidas',
+    'salidas.subtitle':
+      'Fechas programadas para esta plantilla de expedición. Los compradores eligen una salida al pagar.',
+    'salidas.new': 'Nueva salida',
+    'salidas.back': '← Volver a la expedición',
+    'salidas.manage': 'Gestionar salidas',
+    'salidas.col.starts': 'Inicia',
+    'salidas.col.ends': 'Termina',
+    'salidas.col.capacity': 'Cupos',
+    'salidas.col.seats': 'Reservados',
+    'salidas.col.price': 'Precio',
+    'salidas.col.status': 'Estado',
+    'salidas.col.actions': 'Acciones',
+    'salidas.status.published': 'Publicada',
+    'salidas.status.draft': 'Borrador',
+    'salidas.status.soldOut': 'Agotada',
+    'salidas.inheritsPrice': 'Precio plantilla',
+    'salidas.unlimited': 'Abierto',
+    'salidas.empty': 'Aún no hay salidas — agrega la primera fecha.',
+    'salidas.newPage.title': 'Nueva salida',
+    'salidas.newPage.submit': 'Crear salida',
+    'salidas.editPage.title': 'Editar salida',
+    'salidas.editPage.submit': 'Guardar cambios',
+
+    'salidaForm.starts': 'Inicia el',
+    'salidaForm.ends': 'Termina el (opcional)',
+    'salidaForm.timezone': 'Zona horaria',
+    'salidaForm.capacity': 'Cupos',
+    'salidaForm.capacityHelp': 'Déjalo vacío si la salida no tiene cupo máximo.',
+    'salidaForm.seatsTaken': 'Cupos reservados',
+    'salidaForm.seatsHelp':
+      'Ajuste manual — los webhooks de Wompi incrementan este número automáticamente.',
+    'salidaForm.priceCents': 'Precio (en centavos, opcional)',
+    'salidaForm.priceHelp':
+      'Vacío para heredar el precio de la plantilla. Formato: centavos enteros en la moneda Wompi.',
+    'salidaForm.currency': 'Moneda (opcional)',
+    'salidaForm.notes': 'Notas internas',
+    'salidaForm.published': 'Publicada (disponible para reservar y visible en el calendario)',
+    'salidaForm.saving': 'Guardando…',
+    'salidaForm.cancel': 'Cancelar',
+    'error.salida.required': 'La fecha y hora de inicio son obligatorias.',
+    'error.salida.invalidWindow': 'La hora de fin debe ser posterior a la de inicio.',
+
+    'calendar.title': 'Calendario',
+    'calendar.subtitle': 'Todas las salidas programadas en cada plantilla de expedición.',
+    'calendar.prev': '← Anterior',
+    'calendar.next': 'Siguiente →',
+    'calendar.today': 'Hoy',
+    'calendar.empty': 'Ninguna salida coincide con los filtros.',
+    'calendar.filters.title': 'Filtros',
+    'calendar.filters.category': 'Categoría',
+    'calendar.filters.region': 'Región',
+    'calendar.filters.difficulty': 'Dificultad',
+    'calendar.filters.price': 'Precio',
+    'calendar.filters.all': 'Todos',
+    'calendar.filters.free': 'Solo gratis',
+    'calendar.filters.paid': 'Solo pago',
+    'calendar.filters.reset': 'Restablecer',
+    'calendar.legend.published': 'Publicada',
+    'calendar.legend.draft': 'Borrador',
+    'calendar.legend.soldOut': 'Agotada',
   },
 };
 

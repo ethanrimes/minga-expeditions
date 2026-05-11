@@ -7,10 +7,22 @@ import { Screen } from '../primitives/Screen';
 import { Icon } from '../primitives/Icon';
 import { SectionHeader } from '../components/SectionHeader';
 
-const THEME_META: Record<ThemeName, { title: string; subtitle: string; swatch: string }> = {
-  livehappy: { title: 'Live Happy', subtitle: 'Bright orange · inspired by livehappy.com', swatch: '#ED8B00' },
-  'minga-green': { title: 'Minga Green', subtitle: 'Outdoorsy forest palette', swatch: '#2D7D32' },
-  midnight: { title: 'Midnight', subtitle: 'Dark mode for late rides', swatch: '#161B22' },
+const THEME_META: Record<ThemeName, { titleKey: any; subtitleKey: any; swatch: string }> = {
+  livehappy: {
+    titleKey: 'settings.theme.livehappy.title',
+    subtitleKey: 'settings.theme.livehappy.subtitle',
+    swatch: '#ED8B00',
+  },
+  'minga-green': {
+    titleKey: 'settings.theme.mingaGreen.title',
+    subtitleKey: 'settings.theme.mingaGreen.subtitle',
+    swatch: '#2D7D32',
+  },
+  midnight: {
+    titleKey: 'settings.theme.midnight.title',
+    subtitleKey: 'settings.theme.midnight.subtitle',
+    swatch: '#161B22',
+  },
 };
 
 const FONT_LABEL_KEY: Record<FontScaleLevel, any> = {
@@ -81,10 +93,10 @@ export function SettingsScreen() {
               <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: THEME_META[name].swatch }} />
               <View style={{ flex: 1 }}>
                 <Text style={{ color: theme.text, fontWeight: fontWeights.bold, fontSize: fontSizes.md }}>
-                  {THEME_META[name].title}
+                  {t(THEME_META[name].titleKey)}
                 </Text>
                 <Text style={{ color: theme.textMuted, fontSize: fontSizes.sm }}>
-                  {THEME_META[name].subtitle}
+                  {t(THEME_META[name].subtitleKey)}
                 </Text>
               </View>
               {active ? <Icon name="check" size={18} color={theme.primary} strokeWidth={3} /> : null}
