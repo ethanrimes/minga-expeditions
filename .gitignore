@@ -42,10 +42,11 @@ Thumbs.db
 # Typescript
 *.tsbuildinfo
 
-# Playwright MCP screenshots at repo root (keep pastes/ which contains design refs)
-/web-*.png
-/mw-*.png
-/page-*.png
+# All PNG screenshots and ad-hoc images stay out of git.
+# (Real app assets live under apps/*/assets and packages/*/assets — none
+# of those are PNGs today; if that changes, add a negation like
+# `!apps/mobile/assets/**/*.png` here.)
+*.png
 
 # Original brief from Giovanni (contains secret keys — never commit)
 /app description.md
