@@ -55,19 +55,27 @@ interface WompiCheckoutOptions {
   };
 }
 
-// Split a user-entered phone like "+57 300 123 4567" into Wompi's expected
-// shape: { phoneNumberPrefix: "+57", phoneNumber: "3001234567" }.
-// If the input doesn't start with "+" + 1–3 digits we return undefined so
-// the caller can omit both fields and let Wompi prompt the user.
-function splitPhone(raw: string): { phoneNumber: string; phoneNumberPrefix: string } | undefined {
-  const trimmed = raw.trim();
-  if (!trimmed) return undefined;
-  const m = trimmed.match(/^\+(\d{1,3})[\s-]?(.+)$/);
-  if (!m) return undefined;
-  const digits = m[2].replace(/\D/g, '');
-  if (!digits) return undefined;
-  return { phoneNumberPrefix: `+${m[1]}`, phoneNumber: digits };
-}
+// Country code dropdown options, ordered by relevance to Minga's audience.
+// Add more here as they come up; format is { code: '+57', label: '🇨🇴 +57' }.
+// Labels include the country flag emoji for quick visual identification.
+const COUNTRY_CODES: { code: string; label: string }[] = [
+  { code: '+57', label: '🇨🇴 +57' },
+  { code: '+1', label: '🇺🇸 +1' },
+  { code: '+52', label: '🇲🇽 +52' },
+  { code: '+593', label: '🇪🇨 +593' },
+  { code: '+51', label: '🇵🇪 +51' },
+  { code: '+56', label: '🇨🇱 +56' },
+  { code: '+54', label: '🇦🇷 +54' },
+  { code: '+55', label: '🇧🇷 +55' },
+  { code: '+58', label: '🇻🇪 +58' },
+  { code: '+591', label: '🇧🇴 +591' },
+  { code: '+34', label: '🇪🇸 +34' },
+  { code: '+44', label: '🇬🇧 +44' },
+  { code: '+49', label: '🇩🇪 +49' },
+  { code: '+33', label: '🇫🇷 +33' },
+];
+
+const DEFAULT_COUNTRY_CODE = '+57';
 
 interface WompiCheckoutInstance {
   open(cb: (result: { transaction: { id: string; status: string } | null }) => void): void;
@@ -95,7 +103,14 @@ export function CheckoutDrawer({
   // auth session. We hide the input in that case but keep the value so the
   // submit handler still has it. If null, the user is a guest.
   const [signedInEmail, setSignedInEmail] = useState<string | null>(null);
-  const [phone, setPhone] = useState('');
+  // Auth user id, so we can save the phone back to their profile after a
+  // successful pay click. Guests don't have a profile to save to.
+  const [signedInUserId, setSignedInUserId] = useState<string | null>(null);
+  // Phone is stored split — matches the DB schema (phone_country_code +
+  // phone_number) and Wompi's customerData shape. Default country is
+  // Colombia since that's the launch market.
+  const [phoneCode, setPhoneCode] = useState<string>(DEFAULT_COUNTRY_CODE);
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [name, setName] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -105,9 +120,10 @@ export function CheckoutDrawer({
     return () => document.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  // Pre-fill from the signed-in session: skip asking for contact info the
-  // server already knows. For now we pull email + name from auth.users;
-  // phone pre-fill from profile.phone_e164 will land with the migration.
+  // Pre-fill from the signed-in session + profile: skip asking for contact
+  // info the server already knows. Email + name come from auth.users; phone
+  // comes from public.profiles (added by migration 20260511_000100). Guests
+  // see empty fields and we'll create a guest_contacts row at submit time.
   useEffect(() => {
     let cancelled = false;
     void (async () => {
@@ -124,6 +140,19 @@ export function CheckoutDrawer({
         setEmail(userEmail);
       }
       if (userName) setName((current) => current || userName);
+      if (!user?.id) return;
+      setSignedInUserId(user.id);
+      // Phone pre-fill from profile. Failures are silent — empty fields fall
+      // back to the country-code default + empty number, same as a guest.
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('phone_country_code, phone_number')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (cancelled || !profile) return;
+      const p = profile as { phone_country_code: string | null; phone_number: string | null };
+      if (p.phone_country_code) setPhoneCode(p.phone_country_code);
+      if (p.phone_number) setPhoneNumber(p.phone_number);
     })();
     return () => {
       cancelled = true;
@@ -139,16 +168,29 @@ export function CheckoutDrawer({
       setError('Email is required.');
       return;
     }
-    if (WHATSAPP_ENABLED && !phone.trim()) {
+    const trimmedNumber = phoneNumber.replace(/\D/g, '');
+    if (WHATSAPP_ENABLED && !trimmedNumber) {
       setError('WhatsApp number is required.');
       return;
     }
+    const phoneE164 = trimmedNumber ? `${phoneCode}${trimmedNumber}` : '';
     setMode('opening-widget');
     try {
       const session = await supabase.auth.getSession();
       const accessToken = session.data.session?.access_token;
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
+
+      // Save phone back to the signed-in user's profile so the next purchase
+      // doesn't ask again. Guests have no profile row to write to. Fire and
+      // forget — a failed save shouldn't block checkout.
+      if (signedInUserId && trimmedNumber) {
+        void supabase
+          .from('profiles')
+          .update({ phone_country_code: phoneCode, phone_number: trimmedNumber })
+          .eq('id', signedInUserId);
+      }
+
       const res = await fetch(`${FUNCTIONS_BASE}/wompi-create-order`, {
         method: 'POST',
         headers,
@@ -156,7 +198,7 @@ export function CheckoutDrawer({
           expedition_id: expeditionId,
           guest: {
             email: email.trim() || undefined,
-            phone: phone.trim() || undefined,
+            phone: phoneE164 || undefined,
             display_name: name.trim() || undefined,
           },
         }),
@@ -167,7 +209,6 @@ export function CheckoutDrawer({
       await loadWompiScript();
       if (!window.WidgetCheckout) throw new Error('Wompi widget unavailable');
 
-      const phoneFields = splitPhone(phone);
       const checkout = new window.WidgetCheckout({
         currency: json.currency,
         amountInCents: json.amountInCents,
@@ -178,7 +219,7 @@ export function CheckoutDrawer({
         customerData: {
           email: email.trim() || undefined,
           fullName: name.trim() || undefined,
-          ...(phoneFields ?? {}),
+          ...(trimmedNumber ? { phoneNumberPrefix: phoneCode, phoneNumber: trimmedNumber } : {}),
         },
       });
 
@@ -292,7 +333,34 @@ export function CheckoutDrawer({
           )}
           {WHATSAPP_ENABLED ? (
             <Field label="WhatsApp phone" theme={theme}>
-              <Input value={phone} onChange={setPhone} type="tel" theme={theme} placeholder="+57 …" />
+              <div style={{ display: 'flex', gap: 8 }}>
+                <select
+                  value={phoneCode}
+                  onChange={(e) => setPhoneCode(e.target.value)}
+                  style={{
+                    background: theme.surface,
+                    color: theme.text,
+                    border: `1px solid ${theme.border}`,
+                    borderRadius: 10,
+                    padding: '12px 10px',
+                    fontSize: 15,
+                    minWidth: 110,
+                  }}
+                >
+                  {COUNTRY_CODES.map((c) => (
+                    <option key={c.code} value={c.code}>{c.label}</option>
+                  ))}
+                </select>
+                <div style={{ flex: 1 }}>
+                  <Input
+                    value={phoneNumber}
+                    onChange={(v) => setPhoneNumber(v.replace(/[^\d]/g, ''))}
+                    type="tel"
+                    theme={theme}
+                    placeholder="3001234567"
+                  />
+                </div>
+              </div>
             </Field>
           ) : null}
 
