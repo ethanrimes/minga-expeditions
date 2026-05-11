@@ -4,6 +4,7 @@ import type { DbCategory } from '@minga/types';
 import { fetchCategories } from '@minga/supabase';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getT } from '@/lib/i18n/server';
+import { CategoryIcon } from '@/components/CategoryIcon';
 import { deleteCategoryAction } from './actions';
 
 export default async function CategoriesPage() {
@@ -42,7 +43,19 @@ export default async function CategoriesPage() {
                 <td className="px-4 py-3 font-mono text-xs">{c.slug}</td>
                 <td className="px-4 py-3">{c.name_en}</td>
                 <td className="px-4 py-3">{c.name_es}</td>
-                <td className="px-4 py-3 text-ink-500">{c.icon_name ?? '—'}</td>
+                <td className="px-4 py-3 text-ink-700">
+                  {c.icon_name ? (
+                    <span
+                      className="inline-flex items-center gap-2"
+                      title={c.icon_name}
+                    >
+                      <CategoryIcon name={c.icon_name} size={20} />
+                      <span className="text-xs text-ink-500 font-mono">{c.icon_name}</span>
+                    </span>
+                  ) : (
+                    <span className="text-ink-500">—</span>
+                  )}
+                </td>
                 <td className="px-4 py-3 text-ink-500">{c.sort_order}</td>
                 <td className="px-4 py-3">
                   <span
