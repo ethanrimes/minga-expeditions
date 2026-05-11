@@ -125,5 +125,6 @@ minga-app/
 
 - [docs/architecture.md](docs/architecture.md) — how the monorepo is wired and what each package does
 - [docs/supabase.md](docs/supabase.md) — schema, RLS, triggers, seeding
+- [docs/credentials.md](docs/credentials.md) — step-by-step for obtaining the missing dev credentials (Wompi sandbox, Supabase CLI, OAuth, WhatsApp)
 - [docs/tracking.md](docs/tracking.md) — how Strava-style GPS tracking works, and how to extend it
 - [docs/theming.md](docs/theming.md) — theme tokens and how to add a new theme
