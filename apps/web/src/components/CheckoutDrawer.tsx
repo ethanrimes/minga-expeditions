@@ -16,6 +16,11 @@ interface Props {
 
 const env = import.meta.env as unknown as Record<string, string>;
 const FUNCTIONS_BASE = `${env.VITE_SUPABASE_URL}/functions/v1`;
+// Top-level flag from Minga: when WhatsApp is on, the booking form collects
+// a phone number (required) and the post-payment webhook fires a WhatsApp
+// utility message. Each WA utility message costs ~$0.008 in Colombia, so
+// turning this off is the cheap-default. Email is always collected.
+const WHATSAPP_ENABLED = env.VITE_WHATSAPP_ENABLED === 'true';
 
 // Wompi widget loader — script tag that becomes a global form-renderer.
 // Reference: https://docs.wompi.co/docs/colombia/widget-checkout-web
@@ -86,6 +91,10 @@ export function CheckoutDrawer({
   const { t } = useT();
   const [mode, setMode] = useState<CheckoutMode>('collect-info');
   const [email, setEmail] = useState('');
+  // Tracks whether the email field was pre-filled from the signed-in user's
+  // auth session. We hide the input in that case but keep the value so the
+  // submit handler still has it. If null, the user is a guest.
+  const [signedInEmail, setSignedInEmail] = useState<string | null>(null);
   const [phone, setPhone] = useState('');
   const [name, setName] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -96,11 +105,42 @@ export function CheckoutDrawer({
     return () => document.removeEventListener('keydown', onKey);
   }, [onClose]);
 
+  // Pre-fill from the signed-in session: skip asking for contact info the
+  // server already knows. For now we pull email + name from auth.users;
+  // phone pre-fill from profile.phone_e164 will land with the migration.
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const { data } = await supabase.auth.getSession();
+      if (cancelled) return;
+      const user = data.session?.user;
+      const userEmail = user?.email?.trim() || null;
+      const userMeta = user?.user_metadata as Record<string, unknown> | undefined;
+      const userName =
+        (typeof userMeta?.full_name === 'string' ? userMeta.full_name : null) ??
+        (typeof userMeta?.name === 'string' ? userMeta.name : null);
+      if (userEmail) {
+        setSignedInEmail(userEmail);
+        setEmail(userEmail);
+      }
+      if (userName) setName((current) => current || userName);
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // Pre-fill runs once on mount only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (!email.trim() && !phone.trim()) {
-      setError('Add at least one contact method (email or WhatsApp).');
+    if (!email.trim()) {
+      setError('Email is required.');
+      return;
+    }
+    if (WHATSAPP_ENABLED && !phone.trim()) {
+      setError('WhatsApp number is required.');
       return;
     }
     setMode('opening-widget');
@@ -224,18 +264,42 @@ export function CheckoutDrawer({
         </div>
 
         <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <Field label="Your name" theme={theme}>
-            <Input value={name} onChange={setName} theme={theme} placeholder="Optional" />
-          </Field>
-          <Field label="Email" theme={theme}>
-            <Input value={email} onChange={setEmail} type="email" theme={theme} placeholder="you@email.com" />
-          </Field>
-          <Field label="WhatsApp phone" theme={theme}>
-            <Input value={phone} onChange={setPhone} type="tel" theme={theme} placeholder="+57 …" />
-          </Field>
+          {signedInEmail ? (
+            <div
+              style={{
+                background: theme.surfaceAlt,
+                border: `1px solid ${theme.border}`,
+                borderRadius: 10,
+                padding: '12px 14px',
+                fontSize: 13,
+                color: theme.text,
+              }}
+            >
+              <div style={{ color: theme.textMuted, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.3 }}>
+                Signed in as
+              </div>
+              <div style={{ marginTop: 2, fontWeight: 600 }}>{signedInEmail}</div>
+            </div>
+          ) : (
+            <>
+              <Field label="Your name" theme={theme}>
+                <Input value={name} onChange={setName} theme={theme} placeholder="Optional" />
+              </Field>
+              <Field label="Email" theme={theme}>
+                <Input value={email} onChange={setEmail} type="email" theme={theme} placeholder="you@email.com" />
+              </Field>
+            </>
+          )}
+          {WHATSAPP_ENABLED ? (
+            <Field label="WhatsApp phone" theme={theme}>
+              <Input value={phone} onChange={setPhone} type="tel" theme={theme} placeholder="+57 …" />
+            </Field>
+          ) : null}
 
           <p style={{ color: theme.textMuted, fontSize: 12 }}>
-            We send the booking confirmation to whichever contact method you provide. WhatsApp is preferred.
+            {WHATSAPP_ENABLED
+              ? 'We send the booking confirmation to your email and a WhatsApp message with trip details.'
+              : 'We send the booking confirmation to your email.'}
           </p>
 
           {error ? <div style={{ color: theme.danger, fontSize: 14 }}>{error}</div> : null}

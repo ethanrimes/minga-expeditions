@@ -112,16 +112,24 @@ serve(async (req) => {
   // Fire-and-forget confirmations when the payment is approved. Run both
   // channels in parallel; either may fail (template not approved, phone not
   // on test list, RESEND_API_KEY missing) and we still want the other one
-  // to land.
+  // to land. WhatsApp delivery is gated behind WHATSAPP_ENABLED because
+  // each utility message costs ~$0.008/msg in Colombia vs essentially
+  // free email — Minga can flip the channel off without code changes.
   if (status === 'approved') {
-    await Promise.all([
-      sendOrderConfirmation(supabase, tx.reference).catch((e) =>
-        console.error('whatsapp confirmation failed', e),
-      ),
+    const whatsappEnabled = Deno.env.get('WHATSAPP_ENABLED') === 'true';
+    const channels: Promise<unknown>[] = [
       sendOrderEmailConfirmation(supabase, tx.reference).catch((e) =>
         console.error('email confirmation failed', e),
       ),
-    ]);
+    ];
+    if (whatsappEnabled) {
+      channels.push(
+        sendOrderConfirmation(supabase, tx.reference).catch((e) =>
+          console.error('whatsapp confirmation failed', e),
+        ),
+      );
+    }
+    await Promise.all(channels);
     // Do not fail the webhook on a delivery error — Wompi will retry the
     // event, which would double-confirm the order in the DB. The admin can
     // resend manually from the orders dashboard.
