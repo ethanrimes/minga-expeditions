@@ -15,16 +15,16 @@
     "@minga/supabase": "*",
     "@minga/theme": "*",
     "@minga/types": "*",
-    "@supabase/supabase-js": "^2.45.4",
-    "lucide-react": "^0.577.0",
+    "@supabase/supabase-js": "^2.105.4",
+    "lucide-react": "^1.14.0",
     "maplibre-gl": "^4.7.1",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-router-dom": "^6.26.2"
   },
   "devDependencies": {
-    "@types/react": "~19.1.0",
-    "@types/react-dom": "~19.1.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.3.1",
     "typescript": "~5.9.0",
     "vite": "^5.4.6"
