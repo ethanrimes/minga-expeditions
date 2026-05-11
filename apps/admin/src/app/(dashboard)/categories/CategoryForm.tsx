@@ -21,21 +21,36 @@ const ICON_OPTIONS = [
   'star',
 ];
 
+interface Labels {
+  slug: string;
+  slugHelp: string;
+  nameEn: string;
+  nameEs: string;
+  icon: string;
+  iconNone: string;
+  iconHelp: string;
+  sortOrder: string;
+  visible: string;
+  saving: string;
+  cancel: string;
+  submit: string;
+}
+
 interface Props {
   action: (state: CategoryFormState, formData: FormData) => Promise<CategoryFormState>;
   initial?: Partial<DbCategory>;
-  submitLabel: string;
+  labels: Labels;
 }
 
 const initialState: CategoryFormState = {};
 
-export function CategoryForm({ action, initial, submitLabel }: Props) {
+export function CategoryForm({ action, initial, labels }: Props) {
   const [state, formAction, isPending] = useActionState(action, initialState);
 
   return (
     <form action={formAction} className="card max-w-xl flex flex-col gap-4">
       <label className="field">
-        <span className="field-label">Slug</span>
+        <span className="field-label">{labels.slug}</span>
         <input
           name="slug"
           defaultValue={initial?.slug ?? ''}
@@ -43,40 +58,36 @@ export function CategoryForm({ action, initial, submitLabel }: Props) {
           className="field-input font-mono"
           placeholder="hiking"
         />
-        <span className="text-xs text-ink-500">
-          Lowercase, dashes only. Used in URLs and as the stable identifier.
-        </span>
+        <span className="text-xs text-ink-500">{labels.slugHelp}</span>
       </label>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <label className="field">
-          <span className="field-label">Name (English)</span>
+          <span className="field-label">{labels.nameEn}</span>
           <input name="name_en" defaultValue={initial?.name_en ?? ''} required className="field-input" />
         </label>
         <label className="field">
-          <span className="field-label">Nombre (Español)</span>
+          <span className="field-label">{labels.nameEs}</span>
           <input name="name_es" defaultValue={initial?.name_es ?? ''} required className="field-input" />
         </label>
       </div>
 
       <label className="field">
-        <span className="field-label">Icon</span>
+        <span className="field-label">{labels.icon}</span>
         <select name="icon_name" defaultValue={initial?.icon_name ?? ''} className="field-input">
-          <option value="">— none —</option>
+          <option value="">{labels.iconNone}</option>
           {ICON_OPTIONS.map((i) => (
             <option key={i} value={i}>
               {i}
             </option>
           ))}
         </select>
-        <span className="text-xs text-ink-500">
-          Must match a name in the mobile app's Icon component.
-        </span>
+        <span className="text-xs text-ink-500">{labels.iconHelp}</span>
       </label>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <label className="field">
-          <span className="field-label">Sort order</span>
+          <span className="field-label">{labels.sortOrder}</span>
           <input
             name="sort_order"
             type="number"
@@ -91,7 +102,7 @@ export function CategoryForm({ action, initial, submitLabel }: Props) {
             defaultChecked={initial?.is_active ?? true}
             className="h-4 w-4"
           />
-          <span className="text-sm">Visible to users</span>
+          <span className="text-sm">{labels.visible}</span>
         </label>
       </div>
 
@@ -99,10 +110,10 @@ export function CategoryForm({ action, initial, submitLabel }: Props) {
 
       <div className="flex gap-3 mt-2">
         <button type="submit" disabled={isPending} className="btn-primary">
-          {isPending ? 'Saving…' : submitLabel}
+          {isPending ? labels.saving : labels.submit}
         </button>
         <Link href="/categories" className="btn-secondary">
-          Cancel
+          {labels.cancel}
         </Link>
       </div>
     </form>

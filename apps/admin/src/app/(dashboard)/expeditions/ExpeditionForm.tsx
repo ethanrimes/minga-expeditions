@@ -5,28 +5,56 @@ import { useActionState, useState } from 'react';
 import type { DbCategory, DbExpedition } from '@minga/types';
 import type { ExpeditionFormState } from './actions';
 
+interface Labels {
+  title: string;
+  description: string;
+  category: string;
+  selectCategory: string;
+  difficulty: string;
+  location: string;
+  region: string;
+  country: string;
+  startLat: string;
+  startLng: string;
+  distance: string;
+  elevation: string;
+  currency: string;
+  priceCents: string;
+  priceHelp: string;
+  coverPhoto: string;
+  coverPreviewAlt: string;
+  coverHelp: string;
+  official: string;
+  published: string;
+  saving: string;
+  cancel: string;
+  submit: string;
+}
+
 interface Props {
   action: (state: ExpeditionFormState, formData: FormData) => Promise<ExpeditionFormState>;
   categories: DbCategory[];
   initial?: Partial<DbExpedition>;
-  submitLabel: string;
+  labels: Labels;
+  locale: 'en' | 'es';
 }
 
 const initialState: ExpeditionFormState = {};
 
-export function ExpeditionForm({ action, categories, initial, submitLabel }: Props) {
+export function ExpeditionForm({ action, categories, initial, labels, locale }: Props) {
   const [state, formAction, isPending] = useActionState(action, initialState);
   const [previewUrl, setPreviewUrl] = useState<string | null>(initial?.cover_photo_url ?? null);
+  const categoryLabel = (c: DbCategory) => (locale === 'es' ? c.name_es : c.name_en);
 
   return (
     <form action={formAction} encType="multipart/form-data" className="card max-w-3xl flex flex-col gap-5">
       <label className="field">
-        <span className="field-label">Title</span>
+        <span className="field-label">{labels.title}</span>
         <input name="title" defaultValue={initial?.title ?? ''} required className="field-input" />
       </label>
 
       <label className="field">
-        <span className="field-label">Description</span>
+        <span className="field-label">{labels.description}</span>
         <textarea
           name="description"
           defaultValue={initial?.description ?? ''}
@@ -38,7 +66,7 @@ export function ExpeditionForm({ action, categories, initial, submitLabel }: Pro
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <label className="field">
-          <span className="field-label">Category</span>
+          <span className="field-label">{labels.category}</span>
           <select
             name="category_id"
             defaultValue={initial?.category_id ?? ''}
@@ -46,20 +74,20 @@ export function ExpeditionForm({ action, categories, initial, submitLabel }: Pro
             className="field-input"
           >
             <option value="" disabled>
-              Select a category
+              {labels.selectCategory}
             </option>
             {categories
               .filter((c) => c.is_active || c.id === initial?.category_id)
               .map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.name_en}
+                  {categoryLabel(c)}
                 </option>
               ))}
           </select>
         </label>
 
         <label className="field">
-          <span className="field-label">Difficulty (1–5)</span>
+          <span className="field-label">{labels.difficulty}</span>
           <input
             name="difficulty"
             type="number"
@@ -73,7 +101,7 @@ export function ExpeditionForm({ action, categories, initial, submitLabel }: Pro
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <label className="field sm:col-span-2">
-          <span className="field-label">Location</span>
+          <span className="field-label">{labels.location}</span>
           <input
             name="location_name"
             defaultValue={initial?.location_name ?? ''}
@@ -83,14 +111,14 @@ export function ExpeditionForm({ action, categories, initial, submitLabel }: Pro
           />
         </label>
         <label className="field">
-          <span className="field-label">Region</span>
+          <span className="field-label">{labels.region}</span>
           <input name="region" defaultValue={initial?.region ?? ''} className="field-input" />
         </label>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <label className="field">
-          <span className="field-label">Country</span>
+          <span className="field-label">{labels.country}</span>
           <input
             name="country"
             defaultValue={initial?.country ?? 'Colombia'}
@@ -98,7 +126,7 @@ export function ExpeditionForm({ action, categories, initial, submitLabel }: Pro
           />
         </label>
         <label className="field">
-          <span className="field-label">Start latitude</span>
+          <span className="field-label">{labels.startLat}</span>
           <input
             name="start_lat"
             type="number"
@@ -108,7 +136,7 @@ export function ExpeditionForm({ action, categories, initial, submitLabel }: Pro
           />
         </label>
         <label className="field">
-          <span className="field-label">Start longitude</span>
+          <span className="field-label">{labels.startLng}</span>
           <input
             name="start_lng"
             type="number"
@@ -121,7 +149,7 @@ export function ExpeditionForm({ action, categories, initial, submitLabel }: Pro
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <label className="field">
-          <span className="field-label">Distance (km)</span>
+          <span className="field-label">{labels.distance}</span>
           <input
             name="distance_km"
             type="number"
@@ -131,7 +159,7 @@ export function ExpeditionForm({ action, categories, initial, submitLabel }: Pro
           />
         </label>
         <label className="field">
-          <span className="field-label">Elevation gain (m)</span>
+          <span className="field-label">{labels.elevation}</span>
           <input
             name="elevation_gain_m"
             type="number"
@@ -141,7 +169,7 @@ export function ExpeditionForm({ action, categories, initial, submitLabel }: Pro
           />
         </label>
         <label className="field">
-          <span className="field-label">Currency</span>
+          <span className="field-label">{labels.currency}</span>
           <input
             name="currency"
             defaultValue={initial?.currency ?? 'COP'}
@@ -152,7 +180,7 @@ export function ExpeditionForm({ action, categories, initial, submitLabel }: Pro
       </div>
 
       <label className="field">
-        <span className="field-label">Price (in cents — 0 = free)</span>
+        <span className="field-label">{labels.priceCents}</span>
         <input
           name="price_cents"
           type="number"
@@ -160,13 +188,11 @@ export function ExpeditionForm({ action, categories, initial, submitLabel }: Pro
           defaultValue={initial?.price_cents ?? 0}
           className="field-input"
         />
-        <span className="text-xs text-ink-500">
-          Wompi expects integer cents in the order's currency. 50000 COP = 5,000,000 here.
-        </span>
+        <span className="text-xs text-ink-500">{labels.priceHelp}</span>
       </label>
 
       <fieldset className="field">
-        <span className="field-label">Cover photo</span>
+        <span className="field-label">{labels.coverPhoto}</span>
         <div className="flex items-start gap-4">
           {previewUrl ? (
             // Plain <img> so we don't have to whitelist arbitrary user-uploaded
@@ -174,7 +200,7 @@ export function ExpeditionForm({ action, categories, initial, submitLabel }: Pro
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={previewUrl}
-              alt="Cover preview"
+              alt={labels.coverPreviewAlt}
               className="h-24 w-32 rounded-md object-cover border border-surface-border"
             />
           ) : null}
@@ -190,9 +216,7 @@ export function ExpeditionForm({ action, categories, initial, submitLabel }: Pro
               }}
             />
             <input type="hidden" name="cover_photo_url" value={initial?.cover_photo_url ?? ''} />
-            <p className="text-xs text-ink-500 mt-2">
-              Uploads to the <code>expedition-photos</code> Supabase bucket. Leave empty to keep the existing photo.
-            </p>
+            <p className="text-xs text-ink-500 mt-2">{labels.coverHelp}</p>
           </div>
         </div>
       </fieldset>
@@ -205,7 +229,7 @@ export function ExpeditionForm({ action, categories, initial, submitLabel }: Pro
             defaultChecked={initial?.is_official ?? true}
             className="h-4 w-4"
           />
-          <span className="text-sm">Official Minga listing</span>
+          <span className="text-sm">{labels.official}</span>
         </label>
         <label className="flex items-center gap-2">
           <input
@@ -214,7 +238,7 @@ export function ExpeditionForm({ action, categories, initial, submitLabel }: Pro
             defaultChecked={initial?.is_published ?? true}
             className="h-4 w-4"
           />
-          <span className="text-sm">Published (visible in mobile feed)</span>
+          <span className="text-sm">{labels.published}</span>
         </label>
       </div>
 
@@ -222,10 +246,10 @@ export function ExpeditionForm({ action, categories, initial, submitLabel }: Pro
 
       <div className="flex gap-3 mt-2">
         <button type="submit" disabled={isPending} className="btn-primary">
-          {isPending ? 'Saving…' : submitLabel}
+          {isPending ? labels.saving : labels.submit}
         </button>
         <Link href="/expeditions" className="btn-secondary">
-          Cancel
+          {labels.cancel}
         </Link>
       </div>
 

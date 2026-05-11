@@ -2,14 +2,16 @@
 
 import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { getT } from '@/lib/i18n/server';
 
 export type LoginState = { error?: string };
 
 export async function loginWithPassword(_prev: LoginState, formData: FormData): Promise<LoginState> {
   const email = String(formData.get('email') ?? '').trim();
   const password = String(formData.get('password') ?? '');
+  const { t } = await getT();
 
-  if (!email || !password) return { error: 'Email and password are required.' };
+  if (!email || !password) return { error: t('login.required') };
 
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });

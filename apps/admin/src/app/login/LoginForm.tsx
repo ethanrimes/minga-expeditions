@@ -3,16 +3,29 @@
 import { useActionState } from 'react';
 import { loginWithPassword, type LoginState } from './actions';
 
+interface Labels {
+  email: string;
+  password: string;
+  signIn: string;
+  signingIn: string;
+}
+
 const initial: LoginState = {};
 
-export function LoginForm({ initialError }: { initialError: string | null }) {
+export function LoginForm({
+  initialError,
+  labels,
+}: {
+  initialError: string | null;
+  labels: Labels;
+}) {
   const [state, formAction, isPending] = useActionState(loginWithPassword, initial);
   const error = state.error ?? initialError;
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
       <label className="field">
-        <span className="field-label">Email</span>
+        <span className="field-label">{labels.email}</span>
         <input
           name="email"
           type="email"
@@ -22,7 +35,7 @@ export function LoginForm({ initialError }: { initialError: string | null }) {
         />
       </label>
       <label className="field">
-        <span className="field-label">Password</span>
+        <span className="field-label">{labels.password}</span>
         <input
           name="password"
           type="password"
@@ -33,7 +46,7 @@ export function LoginForm({ initialError }: { initialError: string | null }) {
       </label>
       {error ? <p className="text-sm text-danger">{error}</p> : null}
       <button type="submit" disabled={isPending} className="btn-primary mt-2">
-        {isPending ? 'Signing in…' : 'Sign in'}
+        {isPending ? labels.signingIn : labels.signIn}
       </button>
     </form>
   );

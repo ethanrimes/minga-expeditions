@@ -10,13 +10,14 @@ import {
 } from '@minga/supabase';
 import { requireAdmin } from '@/lib/auth';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { getT } from '@/lib/i18n/server';
 import { parseExpeditionFormFields } from './parser';
 
 export type ExpeditionFormState = { error?: string };
 
 async function parseExpeditionForm(formData: FormData) {
   const fields = parseExpeditionFormFields(formData);
-  if ('error' in fields) return fields;
+  if ('errorKey' in fields) return fields;
 
   const supabase = await createSupabaseServerClient();
 
@@ -28,7 +29,10 @@ async function parseExpeditionForm(formData: FormData) {
       const { publicUrl } = await uploadExpeditionPhoto(supabase, photo, photo.name);
       cover_photo_url = publicUrl;
     } catch (e) {
-      return { error: `Photo upload failed: ${(e as Error).message}` as const };
+      const { t } = await getT();
+      return {
+        error: t('error.expedition.photoFailed', { msg: (e as Error).message }),
+      };
     }
   } else {
     const existing = String(formData.get('cover_photo_url') ?? '').trim();
@@ -44,6 +48,10 @@ export async function createExpeditionAction(
 ): Promise<ExpeditionFormState> {
   const session = await requireAdmin();
   const parsed = await parseExpeditionForm(formData);
+  if ('errorKey' in parsed) {
+    const { t } = await getT();
+    return { error: t(parsed.errorKey) };
+  }
   if ('error' in parsed) return { error: parsed.error };
 
   const supabase = await createSupabaseServerClient();
@@ -63,6 +71,10 @@ export async function updateExpeditionAction(
 ): Promise<ExpeditionFormState> {
   await requireAdmin();
   const parsed = await parseExpeditionForm(formData);
+  if ('errorKey' in parsed) {
+    const { t } = await getT();
+    return { error: t(parsed.errorKey) };
+  }
   if ('error' in parsed) return { error: parsed.error };
 
   const supabase = await createSupabaseServerClient();

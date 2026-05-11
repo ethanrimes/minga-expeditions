@@ -2,6 +2,8 @@ import Link from 'next/link';
 import type { DbOrder, OrderStatus } from '@minga/types';
 import { adminListOrders } from '@minga/supabase';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { getT } from '@/lib/i18n/server';
+import type { Key } from '@/lib/i18n/dictionary';
 
 const STATUSES: (OrderStatus | 'all')[] = [
   'pending',
@@ -13,14 +15,14 @@ const STATUSES: (OrderStatus | 'all')[] = [
   'all',
 ];
 
-const LABEL: Record<OrderStatus | 'all', string> = {
-  pending: 'Pending',
-  approved: 'Approved',
-  declined: 'Declined',
-  voided: 'Voided',
-  error: 'Error',
-  refunded: 'Refunded',
-  all: 'All',
+const STATUS_KEY: Record<OrderStatus | 'all', Key> = {
+  pending: 'orders.status.pending',
+  approved: 'orders.status.approved',
+  declined: 'orders.status.declined',
+  voided: 'orders.status.voided',
+  error: 'orders.status.error',
+  refunded: 'orders.status.refunded',
+  all: 'orders.status.all',
 };
 
 const PILL: Record<OrderStatus, string> = {
@@ -50,12 +52,14 @@ export default async function OrdersPage({
 
   const supabase = await createSupabaseServerClient();
   const orders = await adminListOrders(supabase, { status: filter });
+  const { t, locale } = await getT();
+  const dateLocale = locale === 'es' ? 'es-CO' : 'en-US';
 
   return (
     <div>
       <header>
-        <h1 className="text-2xl font-bold">Orders</h1>
-        <p className="text-ink-500 mt-1">All Wompi transactions, including pending and failed payments.</p>
+        <h1 className="text-2xl font-bold">{t('orders.title')}</h1>
+        <p className="text-ink-500 mt-1">{t('orders.subtitle')}</p>
       </header>
 
       <nav className="mt-6 flex flex-wrap gap-1 text-sm">
@@ -71,7 +75,7 @@ export default async function OrdersPage({
                   : 'px-3 py-1.5 rounded-full bg-surface border border-surface-border text-ink-700 hover:bg-surface-alt'
               }
             >
-              {LABEL[s]}
+              {t(STATUS_KEY[s])}
             </Link>
           );
         })}
@@ -81,12 +85,12 @@ export default async function OrdersPage({
         <table className="w-full text-sm">
           <thead className="bg-surface-alt text-left text-xs uppercase tracking-wide text-ink-500">
             <tr>
-              <th className="px-4 py-3">Reference</th>
-              <th className="px-4 py-3">Amount</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Buyer</th>
-              <th className="px-4 py-3">Created</th>
-              <th className="px-4 py-3 text-right">Actions</th>
+              <th className="px-4 py-3">{t('orders.col.reference')}</th>
+              <th className="px-4 py-3">{t('orders.col.amount')}</th>
+              <th className="px-4 py-3">{t('orders.col.status')}</th>
+              <th className="px-4 py-3">{t('orders.col.buyer')}</th>
+              <th className="px-4 py-3">{t('orders.col.created')}</th>
+              <th className="px-4 py-3 text-right">{t('orders.col.actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -96,18 +100,18 @@ export default async function OrdersPage({
                 <td className="px-4 py-3">{fmtPrice(o.amount_cents, o.currency)}</td>
                 <td className="px-4 py-3">
                   <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${PILL[o.status]}`}>
-                    {LABEL[o.status]}
+                    {t(STATUS_KEY[o.status])}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-ink-500">
-                  {o.buyer_profile_id ? 'Account' : 'Guest'}
+                  {o.buyer_profile_id ? t('orders.buyer.account') : t('orders.buyer.guest')}
                 </td>
                 <td className="px-4 py-3 text-ink-500 whitespace-nowrap">
-                  {new Date(o.created_at).toLocaleString()}
+                  {new Date(o.created_at).toLocaleString(dateLocale)}
                 </td>
                 <td className="px-4 py-3 text-right">
                   <Link href={`/orders/${o.id}`} className="btn-secondary text-xs">
-                    View
+                    {t('orders.action.view')}
                   </Link>
                 </td>
               </tr>
@@ -115,7 +119,7 @@ export default async function OrdersPage({
             {orders.length === 0 ? (
               <tr>
                 <td colSpan={6} className="px-4 py-8 text-center text-ink-500">
-                  No orders match this filter.
+                  {t('orders.empty')}
                 </td>
               </tr>
             ) : null}

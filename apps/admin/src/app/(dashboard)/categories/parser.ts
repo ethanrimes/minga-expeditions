@@ -10,9 +10,15 @@ export interface CategoryFormValue {
   is_active: boolean;
 }
 
+// Errors are returned as i18n keys so the server action can translate them in
+// the caller's locale. Tests assert on keys to stay locale-agnostic.
+export type CategoryFormErrorKey =
+  | 'error.category.required'
+  | 'error.category.slugFormat';
+
 export type CategoryFormParseResult =
   | { value: CategoryFormValue }
-  | { error: string };
+  | { errorKey: CategoryFormErrorKey };
 
 export function parseCategoryForm(formData: FormData): CategoryFormParseResult {
   const slug = String(formData.get('slug') ?? '').trim();
@@ -23,10 +29,10 @@ export function parseCategoryForm(formData: FormData): CategoryFormParseResult {
   const is_active = formData.get('is_active') === 'on';
 
   if (!slug || !name_en || !name_es) {
-    return { error: 'Slug, English name, and Spanish name are required.' };
+    return { errorKey: 'error.category.required' };
   }
   if (!/^[a-z0-9-]+$/.test(slug)) {
-    return { error: 'Slug must be lowercase letters, numbers, and dashes only.' };
+    return { errorKey: 'error.category.slugFormat' };
   }
   return { value: { slug, name_en, name_es, icon_name, sort_order, is_active } };
 }

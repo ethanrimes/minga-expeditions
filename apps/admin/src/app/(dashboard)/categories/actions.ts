@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { createCategory, deleteCategory, updateCategory } from '@minga/supabase';
 import { requireAdmin } from '@/lib/auth';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { getT } from '@/lib/i18n/server';
 import { parseCategoryForm } from './parser';
 
 export type CategoryFormState = { error?: string };
@@ -15,7 +16,10 @@ export async function createCategoryAction(
 ): Promise<CategoryFormState> {
   await requireAdmin();
   const parsed = parseCategoryForm(formData);
-  if ('error' in parsed) return { error: parsed.error };
+  if ('errorKey' in parsed) {
+    const { t } = await getT();
+    return { error: t(parsed.errorKey) };
+  }
 
   const supabase = await createSupabaseServerClient();
   try {
@@ -34,7 +38,10 @@ export async function updateCategoryAction(
 ): Promise<CategoryFormState> {
   await requireAdmin();
   const parsed = parseCategoryForm(formData);
-  if ('error' in parsed) return { error: parsed.error };
+  if ('errorKey' in parsed) {
+    const { t } = await getT();
+    return { error: t(parsed.errorKey) };
+  }
 
   const supabase = await createSupabaseServerClient();
   try {

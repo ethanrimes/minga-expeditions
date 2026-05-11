@@ -9,7 +9,7 @@ function fd(entries: Record<string, string>): FormData {
 
 function ok(input: Record<string, string>): ExpeditionFormValue {
   const out = parseExpeditionFormFields(fd(input));
-  if ('error' in out) throw new Error(`expected success, got: ${out.error}`);
+  if ('errorKey' in out) throw new Error(`expected success, got: ${out.errorKey}`);
   return out.value;
 }
 
@@ -93,7 +93,7 @@ describe('parseExpeditionFormFields', () => {
     ['no location_name', { ...minimum, location_name: '' }],
   ])('rejects when %s', (_label, entries) => {
     const out = parseExpeditionFormFields(fd(entries));
-    expect('error' in out && out.error).toMatch(/required/i);
+    expect('errorKey' in out && out.errorKey).toBe('error.expedition.required');
   });
 
   it('treats checkbox absence as false', () => {

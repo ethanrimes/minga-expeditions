@@ -3,21 +3,23 @@ import { Plus } from 'lucide-react';
 import type { DbCategory } from '@minga/types';
 import { fetchCategories } from '@minga/supabase';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { getT } from '@/lib/i18n/server';
 import { deleteCategoryAction } from './actions';
 
 export default async function CategoriesPage() {
   const supabase = await createSupabaseServerClient();
   const categories = await fetchCategories(supabase);
+  const { t } = await getT();
 
   return (
     <div>
       <header className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Categories</h1>
-          <p className="text-ink-500 mt-1">Drives the filters in the mobile app and the picker on each expedition.</p>
+          <h1 className="text-2xl font-bold">{t('categories.title')}</h1>
+          <p className="text-ink-500 mt-1">{t('categories.subtitle')}</p>
         </div>
         <Link href="/categories/new" className="btn-primary">
-          <Plus size={16} /> New category
+          <Plus size={16} /> {t('categories.new')}
         </Link>
       </header>
 
@@ -25,13 +27,13 @@ export default async function CategoriesPage() {
         <table className="w-full text-sm">
           <thead className="bg-surface-alt text-left text-xs uppercase tracking-wide text-ink-500">
             <tr>
-              <th className="px-4 py-3">Slug</th>
-              <th className="px-4 py-3">English</th>
-              <th className="px-4 py-3">Español</th>
-              <th className="px-4 py-3">Icon</th>
-              <th className="px-4 py-3">Sort</th>
-              <th className="px-4 py-3">Active</th>
-              <th className="px-4 py-3 text-right">Actions</th>
+              <th className="px-4 py-3">{t('categories.col.slug')}</th>
+              <th className="px-4 py-3">{t('categories.col.english')}</th>
+              <th className="px-4 py-3">{t('categories.col.spanish')}</th>
+              <th className="px-4 py-3">{t('categories.col.icon')}</th>
+              <th className="px-4 py-3">{t('categories.col.sort')}</th>
+              <th className="px-4 py-3">{t('categories.col.active')}</th>
+              <th className="px-4 py-3 text-right">{t('categories.col.actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -50,13 +52,13 @@ export default async function CategoriesPage() {
                         : 'inline-flex rounded-full bg-ink-300/20 text-ink-500 px-2 py-0.5 text-xs font-semibold'
                     }
                   >
-                    {c.is_active ? 'Active' : 'Hidden'}
+                    {c.is_active ? t('categories.status.active') : t('categories.status.hidden')}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-right">
                   <div className="inline-flex gap-2">
                     <Link href={`/categories/${c.id}`} className="btn-secondary text-xs">
-                      Edit
+                      {t('categories.action.edit')}
                     </Link>
                     <form action={deleteCategoryAction}>
                       <input type="hidden" name="id" value={c.id} />
@@ -64,7 +66,7 @@ export default async function CategoriesPage() {
                         type="submit"
                         className="btn-secondary text-xs text-danger hover:bg-danger/10"
                       >
-                        Delete
+                        {t('categories.action.delete')}
                       </button>
                     </form>
                   </div>
@@ -74,7 +76,7 @@ export default async function CategoriesPage() {
             {categories.length === 0 ? (
               <tr>
                 <td colSpan={7} className="px-4 py-8 text-center text-ink-500">
-                  No categories yet — create the first one.
+                  {t('categories.empty')}
                 </td>
               </tr>
             ) : null}

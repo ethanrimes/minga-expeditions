@@ -20,9 +20,13 @@ export interface ExpeditionFormValue {
   is_published: boolean;
 }
 
+// Errors are returned as i18n keys so the server action can translate them in
+// the caller's locale. Tests assert on keys to stay locale-agnostic.
+export type ExpeditionFormErrorKey = 'error.expedition.required';
+
 export type ExpeditionFormParseResult =
   | { value: ExpeditionFormValue }
-  | { error: string };
+  | { errorKey: ExpeditionFormErrorKey };
 
 function num(v: FormDataEntryValue | null): number | null {
   if (v === null || v === '') return null;
@@ -56,7 +60,7 @@ export function parseExpeditionFormFields(formData: FormData): ExpeditionFormPar
   const is_published = formData.get('is_published') === 'on';
 
   if (!title || !description || !category_id || !location_name) {
-    return { error: 'Title, description, category and location are required.' };
+    return { errorKey: 'error.expedition.required' };
   }
 
   return {

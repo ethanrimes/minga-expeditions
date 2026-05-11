@@ -1,7 +1,19 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import type { OrderStatus } from '@minga/types';
 import { fetchOrderById } from '@minga/supabase';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { getT } from '@/lib/i18n/server';
+import type { Key } from '@/lib/i18n/dictionary';
+
+const STATUS_KEY: Record<OrderStatus, Key> = {
+  pending: 'orders.status.pending',
+  approved: 'orders.status.approved',
+  declined: 'orders.status.declined',
+  voided: 'orders.status.voided',
+  error: 'orders.status.error',
+  refunded: 'orders.status.refunded',
+};
 
 function fmtPrice(cents: number, currency: string) {
   try {
@@ -27,29 +39,35 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
       : Promise.resolve({ data: null }),
   ]);
 
+  const { t, locale } = await getT();
+  const dateLocale = locale === 'es' ? 'es-CO' : 'en-US';
+
   return (
     <div>
       <Link href="/orders" className="text-sm text-ink-500 hover:text-ink-700">
-        ← Back to orders
+        {t('orderDetail.back')}
       </Link>
-      <h1 className="text-2xl font-bold mt-3">Order detail</h1>
+      <h1 className="text-2xl font-bold mt-3">{t('orderDetail.title')}</h1>
       <p className="text-ink-500 mt-1 font-mono text-xs break-all">{order.wompi_reference}</p>
 
       <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
         <section className="card lg:col-span-2 space-y-3">
-          <h2 className="font-semibold">Payment</h2>
-          <Row label="Status" value={order.status} />
-          <Row label="Amount" value={fmtPrice(order.amount_cents, order.currency)} />
-          <Row label="Wompi transaction id" value={order.wompi_transaction_id ?? '—'} />
-          <Row label="Payment method" value={order.wompi_payment_method_type ?? '—'} />
-          <Row label="Status message" value={order.wompi_status_message ?? '—'} />
-          <Row label="Paid at" value={order.paid_at ? new Date(order.paid_at).toLocaleString() : '—'} />
-          <Row label="Created" value={new Date(order.created_at).toLocaleString()} />
+          <h2 className="font-semibold">{t('orderDetail.payment')}</h2>
+          <Row label={t('orderDetail.row.status')} value={t(STATUS_KEY[order.status])} />
+          <Row label={t('orderDetail.row.amount')} value={fmtPrice(order.amount_cents, order.currency)} />
+          <Row label={t('orderDetail.row.txId')} value={order.wompi_transaction_id ?? '—'} />
+          <Row label={t('orderDetail.row.method')} value={order.wompi_payment_method_type ?? '—'} />
+          <Row label={t('orderDetail.row.statusMessage')} value={order.wompi_status_message ?? '—'} />
+          <Row
+            label={t('orderDetail.row.paidAt')}
+            value={order.paid_at ? new Date(order.paid_at).toLocaleString(dateLocale) : '—'}
+          />
+          <Row label={t('orderDetail.row.created')} value={new Date(order.created_at).toLocaleString(dateLocale)} />
         </section>
 
         <aside className="space-y-6">
           <section className="card">
-            <h2 className="font-semibold mb-3">Expedition</h2>
+            <h2 className="font-semibold mb-3">{t('orderDetail.expedition')}</h2>
             {expedition ? (
               <>
                 <div className="font-medium">{expedition.title}</div>
@@ -58,29 +76,29 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                 </div>
               </>
             ) : (
-              <div className="text-ink-500 text-sm">Expedition deleted.</div>
+              <div className="text-ink-500 text-sm">{t('orderDetail.expeditionDeleted')}</div>
             )}
           </section>
 
           <section className="card">
-            <h2 className="font-semibold mb-3">Buyer</h2>
+            <h2 className="font-semibold mb-3">{t('orderDetail.buyer')}</h2>
             {profile ? (
               <>
                 <div className="font-medium">{profile.display_name}</div>
                 <div className="text-sm text-ink-500">@{profile.username}</div>
-                <div className="text-xs text-ink-500 mt-1">Signed-in account</div>
+                <div className="text-xs text-ink-500 mt-1">{t('orderDetail.guestSignedIn')}</div>
               </>
             ) : guest ? (
               <>
-                <div className="font-medium">{guest.display_name ?? '(no name)'}</div>
+                <div className="font-medium">{guest.display_name ?? t('orderDetail.guestNoName')}</div>
                 <div className="text-sm text-ink-500">{guest.email ?? '—'}</div>
                 <div className="text-sm text-ink-500">{guest.phone ?? '—'}</div>
                 <div className="text-xs text-ink-500 mt-1">
-                  {guest.claimed_by_profile_id ? 'Claimed' : 'Unclaimed guest'}
+                  {guest.claimed_by_profile_id ? t('orderDetail.guestClaimed') : t('orderDetail.guestUnclaimed')}
                 </div>
               </>
             ) : (
-              <div className="text-ink-500 text-sm">No buyer linked.</div>
+              <div className="text-ink-500 text-sm">{t('orderDetail.buyerNone')}</div>
             )}
           </section>
         </aside>

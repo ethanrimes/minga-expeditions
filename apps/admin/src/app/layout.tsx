@@ -1,14 +1,16 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { getLocale } from '@/lib/i18n/server';
 
 export const metadata: Metadata = {
   title: 'Minga Admin',
-  description: 'Manage Minga Expeditions categories, expeditions, and vendors.',
+  description: 'Administra categorías, expediciones y proveedores de Minga Expeditions.',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const locale = await getLocale();
   return (
-    <html lang="en">
+    <html lang={locale}>
       <body>{children}</body>
     </html>
   );

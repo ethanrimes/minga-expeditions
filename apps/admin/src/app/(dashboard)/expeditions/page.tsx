@@ -3,10 +3,11 @@ import { Plus } from 'lucide-react';
 import type { DbCategory, DbExpedition } from '@minga/types';
 import { adminListExpeditions, fetchCategories } from '@minga/supabase';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { getT } from '@/lib/i18n/server';
 import { deleteExpeditionAction } from './actions';
 
-function formatPriceCents(price: number, currency: string) {
-  if (!price) return 'Free';
+function formatPriceCents(price: number, currency: string, freeLabel: string) {
+  if (!price) return freeLabel;
   const value = price / 100;
   try {
     return new Intl.NumberFormat('es-CO', { style: 'currency', currency }).format(value);
@@ -21,18 +22,19 @@ export default async function ExpeditionsPage() {
     adminListExpeditions(supabase, { limit: 200 }),
     fetchCategories(supabase),
   ]);
-
-  const catName = new Map(categories.map((c: DbCategory) => [c.id, c.name_en]));
+  const { t, locale } = await getT();
+  const localizedName = (c: DbCategory) => (locale === 'es' ? c.name_es : c.name_en);
+  const catName = new Map(categories.map((c: DbCategory) => [c.id, localizedName(c)]));
 
   return (
     <div>
       <header className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Expeditions</h1>
-          <p className="text-ink-500 mt-1">Curated experiences shown in the mobile feed.</p>
+          <h1 className="text-2xl font-bold">{t('expeditions.title')}</h1>
+          <p className="text-ink-500 mt-1">{t('expeditions.subtitle')}</p>
         </div>
         <Link href="/expeditions/new" className="btn-primary">
-          <Plus size={16} /> New expedition
+          <Plus size={16} /> {t('expeditions.new')}
         </Link>
       </header>
 
@@ -40,12 +42,12 @@ export default async function ExpeditionsPage() {
         <table className="w-full text-sm">
           <thead className="bg-surface-alt text-left text-xs uppercase tracking-wide text-ink-500">
             <tr>
-              <th className="px-4 py-3">Title</th>
-              <th className="px-4 py-3">Category</th>
-              <th className="px-4 py-3">Location</th>
-              <th className="px-4 py-3">Price</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3 text-right">Actions</th>
+              <th className="px-4 py-3">{t('expeditions.col.title')}</th>
+              <th className="px-4 py-3">{t('expeditions.col.category')}</th>
+              <th className="px-4 py-3">{t('expeditions.col.location')}</th>
+              <th className="px-4 py-3">{t('expeditions.col.price')}</th>
+              <th className="px-4 py-3">{t('expeditions.col.status')}</th>
+              <th className="px-4 py-3 text-right">{t('expeditions.col.actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -57,7 +59,9 @@ export default async function ExpeditionsPage() {
                   {e.location_name}
                   {e.region ? `, ${e.region}` : ''}
                 </td>
-                <td className="px-4 py-3 text-ink-500">{formatPriceCents(e.price_cents, e.currency)}</td>
+                <td className="px-4 py-3 text-ink-500">
+                  {formatPriceCents(e.price_cents, e.currency, t('expeditions.free'))}
+                </td>
                 <td className="px-4 py-3">
                   <span
                     className={
@@ -66,23 +70,23 @@ export default async function ExpeditionsPage() {
                         : 'inline-flex rounded-full bg-ink-300/20 text-ink-500 px-2 py-0.5 text-xs font-semibold'
                     }
                   >
-                    {e.is_published ? 'Published' : 'Draft'}
+                    {e.is_published ? t('expeditions.status.published') : t('expeditions.status.draft')}
                   </span>
                   {e.is_official ? (
                     <span className="ml-2 inline-flex rounded-full bg-primary/10 text-primary px-2 py-0.5 text-xs font-semibold">
-                      Official
+                      {t('expeditions.badge.official')}
                     </span>
                   ) : null}
                 </td>
                 <td className="px-4 py-3 text-right">
                   <div className="inline-flex gap-2">
                     <Link href={`/expeditions/${e.id}`} className="btn-secondary text-xs">
-                      Edit
+                      {t('categories.action.edit')}
                     </Link>
                     <form action={deleteExpeditionAction}>
                       <input type="hidden" name="id" value={e.id} />
                       <button type="submit" className="btn-secondary text-xs text-danger hover:bg-danger/10">
-                        Delete
+                        {t('categories.action.delete')}
                       </button>
                     </form>
                   </div>
@@ -92,7 +96,7 @@ export default async function ExpeditionsPage() {
             {expeditions.length === 0 ? (
               <tr>
                 <td colSpan={6} className="px-4 py-8 text-center text-ink-500">
-                  No expeditions yet — create the first one.
+                  {t('expeditions.empty')}
                 </td>
               </tr>
             ) : null}

@@ -2,24 +2,27 @@ import Link from 'next/link';
 import type { DbVendorProposal, ProposalStatus, VendorType } from '@minga/types';
 import { listVendorProposals } from '@minga/supabase';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { getT } from '@/lib/i18n/server';
+import type { Key } from '@/lib/i18n/dictionary';
 
 const STATUSES: (ProposalStatus | 'all')[] = ['new', 'reviewing', 'accepted', 'rejected', 'archived', 'all'];
-const STATUS_LABEL: Record<ProposalStatus | 'all', string> = {
-  new: 'New',
-  reviewing: 'In review',
-  accepted: 'Accepted',
-  rejected: 'Rejected',
-  archived: 'Archived',
-  all: 'All',
+
+const STATUS_KEY: Record<ProposalStatus | 'all', Key> = {
+  new: 'proposals.status.new',
+  reviewing: 'proposals.status.reviewing',
+  accepted: 'proposals.status.accepted',
+  rejected: 'proposals.status.rejected',
+  archived: 'proposals.status.archived',
+  all: 'proposals.status.all',
 };
 
-const TYPE_LABEL: Record<VendorType, string> = {
-  full_experience: 'Full experience',
-  transportation: 'Transportation',
-  lodging: 'Lodging',
-  guide: 'Guide',
-  food: 'Food',
-  other: 'Other',
+const TYPE_KEY: Record<VendorType, Key> = {
+  full_experience: 'proposals.type.full_experience',
+  transportation: 'proposals.type.transportation',
+  lodging: 'proposals.type.lodging',
+  guide: 'proposals.type.guide',
+  food: 'proposals.type.food',
+  other: 'proposals.type.other',
 };
 
 const STATUS_PILL: Record<ProposalStatus, string> = {
@@ -30,8 +33,12 @@ const STATUS_PILL: Record<ProposalStatus, string> = {
   archived: 'bg-ink-300/20 text-ink-500',
 };
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+function formatDate(iso: string, locale: 'en' | 'es') {
+  return new Date(iso).toLocaleDateString(locale === 'es' ? 'es-CO' : 'en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
 }
 
 export default async function VendorProposalsPage({
@@ -44,17 +51,16 @@ export default async function VendorProposalsPage({
 
   const supabase = await createSupabaseServerClient();
   const proposals = await listVendorProposals(supabase, { status: filter });
+  const { t, locale } = await getT();
 
   return (
     <div>
       <header>
-        <h1 className="text-2xl font-bold">Vendor proposals</h1>
-        <p className="text-ink-500 mt-1">
-          Submissions from vendors offering experiences, transportation, lodging, or other services.
-        </p>
+        <h1 className="text-2xl font-bold">{t('proposals.title')}</h1>
+        <p className="text-ink-500 mt-1">{t('proposals.subtitle')}</p>
       </header>
 
-      <nav className="mt-6 flex flex-wrap gap-1 text-sm" aria-label="Status filter">
+      <nav className="mt-6 flex flex-wrap gap-1 text-sm" aria-label={t('proposals.statusFilter')}>
         {STATUSES.map((s) => {
           const active = filter === s;
           return (
@@ -67,7 +73,7 @@ export default async function VendorProposalsPage({
                   : 'px-3 py-1.5 rounded-full bg-surface border border-surface-border text-ink-700 hover:bg-surface-alt'
               }
             >
-              {STATUS_LABEL[s]}
+              {t(STATUS_KEY[s])}
             </Link>
           );
         })}
@@ -77,13 +83,13 @@ export default async function VendorProposalsPage({
         <table className="w-full text-sm">
           <thead className="bg-surface-alt text-left text-xs uppercase tracking-wide text-ink-500">
             <tr>
-              <th className="px-4 py-3">Vendor</th>
-              <th className="px-4 py-3">Type</th>
-              <th className="px-4 py-3">Title</th>
-              <th className="px-4 py-3">Region</th>
-              <th className="px-4 py-3">Submitted</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3 text-right">Actions</th>
+              <th className="px-4 py-3">{t('proposals.col.vendor')}</th>
+              <th className="px-4 py-3">{t('proposals.col.type')}</th>
+              <th className="px-4 py-3">{t('proposals.col.title')}</th>
+              <th className="px-4 py-3">{t('proposals.col.region')}</th>
+              <th className="px-4 py-3">{t('proposals.col.submitted')}</th>
+              <th className="px-4 py-3">{t('proposals.col.status')}</th>
+              <th className="px-4 py-3 text-right">{t('proposals.col.actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -95,22 +101,22 @@ export default async function VendorProposalsPage({
                     {p.contact_email ?? p.contact_phone}
                   </div>
                 </td>
-                <td className="px-4 py-3 text-ink-700">{TYPE_LABEL[p.vendor_type]}</td>
+                <td className="px-4 py-3 text-ink-700">{t(TYPE_KEY[p.vendor_type])}</td>
                 <td className="px-4 py-3 max-w-md truncate" title={p.title}>
                   {p.title}
                 </td>
                 <td className="px-4 py-3 text-ink-500">{p.region ?? '—'}</td>
-                <td className="px-4 py-3 text-ink-500 whitespace-nowrap">{formatDate(p.created_at)}</td>
+                <td className="px-4 py-3 text-ink-500 whitespace-nowrap">{formatDate(p.created_at, locale)}</td>
                 <td className="px-4 py-3">
                   <span
                     className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_PILL[p.status]}`}
                   >
-                    {STATUS_LABEL[p.status]}
+                    {t(STATUS_KEY[p.status])}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-right">
                   <Link href={`/vendor-proposals/${p.id}`} className="btn-secondary text-xs">
-                    Review
+                    {t('proposals.review')}
                   </Link>
                 </td>
               </tr>
@@ -118,7 +124,7 @@ export default async function VendorProposalsPage({
             {proposals.length === 0 ? (
               <tr>
                 <td colSpan={7} className="px-4 py-8 text-center text-ink-500">
-                  No proposals match this filter.
+                  {t('proposals.empty')}
                 </td>
               </tr>
             ) : null}

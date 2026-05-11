@@ -3,23 +3,25 @@ import { notFound } from 'next/navigation';
 import type { ProposalStatus, VendorType } from '@minga/types';
 import { getVendorProposal } from '@minga/supabase';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { getT } from '@/lib/i18n/server';
+import type { Key } from '@/lib/i18n/dictionary';
 import { updateProposalNotes, updateProposalStatus } from '../actions';
 
-const TYPE_LABEL: Record<VendorType, string> = {
-  full_experience: 'Full experience',
-  transportation: 'Transportation',
-  lodging: 'Lodging',
-  guide: 'Guide',
-  food: 'Food',
-  other: 'Other',
+const TYPE_KEY: Record<VendorType, Key> = {
+  full_experience: 'proposals.type.full_experience',
+  transportation: 'proposals.type.transportation',
+  lodging: 'proposals.type.lodging',
+  guide: 'proposals.type.guide',
+  food: 'proposals.type.food',
+  other: 'proposals.type.other',
 };
 
-const STATUS_LABEL: Record<ProposalStatus, string> = {
-  new: 'New',
-  reviewing: 'In review',
-  accepted: 'Accepted',
-  rejected: 'Rejected',
-  archived: 'Archived',
+const STATUS_KEY: Record<ProposalStatus, Key> = {
+  new: 'proposals.status.new',
+  reviewing: 'proposals.status.reviewing',
+  accepted: 'proposals.status.accepted',
+  rejected: 'proposals.status.rejected',
+  archived: 'proposals.status.archived',
 };
 
 const STATUSES: ProposalStatus[] = ['new', 'reviewing', 'accepted', 'rejected', 'archived'];
@@ -33,44 +35,47 @@ export default async function VendorProposalDetailPage({
   const supabase = await createSupabaseServerClient();
   const proposal = await getVendorProposal(supabase, id);
   if (!proposal) notFound();
+  const { t, locale } = await getT();
+
+  const dateLocale = locale === 'es' ? 'es-CO' : 'en-US';
 
   return (
     <div>
       <Link href="/vendor-proposals" className="text-sm text-ink-500 hover:text-ink-700">
-        ← Back to proposals
+        {t('proposalDetail.back')}
       </Link>
 
       <header className="mt-3 flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold">{proposal.title}</h1>
           <p className="text-ink-500 mt-1">
-            {TYPE_LABEL[proposal.vendor_type]}
+            {t(TYPE_KEY[proposal.vendor_type])}
             {proposal.region ? ` · ${proposal.region}` : ''}
           </p>
         </div>
         <div className="text-right text-sm">
-          <div className="text-ink-500">Submitted</div>
-          <div>{new Date(proposal.created_at).toLocaleString()}</div>
+          <div className="text-ink-500">{t('proposalDetail.submitted')}</div>
+          <div>{new Date(proposal.created_at).toLocaleString(dateLocale)}</div>
         </div>
       </header>
 
       <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           <section className="card">
-            <h2 className="font-semibold mb-2">Description</h2>
+            <h2 className="font-semibold mb-2">{t('proposalDetail.description')}</h2>
             <p className="text-sm whitespace-pre-line leading-relaxed">{proposal.description}</p>
           </section>
 
           {proposal.pricing_notes ? (
             <section className="card">
-              <h2 className="font-semibold mb-2">Pricing notes</h2>
+              <h2 className="font-semibold mb-2">{t('proposalDetail.pricingNotes')}</h2>
               <p className="text-sm whitespace-pre-line leading-relaxed">{proposal.pricing_notes}</p>
             </section>
           ) : null}
 
           {proposal.attachments_url ? (
             <section className="card">
-              <h2 className="font-semibold mb-2">Attachments</h2>
+              <h2 className="font-semibold mb-2">{t('proposalDetail.attachments')}</h2>
               <a
                 href={proposal.attachments_url}
                 target="_blank"
@@ -83,7 +88,7 @@ export default async function VendorProposalDetailPage({
           ) : null}
 
           <section className="card">
-            <h2 className="font-semibold mb-3">Internal notes</h2>
+            <h2 className="font-semibold mb-3">{t('proposalDetail.internalNotes')}</h2>
             <form action={updateProposalNotes} className="flex flex-col gap-3">
               <input type="hidden" name="id" value={proposal.id} />
               <textarea
@@ -91,10 +96,10 @@ export default async function VendorProposalDetailPage({
                 rows={5}
                 defaultValue={proposal.admin_notes ?? ''}
                 className="field-input resize-y"
-                placeholder="Visible only to admins. Outcome of phone calls, follow-ups, decision rationale, etc."
+                placeholder={t('proposalDetail.notesPlaceholder')}
               />
               <button type="submit" className="btn-primary self-start">
-                Save notes
+                {t('proposalDetail.saveNotes')}
               </button>
             </form>
           </section>
@@ -102,16 +107,16 @@ export default async function VendorProposalDetailPage({
 
         <aside className="space-y-6">
           <section className="card">
-            <h2 className="font-semibold mb-3">Vendor</h2>
+            <h2 className="font-semibold mb-3">{t('proposalDetail.vendor')}</h2>
             <dl className="text-sm grid grid-cols-1 gap-2">
-              <Row label="Name" value={proposal.vendor_name} />
-              <Row label="Email" value={proposal.contact_email ?? '—'} />
-              <Row label="Phone" value={proposal.contact_phone ?? '—'} />
+              <Row label={t('proposalDetail.row.name')} value={proposal.vendor_name} />
+              <Row label={t('proposalDetail.row.email')} value={proposal.contact_email ?? '—'} />
+              <Row label={t('proposalDetail.row.phone')} value={proposal.contact_phone ?? '—'} />
             </dl>
           </section>
 
           <section className="card">
-            <h2 className="font-semibold mb-3">Status</h2>
+            <h2 className="font-semibold mb-3">{t('proposalDetail.statusTitle')}</h2>
             <form action={updateProposalStatus} className="flex flex-col gap-3">
               <input type="hidden" name="id" value={proposal.id} />
               <select
@@ -121,17 +126,17 @@ export default async function VendorProposalDetailPage({
               >
                 {STATUSES.map((s) => (
                   <option key={s} value={s}>
-                    {STATUS_LABEL[s]}
+                    {t(STATUS_KEY[s])}
                   </option>
                 ))}
               </select>
               <button type="submit" className="btn-primary">
-                Update status
+                {t('proposalDetail.updateStatus')}
               </button>
             </form>
             {proposal.reviewed_at ? (
               <p className="text-xs text-ink-500 mt-3">
-                Last reviewed {new Date(proposal.reviewed_at).toLocaleString()}
+                {t('proposalDetail.lastReviewed')} {new Date(proposal.reviewed_at).toLocaleString(dateLocale)}
               </p>
             ) : null}
           </section>

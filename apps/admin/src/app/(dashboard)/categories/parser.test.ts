@@ -35,7 +35,7 @@ describe('parseCategoryForm', () => {
     const out = parseCategoryForm(
       fd({ slug: 'x', name_en: 'X', name_es: 'X', icon_name: '   ' }),
     );
-    if ('error' in out) throw new Error('expected success');
+    if ('errorKey' in out) throw new Error('expected success');
     expect(out.value.icon_name).toBeNull();
   });
 
@@ -43,13 +43,13 @@ describe('parseCategoryForm', () => {
     const out = parseCategoryForm(
       fd({ slug: 'x', name_en: 'X', name_es: 'X', sort_order: '' }),
     );
-    if ('error' in out) throw new Error('expected success');
+    if ('errorKey' in out) throw new Error('expected success');
     expect(out.value.sort_order).toBe(0);
   });
 
   it('treats an unchecked is_active checkbox as false', () => {
     const out = parseCategoryForm(fd({ slug: 'x', name_en: 'X', name_es: 'X' }));
-    if ('error' in out) throw new Error('expected success');
+    if ('errorKey' in out) throw new Error('expected success');
     expect(out.value.is_active).toBe(false);
   });
 
@@ -59,7 +59,7 @@ describe('parseCategoryForm', () => {
     ['blank name_es', { slug: 'x', name_en: 'X', name_es: '' }],
   ])('rejects when %s', (_label, fields) => {
     const out = parseCategoryForm(fd(fields));
-    expect('error' in out && out.error).toMatch(/required/i);
+    expect('errorKey' in out && out.errorKey).toBe('error.category.required');
   });
 
   it.each([
@@ -73,7 +73,7 @@ describe('parseCategoryForm', () => {
     if (slug === '-leading-dash') {
       expect('value' in out).toBe(true);
     } else {
-      expect('error' in out && out.error).toMatch(/lowercase letters, numbers, and dashes/);
+      expect('errorKey' in out && out.errorKey).toBe('error.category.slugFormat');
     }
   });
 });
