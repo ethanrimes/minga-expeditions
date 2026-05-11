@@ -78,8 +78,11 @@ serve(async (req) => {
   }
 
   // ---- Verify signature --------------------------------------------------
+  // Wompi's `signature.properties` are paths relative to `event.data`, not
+  // the event root — e.g., "transaction.id" → event.data.transaction.id.
+  // Reference: https://docs.wompi.co/docs/colombia/eventos
   const concatenated =
-    event.signature.properties.map((p) => String(getValueByPath(event, p) ?? '')).join('') +
+    event.signature.properties.map((p) => String(getValueByPath(event.data, p) ?? '')).join('') +
     String(event.timestamp) +
     WOMPI_EVENTS_SECRET;
   const expected = await sha256Hex(concatenated);
