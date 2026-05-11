@@ -14,6 +14,11 @@ export interface SupabaseEnv {
 
 let cached: SupabaseClient | null = null;
 
+// Cached across reloads: once the Supabase project tells us anonymous
+// sign-ins are disabled, don't keep hitting /auth/v1/signup every page
+// load (it just produces 422s in the network panel).
+const ANON_DISABLED_KEY = 'minga.anon-disabled';
+
 function isStaleAuthError(err: unknown): boolean {
   const msg = (err as { message?: string } | null)?.message?.toLowerCase() ?? '';
   return (
@@ -22,6 +27,29 @@ function isStaleAuthError(err: unknown): boolean {
     msg.includes('refresh_token_not_found') ||
     msg.includes('jwt expired')
   );
+}
+
+function isAnonDisabledError(err: unknown): boolean {
+  const e = err as { status?: number; message?: string; code?: string } | null;
+  const msg = (e?.message ?? '').toLowerCase();
+  return (
+    e?.status === 422 ||
+    e?.code === 'anonymous_provider_disabled' ||
+    msg.includes('anonymous sign-ins are disabled') ||
+    msg.includes('anonymous provider disabled') ||
+    msg.includes('signups not allowed')
+  );
+}
+
+function safeStorage(): Storage | null {
+  try {
+    return typeof globalThis !== 'undefined' &&
+      (globalThis as { localStorage?: Storage }).localStorage
+      ? (globalThis as { localStorage: Storage }).localStorage
+      : null;
+  } catch {
+    return null;
+  }
 }
 
 export function createMingaClient(env: SupabaseEnv): SupabaseClient {
@@ -59,13 +87,23 @@ export function createMingaClient(env: SupabaseEnv): SupabaseClient {
       if (autoAnon && !data?.session) {
         // supabase-js >= 2.43 ships `signInAnonymously`. If the user is on an
         // older version, the method is missing; guard so we don't crash.
+        const storage = safeStorage();
+        if (storage?.getItem(ANON_DISABLED_KEY) === '1') {
+          // Server already told us anonymous sign-ins are off — skip the
+          // request so we don't generate a 422 on every page load.
+          return;
+        }
         const anon = (client.auth as unknown as {
-          signInAnonymously?: () => Promise<{ error: unknown }>;
+          signInAnonymously?: () => Promise<{ data: unknown; error: unknown }>;
         }).signInAnonymously;
         if (typeof anon === 'function') {
           try {
-            await anon.call(client.auth);
-          } catch {
+            const result = await anon.call(client.auth);
+            if (result?.error && isAnonDisabledError(result.error)) {
+              storage?.setItem(ANON_DISABLED_KEY, '1');
+            }
+          } catch (e) {
+            if (isAnonDisabledError(e)) storage?.setItem(ANON_DISABLED_KEY, '1');
             /* feature disabled on the project — leave session null */
           }
         }

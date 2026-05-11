@@ -53,6 +53,13 @@ export function ExpeditionDetailScreen({
   const [draft, setDraft] = useState('');
   const [posting, setPosting] = useState(false);
   const [myRating, setMyRating] = useState<number>(0);
+  const [rateNotice, setRateNotice] = useState<string | null>(null);
+  const [commentNotice, setCommentNotice] = useState<string | null>(null);
+
+  const isSignInRequired = (e: unknown): boolean => {
+    const msg = (e instanceof Error ? e.message : String(e ?? '')).toLowerCase();
+    return msg.includes('sign in');
+  };
 
   if (loading && !expedition) {
     return (
@@ -74,9 +81,12 @@ export function ExpeditionDetailScreen({
   const postRoot = async () => {
     if (!draft.trim()) return;
     setPosting(true);
+    setCommentNotice(null);
     try {
       await rootComment(draft.trim());
       setDraft('');
+    } catch (e) {
+      setCommentNotice(isSignInRequired(e) ? t('detail.signInToComment') : t('empty.couldNotLoad'));
     } finally {
       setPosting(false);
     }
@@ -252,7 +262,11 @@ export function ExpeditionDetailScreen({
           label={`${expedition.likes_count}`}
           variant="secondary"
           leftIcon={<Icon name="heart" size={14} color={theme.text} strokeWidth={2.2} />}
-          onPress={() => void like()}
+          onPress={() => {
+            void like().catch((e) => {
+              setRateNotice(isSignInRequired(e) ? t('detail.signInToLike') : t('empty.couldNotLoad'));
+            });
+          }}
         />
         <View style={{ flexDirection: 'row', gap: spacing.xs, alignItems: 'center' }}>
           <StarRating value={expedition.avg_rating ?? 0} />
@@ -269,9 +283,17 @@ export function ExpeditionDetailScreen({
           size={fontSizes['2xl']}
           onChange={async (stars) => {
             setMyRating(stars);
-            await rate(stars);
+            setRateNotice(null);
+            try {
+              await rate(stars);
+            } catch (e) {
+              setRateNotice(isSignInRequired(e) ? t('detail.signInToRate') : t('empty.couldNotLoad'));
+            }
           }}
         />
+        {rateNotice ? (
+          <Text style={{ color: theme.textMuted, fontSize: fontSizes.sm }}>{rateNotice}</Text>
+        ) : null}
       </View>
 
       <View style={{ gap: spacing.sm, marginTop: spacing.lg }}>
@@ -281,10 +303,16 @@ export function ExpeditionDetailScreen({
         <Input
           placeholder={t('detail.commentPlaceholder')}
           value={draft}
-          onChangeText={setDraft}
+          onChangeText={(v) => {
+            setDraft(v);
+            if (commentNotice) setCommentNotice(null);
+          }}
           multiline
         />
         <Button label={t('detail.post')} loading={posting} onPress={postRoot} />
+        {commentNotice ? (
+          <Text style={{ color: theme.textMuted, fontSize: fontSizes.sm }}>{commentNotice}</Text>
+        ) : null}
         <CommentThread comments={comments} onReply={reply} />
       </View>
     </Screen>

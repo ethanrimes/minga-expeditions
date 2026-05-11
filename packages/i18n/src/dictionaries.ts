@@ -79,8 +79,9 @@ export type TranslationKey =
   | 'track.titlePlaceholder'
   | 'track.notesLabel'
   | 'track.notesPlaceholder'
-  | 'track.signInToRate'
-  | 'track.signInToComment'
+  | 'detail.signInToRate'
+  | 'detail.signInToComment'
+  | 'detail.signInToLike'
   | 'track.savedSuccess'
   | 'track.statusReady'
   | 'track.statusRecording'
@@ -343,8 +344,9 @@ export const en: Record<TranslationKey, string> = {
   'track.titlePlaceholder': 'Title (e.g., Cerro Tusa · 8km loop)',
   'track.notesLabel': 'Notes',
   'track.notesPlaceholder': 'How did it go?',
-  'track.signInToRate': 'Sign in to rate this expedition.',
-  'track.signInToComment': 'Sign in to leave a comment.',
+  'detail.signInToRate': 'Sign in to rate this expedition.',
+  'detail.signInToComment': 'Sign in to leave a comment.',
+  'detail.signInToLike': 'Sign in to like expeditions.',
   'track.savedSuccess': 'Saved! See it on your profile.',
   'track.statusReady': 'Ready',
   'track.statusRecording': 'Recording',
@@ -612,8 +614,9 @@ export const es: Record<TranslationKey, string> = {
   'track.titlePlaceholder': 'Título (p. ej., Cerro Tusa · 8km)',
   'track.notesLabel': 'Notas',
   'track.notesPlaceholder': '¿Cómo te fue?',
-  'track.signInToRate': 'Inicia sesión para calificar esta expedición.',
-  'track.signInToComment': 'Inicia sesión para dejar un comentario.',
+  'detail.signInToRate': 'Inicia sesión para calificar esta expedición.',
+  'detail.signInToComment': 'Inicia sesión para dejar un comentario.',
+  'detail.signInToLike': 'Inicia sesión para dar me gusta a expediciones.',
   'track.savedSuccess': '¡Guardado! Mira tu perfil.',
   'track.statusReady': 'Listo',
   'track.statusRecording': 'Grabando',

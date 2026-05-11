@@ -21,8 +21,15 @@ if (!url || !anonKey) {
   );
 }
 
+// `Allow anonymous sign-ins` is off on this project's Supabase, so leave
+// the auto-anon bootstrap off by default to keep the network log clean.
+// Flip EXPO_PUBLIC_SUPABASE_AUTO_ANONYMOUS=true in apps/mobile/.env to
+// re-enable once it's turned on in the dashboard.
+const autoAnonymous = process.env.EXPO_PUBLIC_SUPABASE_AUTO_ANONYMOUS === 'true';
+
 export const supabase = initSupabase({
   url,
   anonKey,
   storage: AsyncStorage,
+  autoAnonymous,
 });
