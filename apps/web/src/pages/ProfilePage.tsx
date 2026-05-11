@@ -8,6 +8,32 @@ import { formatDistanceKm, formatDuration, formatElevation, progressToNextTier, 
 import type { ActivityType, DbActivity, DbProfile, TierLevel } from '@minga/types';
 import { supabase } from '../supabase';
 
+const COUNTRY_CODES: { code: string; label: string }[] = [
+  { code: '+57', label: '🇨🇴 +57' },
+  { code: '+1', label: '🇺🇸 +1' },
+  { code: '+52', label: '🇲🇽 +52' },
+  { code: '+593', label: '🇪🇨 +593' },
+  { code: '+51', label: '🇵🇪 +51' },
+  { code: '+56', label: '🇨🇱 +56' },
+  { code: '+54', label: '🇦🇷 +54' },
+  { code: '+55', label: '🇧🇷 +55' },
+  { code: '+58', label: '🇻🇪 +58' },
+  { code: '+591', label: '🇧🇴 +591' },
+  { code: '+34', label: '🇪🇸 +34' },
+  { code: '+44', label: '🇬🇧 +44' },
+  { code: '+49', label: '🇩🇪 +49' },
+  { code: '+33', label: '🇫🇷 +33' },
+];
+
+const PROVIDER_META: Record<string, { label: string; emoji: string }> = {
+  email: { label: 'Email + password', emoji: '✉️' },
+  facebook: { label: 'Facebook', emoji: '📘' },
+  google: { label: 'Google', emoji: '🔵' },
+  apple: { label: 'Apple', emoji: '🍎' },
+  github: { label: 'GitHub', emoji: '🐙' },
+  anonymous: { label: 'Guest session', emoji: '👻' },
+};
+
 const TIER_KEY: Record<TierLevel, any> = {
   bronze: 'tier.bronze',
   silver: 'tier.silver',
@@ -29,6 +55,13 @@ export function ProfilePage() {
   const [activities, setActivities] = useState<DbActivity[]>([]);
   const [email, setEmail] = useState<string | null>(null);
   const [signedIn, setSignedIn] = useState<boolean>(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  // Identities the user has linked via Supabase auth providers. Order is
+  // preserved from supabase-js — typically the signup provider is first.
+  const [identityProviders, setIdentityProviders] = useState<string[]>([]);
+  const [phoneCode, setPhoneCode] = useState<string>('+57');
+  const [phoneNumber, setPhoneNumber] = useState<string>('');
+  const [phoneSaveState, setPhoneSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const locale = language === 'es' ? 'es-CO' : 'en-US';
 
   useEffect(() => {
@@ -39,12 +72,48 @@ export function ProfilePage() {
         return;
       }
       setSignedIn(true);
+      setUserId(data.user.id);
       setEmail(data.user.email ?? null);
-      const [p, a] = await Promise.all([fetchProfile(supabase, data.user.id), fetchMyActivities(supabase)]);
+      // identities lives on the user object when Supabase populates it.
+      // Falls back to app_metadata.providers when identities is missing.
+      const identities = (data.user.identities ?? []) as Array<{ provider: string }>;
+      const providers = identities.length
+        ? identities.map((i) => i.provider)
+        : ((data.user.app_metadata?.providers as string[] | undefined) ?? []);
+      setIdentityProviders(Array.from(new Set(providers)));
+      const [p, a, phoneRow] = await Promise.all([
+        fetchProfile(supabase, data.user.id),
+        fetchMyActivities(supabase),
+        supabase
+          .from('profiles')
+          .select('phone_country_code, phone_number')
+          .eq('id', data.user.id)
+          .maybeSingle(),
+      ]);
       setProfile(p);
       setActivities(a);
+      const ph = phoneRow.data as { phone_country_code: string | null; phone_number: string | null } | null;
+      if (ph?.phone_country_code) setPhoneCode(ph.phone_country_code);
+      if (ph?.phone_number) setPhoneNumber(ph.phone_number);
     })();
   }, []);
+
+  const savePhone = async () => {
+    if (!userId) return;
+    setPhoneSaveState('saving');
+    const trimmed = phoneNumber.replace(/\D/g, '');
+    const { error } = await supabase
+      .from('profiles')
+      .update({ phone_country_code: phoneCode, phone_number: trimmed || null })
+      .eq('id', userId);
+    if (error) {
+      setPhoneSaveState('error');
+      return;
+    }
+    setPhoneNumber(trimmed);
+    setPhoneSaveState('saved');
+    setTimeout(() => setPhoneSaveState('idle'), 2000);
+  };
 
   if (!signedIn) {
     return (
@@ -184,6 +253,108 @@ export function ProfilePage() {
         </section>
       ) : null}
 
+      <section
+        style={{
+          background: theme.surface,
+          border: `1px solid ${theme.border}`,
+          borderRadius: 16,
+          padding: 24,
+          marginBottom: 32,
+        }}
+      >
+        <h2 style={{ color: theme.text, margin: '0 0 16px' }}>Connected accounts</h2>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <ContactRow theme={theme} icon="✉️" label="Email" value={email ?? '—'} hint="From your account" />
+          <ContactRow
+            theme={theme}
+            icon="🔐"
+            label="Sign-in method"
+            value={
+              identityProviders.length
+                ? identityProviders
+                    .map((p) => PROVIDER_META[p]?.label ?? p)
+                    .join(' · ')
+                : 'Email + password'
+            }
+            hint={
+              identityProviders.includes('facebook') || identityProviders.includes('google')
+                ? 'OAuth-linked at signup'
+                : 'Linked OAuth providers will show here'
+            }
+          />
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 8,
+              padding: '12px 0',
+              borderTop: `1px solid ${theme.border}`,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ fontSize: 20, lineHeight: 1 }}>💬</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ color: theme.text, fontWeight: 700 }}>WhatsApp</div>
+                <div style={{ color: theme.textMuted, fontSize: 12 }}>
+                  Used to send booking confirmations and trip reminders.
+                </div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <select
+                value={phoneCode}
+                onChange={(e) => setPhoneCode(e.target.value)}
+                style={{
+                  background: theme.surfaceAlt,
+                  color: theme.text,
+                  border: `1px solid ${theme.border}`,
+                  borderRadius: 10,
+                  padding: '10px',
+                  fontSize: 14,
+                  minWidth: 110,
+                }}
+              >
+                {COUNTRY_CODES.map((c) => (
+                  <option key={c.code} value={c.code}>{c.label}</option>
+                ))}
+              </select>
+              <input
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
+                type="tel"
+                placeholder="3001234567"
+                style={{
+                  background: theme.surfaceAlt,
+                  color: theme.text,
+                  border: `1px solid ${theme.border}`,
+                  borderRadius: 10,
+                  padding: '10px 12px',
+                  fontSize: 14,
+                  flex: 1,
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => void savePhone()}
+                disabled={phoneSaveState === 'saving'}
+                style={{
+                  background: phoneSaveState === 'saved' ? theme.surface : theme.primary,
+                  color: phoneSaveState === 'saved' ? theme.text : theme.onPrimary,
+                  border: phoneSaveState === 'saved' ? `1px solid ${theme.border}` : 0,
+                  borderRadius: 999,
+                  padding: '10px 18px',
+                  fontWeight: 700,
+                  fontSize: 13,
+                  cursor: phoneSaveState === 'saving' ? 'wait' : 'pointer',
+                }}
+              >
+                {phoneSaveState === 'saving' ? 'Saving…' : phoneSaveState === 'saved' ? 'Saved ✓' : phoneSaveState === 'error' ? 'Retry' : 'Save'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <h2 style={{ color: theme.text, marginTop: 0 }}>{t('profile.recentActivities')}</h2>
       {activities.length === 0 ? (
         <div style={{ color: theme.textMuted }}>
@@ -232,6 +403,43 @@ export function ProfilePage() {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+function ContactRow({
+  theme,
+  icon,
+  label,
+  value,
+  hint,
+}: {
+  theme: any;
+  icon: string;
+  label: string;
+  value: string;
+  hint?: string;
+}) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      <span style={{ fontSize: 20, lineHeight: 1 }}>{icon}</span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ color: theme.text, fontWeight: 700 }}>{label}</div>
+        <div
+          style={{
+            color: theme.text,
+            fontSize: 14,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {value}
+        </div>
+        {hint ? (
+          <div style={{ color: theme.textMuted, fontSize: 12 }}>{hint}</div>
+        ) : null}
+      </div>
     </div>
   );
 }
