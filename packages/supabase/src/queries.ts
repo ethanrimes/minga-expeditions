@@ -649,7 +649,7 @@ export async function fetchMyPurchasedExpeditions(
   if (error) throw error;
   const seen = new Set<string>();
   const out: { id: string; title: string }[] = [];
-  for (const row of (data ?? []) as { expedition: { id: string; title: string } | null }[]) {
+  for (const row of (data ?? []) as unknown as { expedition: { id: string; title: string } | null }[]) {
     if (row.expedition && !seen.has(row.expedition.id)) {
       seen.add(row.expedition.id);
       out.push(row.expedition);

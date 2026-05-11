@@ -1,10 +1,12 @@
 import { createClient, type SupabaseClient, type SupabaseClientOptions } from '@supabase/supabase-js';
 
+type AuthOptions = NonNullable<SupabaseClientOptions<'public'>['auth']>;
+
 export interface SupabaseEnv {
   url: string;
   anonKey: string;
   // Optional storage adapter — RN provides AsyncStorage, browsers default to localStorage.
-  storage?: SupabaseClientOptions<'public'>['auth']['storage'];
+  storage?: AuthOptions['storage'];
   // Opt out of automatic anonymous sign-in (true by default). If the Supabase
   // project has `Allow anonymous sign-ins` disabled, the call fails silently.
   autoAnonymous?: boolean;

@@ -31,8 +31,10 @@
     "node": ">=20"
   },
   "devDependencies": {
-    "@expo/ngrok-bin-win32-x64": "^2.3.42",
     "typescript": "~5.9.0",
     "vitest": "^2.1.4"
+  },
+  "optionalDependencies": {
+    "@expo/ngrok-bin-win32-x64": "^2.3.42"
   }
 }
