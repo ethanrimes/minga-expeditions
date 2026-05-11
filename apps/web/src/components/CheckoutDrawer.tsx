@@ -39,7 +39,29 @@ interface WompiCheckoutOptions {
   publicKey: string;
   signature: { integrity: string };
   redirectUrl: string;
-  customerData?: { email?: string; fullName?: string; phoneNumber?: string };
+  // Wompi requires phoneNumber + phoneNumberPrefix as SEPARATE fields when
+  // either is provided. Passing a combined string like "+573001234567" as
+  // phoneNumber alone throws "phoneNumberPrefix obligatorio" on construct.
+  customerData?: {
+    email?: string;
+    fullName?: string;
+    phoneNumber?: string;
+    phoneNumberPrefix?: string;
+  };
+}
+
+// Split a user-entered phone like "+57 300 123 4567" into Wompi's expected
+// shape: { phoneNumberPrefix: "+57", phoneNumber: "3001234567" }.
+// If the input doesn't start with "+" + 1–3 digits we return undefined so
+// the caller can omit both fields and let Wompi prompt the user.
+function splitPhone(raw: string): { phoneNumber: string; phoneNumberPrefix: string } | undefined {
+  const trimmed = raw.trim();
+  if (!trimmed) return undefined;
+  const m = trimmed.match(/^\+(\d{1,3})[\s-]?(.+)$/);
+  if (!m) return undefined;
+  const digits = m[2].replace(/\D/g, '');
+  if (!digits) return undefined;
+  return { phoneNumberPrefix: `+${m[1]}`, phoneNumber: digits };
 }
 
 interface WompiCheckoutInstance {
@@ -105,6 +127,7 @@ export function CheckoutDrawer({
       await loadWompiScript();
       if (!window.WidgetCheckout) throw new Error('Wompi widget unavailable');
 
+      const phoneFields = splitPhone(phone);
       const checkout = new window.WidgetCheckout({
         currency: json.currency,
         amountInCents: json.amountInCents,
@@ -115,7 +138,7 @@ export function CheckoutDrawer({
         customerData: {
           email: email.trim() || undefined,
           fullName: name.trim() || undefined,
-          phoneNumber: phone.trim() || undefined,
+          ...(phoneFields ?? {}),
         },
       });
 
@@ -126,7 +149,13 @@ export function CheckoutDrawer({
         // if the user dismissed, leave them on the expedition page.
       });
     } catch (err) {
-      setError((err as Error).message);
+      // Wompi widget throws non-Error values (plain strings / objects),
+      // so falling back to String(err) keeps the error visible to the user.
+      const msg =
+        err && typeof err === 'object' && 'message' in err && (err as { message?: unknown }).message
+          ? String((err as { message: unknown }).message)
+          : String(err);
+      setError(msg);
       setMode('collect-info');
     }
   };
