@@ -109,25 +109,39 @@ serve(async (req) => {
   const { error } = await supabase.from('orders').update(update).eq('wompi_reference', tx.reference);
   if (error) return new Response(`db error: ${error.message}`, { status: 500 });
 
-  // Fire-and-forget WhatsApp confirmation when the payment is approved.
+  // Fire-and-forget confirmations when the payment is approved. Run both
+  // channels in parallel; either may fail (template not approved, phone not
+  // on test list, RESEND_API_KEY missing) and we still want the other one
+  // to land.
   if (status === 'approved') {
-    try {
-      await sendOrderConfirmation(supabase, tx.reference);
-    } catch (e) {
-      console.error('whatsapp confirmation failed', e);
-      // Do not fail the webhook on a delivery error — Wompi will retry the
-      // event, which would double-confirm the order in the DB. The admin can
-      // resend manually from the orders dashboard.
-    }
+    await Promise.all([
+      sendOrderConfirmation(supabase, tx.reference).catch((e) =>
+        console.error('whatsapp confirmation failed', e),
+      ),
+      sendOrderEmailConfirmation(supabase, tx.reference).catch((e) =>
+        console.error('email confirmation failed', e),
+      ),
+    ]);
+    // Do not fail the webhook on a delivery error — Wompi will retry the
+    // event, which would double-confirm the order in the DB. The admin can
+    // resend manually from the orders dashboard.
   }
 
   return new Response('ok', { status: 200 });
 });
 
-async function sendOrderConfirmation(
+interface OrderForConfirmation {
+  amount_cents: number;
+  currency: string;
+  expedition: { title: string } | null;
+  guest: { phone: string | null; email: string | null; display_name: string | null } | null;
+  profile: { display_name: string | null } | null;
+}
+
+async function loadOrderForConfirmation(
   supabase: ReturnType<typeof createClient>,
   reference: string,
-) {
+): Promise<OrderForConfirmation | null> {
   const { data: order } = await supabase
     .from('orders')
     .select(
@@ -138,17 +152,24 @@ async function sendOrderConfirmation(
     )
     .eq('wompi_reference', reference)
     .maybeSingle();
-  if (!order) return;
+  return (order as unknown as OrderForConfirmation | null) ?? null;
+}
 
-  const phone =
-    (order as { guest: { phone: string | null } | null }).guest?.phone ?? null;
+function formatAmount(amountCents: number, currency: string): string {
+  return new Intl.NumberFormat('es-CO', { style: 'currency', currency }).format(amountCents / 100);
+}
+
+async function sendOrderConfirmation(
+  supabase: ReturnType<typeof createClient>,
+  reference: string,
+) {
+  const order = await loadOrderForConfirmation(supabase, reference);
+  if (!order) return;
+  const phone = order.guest?.phone ?? null;
   if (!phone) return; // No WhatsApp delivery target.
 
-  const expeditionTitle = (order as { expedition: { title: string } | null }).expedition?.title ?? 'your trip';
-  const friendlyAmount = new Intl.NumberFormat('es-CO', {
-    style: 'currency',
-    currency: (order as { currency: string }).currency,
-  }).format((order as { amount_cents: number }).amount_cents / 100);
+  const expeditionTitle = order.expedition?.title ?? 'your trip';
+  const friendlyAmount = formatAmount(order.amount_cents, order.currency);
 
   const FUNCTIONS_BASE = `${Deno.env.get('SUPABASE_URL')}/functions/v1`;
   await fetch(`${FUNCTIONS_BASE}/whatsapp-send`, {
@@ -159,12 +180,39 @@ async function sendOrderConfirmation(
     },
     body: JSON.stringify({
       to: phone,
-      // Falls back to a plain text body if the template is unavailable.
-      // Template `order_confirmation` should be created in Meta Business
+      // Template `order_confirmation` must be created in Meta Business
       // Manager with two variables: {{1}} = expedition title, {{2}} = amount.
       template: 'order_confirmation',
       language: 'es_CO',
       params: [expeditionTitle, friendlyAmount],
+    }),
+  });
+}
+
+async function sendOrderEmailConfirmation(
+  supabase: ReturnType<typeof createClient>,
+  reference: string,
+) {
+  const order = await loadOrderForConfirmation(supabase, reference);
+  if (!order) return;
+  const email = order.guest?.email ?? null;
+  if (!email) return; // No email target.
+
+  const name = order.profile?.display_name ?? order.guest?.display_name ?? 'viajero';
+  const expeditionTitle = order.expedition?.title ?? 'tu próxima expedición';
+  const friendlyAmount = formatAmount(order.amount_cents, order.currency);
+
+  const FUNCTIONS_BASE = `${Deno.env.get('SUPABASE_URL')}/functions/v1`;
+  await fetch(`${FUNCTIONS_BASE}/email-send`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+    },
+    body: JSON.stringify({
+      to: email,
+      template: 'order_confirmation',
+      params: { name, title: expeditionTitle, amount: friendlyAmount },
     }),
   });
 }
