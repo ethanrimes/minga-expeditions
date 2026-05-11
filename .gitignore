@@ -52,6 +52,10 @@ Thumbs.db
 /pastes/
 pastes
 
+# Scratch / handover docs workspace. Tracked files in here stay tracked, but
+# new docs (handover scratchpads, app config drops, etc.) aren't auto-added.
+/docs/
+
 # EAS build profile — contains baked Supabase env vars per environment.
 # Each dev keeps their own copy; see apps/mobile/eas.example.json for the
 # template and fill in from your Supabase dashboard.
@@ -72,3 +76,4 @@ apps/mobile/tools/
 # Playwright MCP debug output (console logs, snapshots) generated when
 # Claude drives the browser to debug the web build. Pure ephemera.
 .playwright-mcp/
+.vercel
