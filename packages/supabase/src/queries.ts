@@ -1,6 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type {
   AppRole,
+  CommChannel,
+  CommLocale,
   DbActivity,
   DbActivityComment,
   DbActivityPhoto,
@@ -8,14 +10,18 @@ import type {
   DbActivityTrackPoint,
   DbCategory,
   DbComment,
+  DbCommEventType,
+  DbCommTemplate,
   DbExpedition,
   DbExpeditionSalida,
   DbOrder,
+  DbParticipation,
   DbProfile,
   DbVendorProposal,
   ExpeditionWithAuthor,
   CommentWithAuthor,
   OrderStatus,
+  ParticipationWithSalida,
   ProposalStatus,
   SalidaWithExpedition,
   TerrainTag,
@@ -1017,5 +1023,170 @@ export async function updateSalida(
 
 export async function deleteSalida(client: SupabaseClient, id: string): Promise<void> {
   const { error } = await client.from('expedition_salidas').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// =============================================================================
+// Participations — who attended which salida, completion popup state, and
+// the organizer-side review of the guest. See migration ..._participations_and_comms.
+// =============================================================================
+
+const PARTICIPATION_FULL_SELECT = `
+  *,
+  salida:expedition_salidas!participations_salida_id_fkey (*),
+  expedition:expeditions!participations_expedition_id_fkey (
+    id, title, location_name, region, country, cover_photo_url, difficulty
+  )
+`;
+
+// Returns participations for the signed-in user where the salida has ended
+// and the user hasn't yet acknowledged the completion popup. The app uses
+// this on load to decide whether to pop the trip-completion modal.
+export async function fetchUnacknowledgedCompletions(
+  client: SupabaseClient,
+): Promise<ParticipationWithSalida[]> {
+  const { data: u } = await client.auth.getUser();
+  if (!u.user) return [];
+  const nowIso = new Date().toISOString();
+  const { data, error } = await client
+    .from('participations')
+    .select(PARTICIPATION_FULL_SELECT)
+    .eq('user_id', u.user.id)
+    .is('completion_acknowledged_at', null)
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  const rows = ((data ?? []) as unknown) as ParticipationWithSalida[];
+  // Only return ones whose salida has actually ended. We can't filter that in
+  // PostgREST via a nested column without a stored view, so filter client-side.
+  return rows.filter((p) => {
+    const endIso = p.salida?.ends_at ?? p.salida?.starts_at;
+    if (!endIso) return false;
+    return new Date(endIso).getTime() <= new Date(nowIso).getTime();
+  });
+}
+
+export async function acknowledgeCompletion(
+  client: SupabaseClient,
+  participationId: string,
+  stats: { distance_km?: number | null; elevation_m?: number | null } = {},
+): Promise<void> {
+  const { error } = await client
+    .from('participations')
+    .update({
+      completion_acknowledged_at: new Date().toISOString(),
+      ack_distance_km: stats.distance_km ?? null,
+      ack_elevation_m: stats.elevation_m ?? null,
+    })
+    .eq('id', participationId);
+  if (error) throw error;
+}
+
+// Used by the trip-completion modal to know whether the user crossed a tier
+// threshold during the trip. Compares the current profile tier vs the tier
+// captured at signup time.
+const TIER_ORDER: Record<DbProfile['tier'], number> = {
+  bronze: 0,
+  silver: 1,
+  gold: 2,
+  diamond: 3,
+};
+
+export function didLevelUp(p: Pick<DbParticipation, 'tier_at_signup'>, currentTier: DbProfile['tier']): boolean {
+  return TIER_ORDER[currentTier] > TIER_ORDER[p.tier_at_signup];
+}
+
+// Admin / organizer pages: list participations on a salida (people attended +
+// pending guest reviews) and write organizer reviews.
+
+export async function listSalidaParticipations(
+  client: SupabaseClient,
+  salidaId: string,
+): Promise<(DbParticipation & { user: Pick<DbProfile, 'id' | 'username' | 'display_name' | 'avatar_url' | 'tier'> })[]> {
+  const { data, error } = await client
+    .from('participations')
+    .select(`*, user:profiles!participations_user_id_fkey (id, username, display_name, avatar_url, tier)`)
+    .eq('salida_id', salidaId)
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  return ((data ?? []) as unknown) as (DbParticipation & {
+    user: Pick<DbProfile, 'id' | 'username' | 'display_name' | 'avatar_url' | 'tier'>;
+  })[];
+}
+
+export async function submitOrganizerReview(
+  client: SupabaseClient,
+  participationId: string,
+  stars: 1 | 2 | 3 | 4 | 5,
+  body: string,
+): Promise<void> {
+  const { data: u } = await client.auth.getUser();
+  if (!u.user) throw new Error('Sign in to leave a review.');
+  const { error } = await client
+    .from('participations')
+    .update({
+      organizer_review_stars: stars,
+      organizer_review_body: body,
+      organizer_reviewed_at: new Date().toISOString(),
+      organizer_reviewer_id: u.user.id,
+    })
+    .eq('id', participationId);
+  if (error) throw error;
+}
+
+// =============================================================================
+// Comm events + templates — see migration ..._participations_and_comms.
+// =============================================================================
+
+export async function fetchCommEventTypes(client: SupabaseClient): Promise<DbCommEventType[]> {
+  const { data, error } = await client
+    .from('comm_event_types')
+    .select('*')
+    .order('key', { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as DbCommEventType[];
+}
+
+export async function fetchCommTemplates(
+  client: SupabaseClient,
+  opts: { eventKey?: string; locale?: CommLocale; channel?: CommChannel } = {},
+): Promise<DbCommTemplate[]> {
+  let q = client
+    .from('comm_templates')
+    .select('*')
+    .order('event_key', { ascending: true })
+    .order('locale', { ascending: true })
+    .order('channel', { ascending: true });
+  if (opts.eventKey) q = q.eq('event_key', opts.eventKey);
+  if (opts.locale) q = q.eq('locale', opts.locale);
+  if (opts.channel) q = q.eq('channel', opts.channel);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as DbCommTemplate[];
+}
+
+export type CommTemplateInput = {
+  event_key: string;
+  locale: CommLocale;
+  channel: CommChannel;
+  subject?: string | null;
+  body: string;
+  is_active?: boolean;
+};
+
+export async function upsertCommTemplate(
+  client: SupabaseClient,
+  input: CommTemplateInput,
+): Promise<DbCommTemplate> {
+  const { data, error } = await client
+    .from('comm_templates')
+    .upsert(input, { onConflict: 'event_key,locale,channel' })
+    .select('*')
+    .single();
+  if (error) throw error;
+  return data as DbCommTemplate;
+}
+
+export async function deleteCommTemplate(client: SupabaseClient, id: string): Promise<void> {
+  const { error } = await client.from('comm_templates').delete().eq('id', id);
   if (error) throw error;
 }

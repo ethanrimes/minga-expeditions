@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { LayoutGrid, ListTree, Mountain, Briefcase, Receipt, LogOut, CalendarDays } from 'lucide-react';
+import { LayoutGrid, ListTree, Mountain, Briefcase, Receipt, LogOut, CalendarDays, Mail } from 'lucide-react';
 import { requireAdmin } from '@/lib/auth';
 import { getT } from '@/lib/i18n/server';
 import { LanguageToggle } from '@/components/LanguageToggle';
@@ -26,6 +26,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <NavLink href="/expeditions/calendar" icon={<CalendarDays size={16} />}>{t('sidebar.calendar')}</NavLink>
           <NavLink href="/vendor-proposals" icon={<Briefcase size={16} />}>{t('sidebar.vendorProposals')}</NavLink>
           <NavLink href="/orders" icon={<Receipt size={16} />}>{t('sidebar.orders')}</NavLink>
+          <NavLink href="/comms" icon={<Mail size={16} />}>{t('sidebar.comms')}</NavLink>
         </nav>
 
         <div className="border-t border-surface-border">

@@ -28,6 +28,7 @@ export type Key =
   | 'sidebar.calendar'
   | 'sidebar.vendorProposals'
   | 'sidebar.orders'
+  | 'sidebar.comms'
   | 'sidebar.signOut'
   | 'sidebar.language'
   | 'lang.english'
@@ -275,7 +276,22 @@ export type Key =
   | 'calendar.filters.reset'
   | 'calendar.legend.published'
   | 'calendar.legend.draft'
-  | 'calendar.legend.soldOut';
+  | 'calendar.legend.soldOut'
+  // comms
+  | 'comms.title'
+  | 'comms.subtitle'
+  | 'comms.event.heading'
+  | 'comms.template.empty'
+  | 'comms.template.subject'
+  | 'comms.template.body'
+  | 'comms.template.locale'
+  | 'comms.template.channel'
+  | 'comms.template.active'
+  | 'comms.template.save'
+  | 'comms.template.saved'
+  | 'comms.template.placeholdersHelp'
+  | 'comms.channel.email'
+  | 'comms.channel.whatsapp';
 
 export const dict: Record<Locale, Record<Key, string>> = {
   en: {
@@ -297,6 +313,7 @@ export const dict: Record<Locale, Record<Key, string>> = {
     'sidebar.calendar': 'Calendar',
     'sidebar.vendorProposals': 'Vendor proposals',
     'sidebar.orders': 'Orders',
+    'sidebar.comms': 'Communications',
     'sidebar.signOut': 'Sign out',
     'sidebar.language': 'Language',
     'lang.english': 'English',
@@ -559,6 +576,23 @@ export const dict: Record<Locale, Record<Key, string>> = {
     'calendar.legend.published': 'Published',
     'calendar.legend.draft': 'Draft',
     'calendar.legend.soldOut': 'Sold out',
+
+    'comms.title': 'Communications',
+    'comms.subtitle':
+      'Per-event message templates. Each event supports an email and a WhatsApp variant, in English and Spanish.',
+    'comms.event.heading': 'Event',
+    'comms.template.empty': 'No template yet for this combination.',
+    'comms.template.subject': 'Subject (email only)',
+    'comms.template.body': 'Body',
+    'comms.template.locale': 'Language',
+    'comms.template.channel': 'Channel',
+    'comms.template.active': 'Active',
+    'comms.template.save': 'Save template',
+    'comms.template.saved': 'Saved ✓',
+    'comms.template.placeholdersHelp':
+      'Use {display_name}, {expedition_title}, {salida_starts_at}, {distance_km}, {elevation_m}, {new_tier}, {total_distance_km}.',
+    'comms.channel.email': 'Email',
+    'comms.channel.whatsapp': 'WhatsApp',
   },
   es: {
     'login.title': 'Minga Admin',
@@ -580,6 +614,7 @@ export const dict: Record<Locale, Record<Key, string>> = {
     'sidebar.calendar': 'Calendario',
     'sidebar.vendorProposals': 'Propuestas de proveedores',
     'sidebar.orders': 'Pedidos',
+    'sidebar.comms': 'Comunicaciones',
     'sidebar.signOut': 'Cerrar sesión',
     'sidebar.language': 'Idioma',
     'lang.english': 'English',
@@ -847,6 +882,23 @@ export const dict: Record<Locale, Record<Key, string>> = {
     'calendar.legend.published': 'Publicada',
     'calendar.legend.draft': 'Borrador',
     'calendar.legend.soldOut': 'Agotada',
+
+    'comms.title': 'Comunicaciones',
+    'comms.subtitle':
+      'Plantillas de mensajes por evento. Cada evento tiene variantes para correo y WhatsApp, en inglés y español.',
+    'comms.event.heading': 'Evento',
+    'comms.template.empty': 'Aún no hay plantilla para esta combinación.',
+    'comms.template.subject': 'Asunto (solo correo)',
+    'comms.template.body': 'Cuerpo',
+    'comms.template.locale': 'Idioma',
+    'comms.template.channel': 'Canal',
+    'comms.template.active': 'Activa',
+    'comms.template.save': 'Guardar plantilla',
+    'comms.template.saved': 'Guardada ✓',
+    'comms.template.placeholdersHelp':
+      'Usa {display_name}, {expedition_title}, {salida_starts_at}, {distance_km}, {elevation_m}, {new_tier}, {total_distance_km}.',
+    'comms.channel.email': 'Correo',
+    'comms.channel.whatsapp': 'WhatsApp',
   },
 };
 

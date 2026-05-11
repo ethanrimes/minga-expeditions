@@ -243,6 +243,46 @@ export interface DbExpeditionSalida {
   updated_at: string;
 }
 
+export interface DbParticipation {
+  id: string;
+  user_id: string;
+  salida_id: string;
+  expedition_id: string;
+  order_id: string | null;
+  tier_at_signup: TierLevel;
+  attended_at: string | null;
+  completion_acknowledged_at: string | null;
+  organizer_review_stars: 1 | 2 | 3 | 4 | 5 | null;
+  organizer_review_body: string | null;
+  organizer_reviewed_at: string | null;
+  organizer_reviewer_id: string | null;
+  ack_distance_km: number | null;
+  ack_elevation_m: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type CommChannel = 'email' | 'whatsapp';
+export type CommLocale = 'en' | 'es';
+
+export interface DbCommEventType {
+  key: string;
+  description: string;
+  created_at: string;
+}
+
+export interface DbCommTemplate {
+  id: string;
+  event_key: string;
+  locale: CommLocale;
+  channel: CommChannel;
+  subject: string | null;
+  body: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface DbVendorProposal {
   id: string;
   vendor_name: string;

@@ -247,7 +247,21 @@ export type TranslationKey =
   | 'activity.shareFallback'
   | 'activity.sharePreparing'
   | 'activity.shareTitle'
-  | 'activity.shareUnavailable';
+  | 'activity.shareUnavailable'
+  | 'completion.title'
+  | 'completion.subtitle'
+  | 'completion.levelUpTitle'
+  | 'completion.levelUpBody'
+  | 'completion.statsHeading'
+  | 'completion.distance'
+  | 'completion.elevation'
+  | 'completion.duration'
+  | 'completion.activities'
+  | 'completion.reviewExpedition'
+  | 'completion.reviewPlaceholder'
+  | 'completion.dismiss'
+  | 'completion.submit'
+  | 'completion.thanks';
 
 export const en: Record<TranslationKey, string> = {
   'app.tagline': 'Every trail in Colombia, in one happy app.',
@@ -497,6 +511,20 @@ export const en: Record<TranslationKey, string> = {
   'activity.sharePreparing': 'Preparing your story…',
   'activity.shareTitle': 'My Minga expedition',
   'activity.shareUnavailable': 'Connect a social account on your profile to share.',
+  'completion.title': 'Trip complete · {title}',
+  'completion.subtitle': 'Here is how you did.',
+  'completion.levelUpTitle': 'You leveled up to {tier}!',
+  'completion.levelUpBody': 'You crossed a tier threshold during this trip. 🎉',
+  'completion.statsHeading': 'Your numbers',
+  'completion.distance': 'Distance',
+  'completion.elevation': 'Elevation',
+  'completion.duration': 'Duration',
+  'completion.activities': 'Activities',
+  'completion.reviewExpedition': 'Rate this expedition',
+  'completion.reviewPlaceholder': 'Tell future travelers how it went (optional)',
+  'completion.dismiss': 'Maybe later',
+  'completion.submit': 'Save and continue',
+  'completion.thanks': 'Thanks for the review!',
 };
 
 export const es: Record<TranslationKey, string> = {
@@ -749,6 +777,20 @@ export const es: Record<TranslationKey, string> = {
   'activity.shareTitle': 'Mi expedición Minga',
   'activity.shareUnavailable':
     'Conecta una cuenta social en tu perfil para compartir.',
+  'completion.title': '¡Viaje completado · {title}!',
+  'completion.subtitle': 'Estas son tus cifras.',
+  'completion.levelUpTitle': '¡Subiste a {tier}!',
+  'completion.levelUpBody': 'Cruzaste un nivel durante este viaje. 🎉',
+  'completion.statsHeading': 'Tus números',
+  'completion.distance': 'Distancia',
+  'completion.elevation': 'Desnivel',
+  'completion.duration': 'Duración',
+  'completion.activities': 'Actividades',
+  'completion.reviewExpedition': 'Califica esta expedición',
+  'completion.reviewPlaceholder': 'Cuéntale a otros viajeros qué tal estuvo (opcional)',
+  'completion.dismiss': 'Más tarde',
+  'completion.submit': 'Guardar y continuar',
+  'completion.thanks': '¡Gracias por la reseña!',
 };
 
 export const dictionaries: Record<LanguageCode, Record<TranslationKey, string>> = { en, es };

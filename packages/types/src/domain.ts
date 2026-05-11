@@ -2,6 +2,7 @@ import type {
   DbExpedition,
   DbExpeditionPhoto,
   DbExpeditionSalida,
+  DbParticipation,
   DbPhotoAttribution,
   DbProfile,
   DbComment,
@@ -18,6 +19,14 @@ export interface ExpeditionWithAuthor extends DbExpedition {
   // Next upcoming published salida, if any. Populated by feed/detail queries
   // so the UI can show "Next departure: …" without an extra round-trip.
   next_salida: DbExpeditionSalida | null;
+}
+
+export interface ParticipationWithSalida extends DbParticipation {
+  salida: DbExpeditionSalida;
+  expedition: Pick<
+    DbExpedition,
+    'id' | 'title' | 'location_name' | 'region' | 'country' | 'cover_photo_url' | 'difficulty'
+  >;
 }
 
 export interface SalidaWithExpedition extends DbExpeditionSalida {

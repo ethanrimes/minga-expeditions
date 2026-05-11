@@ -1,8 +1,12 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { useTheme } from '@minga/theme';
+import { fetchUnacknowledgedCompletions } from '@minga/supabase';
+import type { ParticipationWithSalida } from '@minga/types';
 import { NavBar } from './components/NavBar';
 import { Footer } from './components/Footer';
+import { TripCompletionModal } from './components/TripCompletionModal';
+import { supabase } from './supabase';
 import { HomePage } from './pages/HomePage';
 import { FeedPage } from './pages/FeedPage';
 import { CalendarPage } from './pages/CalendarPage';
@@ -21,6 +25,28 @@ import { DataDeletionPage } from './pages/DataDeletionPage';
 
 export function App() {
   const { theme } = useTheme();
+  const [pendingCompletions, setPendingCompletions] = useState<ParticipationWithSalida[]>([]);
+
+  // Check for unacknowledged trip completions whenever the auth state changes.
+  // The first one in the list is rendered as a popup; closing it pops the next.
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const list = await fetchUnacknowledgedCompletions(supabase);
+        setPendingCompletions(list);
+      } catch (e) {
+        console.warn('trip-completion check failed', e);
+      }
+    };
+    void load();
+    const { data: sub } = supabase.auth.onAuthStateChange((evt) => {
+      if (evt === 'SIGNED_IN' || evt === 'INITIAL_SESSION' || evt === 'TOKEN_REFRESHED') {
+        void load();
+      }
+      if (evt === 'SIGNED_OUT') setPendingCompletions([]);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
 
   // Mirror the active palette into CSS variables so plain CSS can reference it (body bg, scrollbars, etc.).
   useEffect(() => {
@@ -61,6 +87,12 @@ export function App() {
         </Routes>
       </main>
       <Footer />
+      {pendingCompletions[0] ? (
+        <TripCompletionModal
+          participation={pendingCompletions[0]}
+          onClose={() => setPendingCompletions((q) => q.slice(1))}
+        />
+      ) : null}
     </div>
   );
 }
