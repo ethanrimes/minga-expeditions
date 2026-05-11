@@ -16,6 +16,6 @@
     "@minga/types": "*"
   },
   "devDependencies": {
-    "typescript": "~5.9.0"
+    "typescript": "^6.0.3"
   }
 }
