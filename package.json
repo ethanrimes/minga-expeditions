@@ -32,7 +32,7 @@
   },
   "devDependencies": {
     "typescript": "~5.9.0",
-    "vitest": "^2.1.4"
+    "vitest": "^4.1.6"
   },
   "optionalDependencies": {
     "@expo/ngrok-bin-win32-x64": "^2.3.42"

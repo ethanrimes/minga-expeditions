@@ -43,7 +43,7 @@
     "@types/react": "~19.1.0",
     "jest": "^29.7.0",
     "jest-expo": "~54.0.0",
-    "lucide-react-native": "^1.14.0",
+    "lucide-react-native": "^0.577.0",
     "typescript": "~5.9.0"
   },
   "jest": {
