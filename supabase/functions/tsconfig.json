@@ -1,9 +1,10 @@
 {
-  "_comment": "These files run on Deno (Supabase Edge runtime), not Node. The VS Code TypeScript service should ignore them — the Deno extension handles type checking, or treat them as plain JS via the lib/types below to suppress 'Cannot find module' on https:// imports and the global Deno.",
+  "_comment": "These files run on Deno (Supabase Edge runtime), not Node. The VS Code TypeScript service should ignore them — the Deno extension handles type checking, or treat them as plain JS via the lib/types below to suppress 'Cannot find module' on https:// imports and the global Deno. moduleResolution stays 'Node' (= node10) so Deno-style 'import { x } from \"https://…/file.ts\"' specifiers resolve; 'Bundler'/'NodeNext' both reject the explicit .ts extension and the wildcard https:// module shape. ignoreDeprecations silences TS 6.x's node10 deprecation warning until we migrate these to the Deno LSP.",
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",
-    "moduleResolution": "Bundler",
+    "moduleResolution": "Node",
+    "ignoreDeprecations": "5.0",
     "lib": ["ES2022", "DOM"],
     "allowJs": true,
     "checkJs": false,
