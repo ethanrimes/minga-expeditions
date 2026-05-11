@@ -333,7 +333,7 @@ describe('uploadActivityPhoto', () => {
   it('rejects unauthenticated callers', async () => {
     const client = createFakeClient();
     await expect(
-      uploadActivityPhoto(asClient(client), 'a1', new Blob([new Uint8Array([1])]), 'p.jpg'),
+      uploadActivityPhoto(asClient(client), 'a1', new Blob([new Uint8Array([1]).buffer]), 'p.jpg'),
     ).rejects.toThrow(/sign in/i);
   });
 
@@ -343,7 +343,7 @@ describe('uploadActivityPhoto', () => {
       data: { id: 'ph1', activity_id: 'a1', url: 'x' },
       error: null,
     });
-    await uploadActivityPhoto(asClient(client), 'a1', new Blob([new Uint8Array([1])]), 'pic.jpg', {
+    await uploadActivityPhoto(asClient(client), 'a1', new Blob([new Uint8Array([1]).buffer]), 'pic.jpg', {
       lat: 4.6,
       lng: -74.08,
     });
@@ -411,13 +411,13 @@ describe('uploadAvatar', () => {
   it('rejects unauthenticated callers', async () => {
     const client = createFakeClient();
     await expect(
-      uploadAvatar(asClient(client), new Blob([new Uint8Array([1])]), 'me.png'),
+      uploadAvatar(asClient(client), new Blob([new Uint8Array([1]).buffer]), 'me.png'),
     ).rejects.toThrow(/sign in/i);
   });
 
   it('returns a public URL under the caller folder', async () => {
     const client = createFakeClient({ user: { id: 'u1' } });
-    const url = await uploadAvatar(asClient(client), new Blob([new Uint8Array([1])]), 'me.png');
+    const url = await uploadAvatar(asClient(client), new Blob([new Uint8Array([1]).buffer]), 'me.png');
     expect(url).toMatch(/^https:\/\/cdn\.example\/u1\//);
   });
 });

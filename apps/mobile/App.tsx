@@ -77,6 +77,7 @@ function Root() {
   const { theme } = useTheme();
   const { t } = useT();
   const [route, setRoute] = useState<Route>({ kind: 'tab', tab: 'feed' });
+  const [feedCategory, setFeedCategory] = useState<ExpeditionCategory | 'all'>('all');
   const [auth, setAuth] = useState(false);
 
   const tabs: { key: Tab; label: string; icon: IconName }[] = [
@@ -122,10 +123,21 @@ function Root() {
     }
     switch (route.tab) {
       case 'feed':
-        return <FeedScreen onOpenExpedition={(id) => setRoute({ kind: 'expedition', id })} />;
+        return (
+          <FeedScreen
+            key={`feed-${feedCategory}`}
+            initialCategory={feedCategory}
+            onOpenExpedition={(id) => setRoute({ kind: 'expedition', id })}
+          />
+        );
       case 'explore':
         return (
-          <ExploreScreen onPickCategory={(_c: ExpeditionCategory) => setRoute({ kind: 'tab', tab: 'feed' })} />
+          <ExploreScreen
+            onPickCategory={(c: ExpeditionCategory) => {
+              setFeedCategory(c);
+              setRoute({ kind: 'tab', tab: 'feed' });
+            }}
+          />
         );
       case 'calendar':
         return (
@@ -166,6 +178,9 @@ function Root() {
                 key={tab.key}
                 onPress={() => {
                   setAuth(false);
+                  if (tab.key === 'feed' && (route.kind !== 'tab' || route.tab !== 'feed')) {
+                    setFeedCategory('all');
+                  }
                   setRoute({ kind: 'tab', tab: tab.key });
                 }}
                 style={styles.tab}

@@ -10,10 +10,16 @@ import { SectionHeader } from '../components/SectionHeader';
 import { EmptyState } from '../components/EmptyState';
 import { useFeed } from '../hooks/useFeed';
 
-export function FeedScreen({ onOpenExpedition }: { onOpenExpedition: (id: string) => void }) {
+export function FeedScreen({
+  onOpenExpedition,
+  initialCategory,
+}: {
+  onOpenExpedition: (id: string) => void;
+  initialCategory?: ExpeditionCategory | 'all';
+}) {
   const { theme } = useTheme();
   const { t } = useT();
-  const [category, setCategory] = useState<ExpeditionCategory | 'all'>('all');
+  const [category, setCategory] = useState<ExpeditionCategory | 'all'>(initialCategory ?? 'all');
   const { expeditions, loading, error } = useFeed(category === 'all' ? null : category);
 
   const CATEGORIES: { label: string; value: ExpeditionCategory | 'all' }[] = [

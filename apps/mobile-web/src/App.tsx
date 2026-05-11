@@ -32,6 +32,7 @@ type Route =
 export function App() {
   const { theme } = useTheme();
   const [route, setRoute] = useState<Route>({ kind: 'tab', tab: 'feed' });
+  const [feedCategory, setFeedCategory] = useState<ExpeditionCategory | 'all'>('all');
   const [authVisible, setAuthVisible] = useState(false);
 
   const goBackToProfile = () => setRoute({ kind: 'tab', tab: 'profile' });
@@ -68,10 +69,21 @@ export function App() {
     }
     switch (route.tab) {
       case 'feed':
-        return <FeedScreen onOpenExpedition={(id) => setRoute({ kind: 'expedition', id })} />;
+        return (
+          <FeedScreen
+            key={`feed-${feedCategory}`}
+            initialCategory={feedCategory}
+            onOpenExpedition={(id) => setRoute({ kind: 'expedition', id })}
+          />
+        );
       case 'explore':
         return (
-          <ExploreScreen onPickCategory={(_cat: ExpeditionCategory) => setRoute({ kind: 'tab', tab: 'feed' })} />
+          <ExploreScreen
+            onPickCategory={(cat: ExpeditionCategory) => {
+              setFeedCategory(cat);
+              setRoute({ kind: 'tab', tab: 'feed' });
+            }}
+          />
         );
       case 'calendar':
         return (
@@ -102,6 +114,7 @@ export function App() {
       activeTab={route.kind === 'tab' ? route.tab : route.kind === 'activity' ? 'profile' : 'feed'}
       onChangeTab={(t) => {
         setAuthVisible(false);
+        if (t === 'feed' && (route.kind !== 'tab' || route.tab !== 'feed')) setFeedCategory('all');
         setRoute({ kind: 'tab', tab: t });
       }}
       theme={theme}

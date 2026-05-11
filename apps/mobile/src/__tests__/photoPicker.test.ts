@@ -15,7 +15,7 @@ jest.mock('expo-image-picker', () => ({
 const originalFetch = global.fetch;
 beforeAll(() => {
   global.fetch = jest.fn(async () => ({
-    blob: async () => new Blob([new Uint8Array([1, 2, 3])], { type: 'image/jpeg' }),
+    blob: async () => new Blob([new Uint8Array([1, 2, 3]).buffer], { type: 'image/jpeg' }),
   })) as unknown as typeof fetch;
 });
 afterAll(() => {

@@ -181,9 +181,9 @@ export function TrackScreen({
 
       {status === 'ended' ? (
         <View style={{ gap: spacing.md }}>
-          <Input label={t('stats.duration')} placeholder={t('track.titlePlaceholder')} value={title} onChangeText={setTitle} />
+          <Input label={t('track.titleLabel')} placeholder={t('track.titlePlaceholder')} value={title} onChangeText={setTitle} />
           <Input
-            label={t('track.notesPlaceholder')}
+            label={t('track.notesLabel')}
             placeholder={t('track.notesPlaceholder')}
             value={notes}
             onChangeText={setNotes}
