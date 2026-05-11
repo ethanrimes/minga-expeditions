@@ -7,7 +7,7 @@ import type { Session } from '@supabase/supabase-js';
 
 export function NavBar() {
   const { theme } = useTheme();
-  const { t } = useT();
+  const { t, language, setLanguage } = useT();
   const nav = useNavigate();
   const [session, setSession] = useState<Session | null>(null);
 
@@ -77,6 +77,12 @@ export function NavBar() {
           ))}
         </nav>
 
+        <LangToggle
+          language={language}
+          onChange={setLanguage}
+          theme={theme}
+        />
+
         {session ? (
           <button
             onClick={async () => {
@@ -110,6 +116,56 @@ export function NavBar() {
         )}
       </div>
     </header>
+  );
+}
+
+function LangToggle({
+  language,
+  onChange,
+  theme,
+}: {
+  language: 'en' | 'es';
+  onChange: (lang: 'en' | 'es') => void;
+  theme: ReturnType<typeof useTheme>['theme'];
+}) {
+  return (
+    <div
+      role="group"
+      aria-label="Language"
+      style={{
+        display: 'inline-flex',
+        background: theme.surfaceAlt,
+        border: `1px solid ${theme.border}`,
+        borderRadius: 999,
+        padding: 2,
+      }}
+    >
+      {(['en', 'es'] as const).map((l) => {
+        const active = l === language;
+        return (
+          <button
+            key={l}
+            type="button"
+            onClick={() => onChange(l)}
+            aria-pressed={active}
+            style={{
+              background: active ? theme.primary : 'transparent',
+              color: active ? theme.onPrimary : theme.text,
+              border: 0,
+              padding: '6px 12px',
+              borderRadius: 999,
+              fontWeight: 700,
+              fontSize: 12,
+              letterSpacing: 0.4,
+              textTransform: 'uppercase',
+              cursor: 'pointer',
+            }}
+          >
+            {l}
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
