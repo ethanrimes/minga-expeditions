@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { env } from '../env';
 
 // Refreshes the Supabase session on every request and forwards updated cookies
@@ -13,7 +13,7 @@ export async function updateSession(request: NextRequest) {
       getAll() {
         return request.cookies.getAll();
       },
-      setAll(toSet) {
+      setAll(toSet: { name: string; value: string; options: CookieOptions }[]) {
         for (const { name, value } of toSet) request.cookies.set(name, value);
         response = NextResponse.next({ request });
         for (const { name, value, options } of toSet) {

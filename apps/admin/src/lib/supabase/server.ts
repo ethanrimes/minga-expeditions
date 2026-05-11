@@ -12,10 +12,10 @@ export async function createSupabaseServerClient() {
       getAll() {
         return cookieStore.getAll();
       },
-      setAll(toSet) {
+      setAll(toSet: { name: string; value: string; options: CookieOptions }[]) {
         try {
           for (const { name, value, options } of toSet) {
-            cookieStore.set(name, value, options as CookieOptions);
+            cookieStore.set(name, value, options);
           }
         } catch {
           // setAll throws when called from a Server Component (read-only).
