@@ -28,5 +28,5 @@
       "@minga/i18n/*": ["./packages/i18n/src/*"]
     }
   },
-  "exclude": ["node_modules", "dist", "build", ".expo"]
+  "exclude": ["node_modules", "dist", "build", ".expo", "supabase/functions"]
 }

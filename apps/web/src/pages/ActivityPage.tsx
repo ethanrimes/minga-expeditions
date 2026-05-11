@@ -18,6 +18,11 @@ import { formatDistanceKm, formatDuration, formatElevation, formatSpeedKmh, rela
 import type { ActivityType, DbActivity, DbActivityComment, DbActivityRating } from '@minga/types';
 import { supabase } from '../supabase';
 import { buildOsmStyle, COLOMBIA_BOUNDS } from '../map/style';
+import { shareStory } from '../storyExport';
+
+const env = import.meta.env as unknown as Record<string, string>;
+const SUPABASE_URL = env.VITE_SUPABASE_URL ?? '';
+const SHARE_CARD_BASE_URL = SUPABASE_URL ? `${SUPABASE_URL}/functions/v1/activity-share-card` : '';
 
 const ICON: Record<ActivityType, React.ComponentType<{ size?: number; strokeWidth?: number }>> = {
   hike: Mountain,
@@ -263,6 +268,39 @@ export function ActivityPage() {
         <h2 style={{ color: theme.text, marginBottom: 8 }}>{t('activity.rateHeading')}</h2>
         <StarPicker value={rating?.stars ?? 0} onPick={rate} color={theme.accent} muted={theme.textMuted} />
       </section>
+
+      {id && SHARE_CARD_BASE_URL ? (
+        <section style={{ marginBottom: 24 }}>
+          <button
+            data-testid="share-to-story"
+            onClick={async () => {
+              const outcome = await shareStory({
+                activityId: id,
+                title: activity.title,
+                caption: t('activity.shareCaption').replace('{title}', activity.title),
+                svgUrl: `${SHARE_CARD_BASE_URL}?activity_id=${id}`,
+              });
+              if (outcome === 'downloaded') {
+                window.alert(t('activity.shareFallback'));
+              } else if (outcome === 'unavailable') {
+                window.alert(t('activity.shareUnavailable'));
+              }
+            }}
+            style={{
+              background: theme.primary,
+              color: theme.onPrimary,
+              border: 0,
+              borderRadius: 999,
+              padding: '12px 22px',
+              fontWeight: 800,
+              fontSize: 14,
+              cursor: 'pointer',
+            }}
+          >
+            {t('activity.shareStory')}
+          </button>
+        </section>
+      ) : null}
 
       <section>
         <h2 style={{ color: theme.text, marginBottom: 8 }}>

@@ -1,0 +1,18 @@
+{
+  "_comment": "These files run on Deno (Supabase Edge runtime), not Node. The VS Code TypeScript service should ignore them — the Deno extension handles type checking, or treat them as plain JS via the lib/types below to suppress 'Cannot find module' on https:// imports and the global Deno.",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "lib": ["ES2022", "DOM"],
+    "allowJs": true,
+    "checkJs": false,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "strict": false,
+    "isolatedModules": true,
+    "types": []
+  },
+  "include": ["./**/*.ts"],
+  "exclude": ["node_modules"]
+}

@@ -309,19 +309,36 @@ export function ActivityDetailScreen({
       </View>
 
       {shareAdapter && shareCardBaseUrl ? (
-        <Button
-          label={t('activity.share')}
-          variant="secondary"
-          onPress={() =>
-            shareAdapter.share({
-              activityId: id,
-              title: activity.title,
-              cardUrl: `${shareCardBaseUrl}?activity_id=${id}`,
-              deepLink: `${publicSiteUrl ?? 'https://minga.co'}/activities/${id}`,
-              caption: t('activity.shareCaption').replace('{title}', activity.title),
-            })
-          }
-        />
+        <View style={{ flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' }}>
+          <Button
+            label={t('activity.share')}
+            variant="secondary"
+            onPress={() =>
+              shareAdapter.share({
+                activityId: id,
+                title: activity.title,
+                cardUrl: `${shareCardBaseUrl}?activity_id=${id}`,
+                deepLink: `${publicSiteUrl ?? 'https://minga.co'}/activities/${id}`,
+                caption: t('activity.shareCaption').replace('{title}', activity.title),
+              })
+            }
+          />
+          {shareAdapter.shareToStory ? (
+            <Button
+              label={t('activity.shareStory')}
+              onPress={() =>
+                shareAdapter.shareToStory!({
+                  activityId: id,
+                  title: activity.title,
+                  cardUrl: `${shareCardBaseUrl}?activity_id=${id}`,
+                  deepLink: `${publicSiteUrl ?? 'https://minga.co'}/activities/${id}`,
+                  caption: t('activity.shareCaption').replace('{title}', activity.title),
+                })
+              }
+              leftIcon={<Icon name="share" size={14} color={theme.onPrimary} strokeWidth={2.4} />}
+            />
+          ) : null}
+        </View>
       ) : null}
 
       <View style={{ gap: spacing.sm }}>
