@@ -14,6 +14,9 @@ import { MapPage } from './pages/MapPage';
 import { ActivityPage } from './pages/ActivityPage';
 import { PartnersPage } from './pages/PartnersPage';
 import { OrderSuccessPage } from './pages/OrderSuccessPage';
+import { PrivacyPage } from './pages/PrivacyPage';
+import { TermsPage } from './pages/TermsPage';
+import { DataDeletionPage } from './pages/DataDeletionPage';
 
 export function App() {
   const { theme } = useTheme();
@@ -50,6 +53,9 @@ export function App() {
           <Route path="/partners" element={<PartnersPage />} />
           <Route path="/orders/:id/success" element={<OrderSuccessPage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/data-deletion" element={<DataDeletionPage />} />
         </Routes>
       </main>
       <Footer />

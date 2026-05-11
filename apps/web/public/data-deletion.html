@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Data Deletion — Minga Expeditions</title>
+<meta name="description" content="How to delete your Minga Expeditions account and personal data." />
+<meta name="robots" content="index, follow" />
+<style>
+  :root { color-scheme: light dark; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1.6; color: #1a1a1a; background: #fafaf7; margin: 0; }
+  main { max-width: 760px; margin: 0 auto; padding: 48px 24px 96px; }
+  .eyebrow { color: #ea580c; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; font-size: 12px; }
+  h1 { font-size: 36px; font-weight: 800; margin: 8px 0 0; }
+  h2 { font-size: 20px; font-weight: 700; margin: 32px 0 8px; }
+  .muted { color: #4b5563; }
+  ul, ol { padding-left: 20px; margin: 0; }
+  a { color: #ea580c; }
+  code { background: #f1f5f4; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+  @media (prefers-color-scheme: dark) {
+    body { color: #f3f4f6; background: #0f172a; }
+    .muted { color: #94a3b8; }
+    code { background: #1e293b; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <p class="eyebrow">Legal</p>
+    <h1>Data Deletion</h1>
+    <p class="muted">Last updated: November 10, 2026</p>
+  </header>
+
+  <h2>Your right to delete</h2>
+  <p class="muted">You can delete your Minga Expeditions account and all associated personal data at any time. This page explains how, what gets removed, and what (if anything) we are required to retain.</p>
+
+  <h2>Self-service from inside the app</h2>
+  <ol class="muted">
+    <li>Sign in at <a href="/auth">minga-expeditions-web.vercel.app/auth</a></li>
+    <li>Open <a href="/settings">Settings</a></li>
+    <li>Scroll to <strong>Delete account</strong></li>
+    <li>Confirm. Deletion is immediate and irreversible.</li>
+  </ol>
+
+  <h2>By email</h2>
+  <p class="muted">If you can't access the app for any reason (lost password, lost device, provider issue), email <a href="mailto:hello@minga.co">hello@minga.co</a> from the address tied to your account, with subject line <code>Delete my account</code>. We will verify your identity and remove your data within 30 days.</p>
+
+  <h2>If you signed in via Facebook, Google, or Instagram</h2>
+  <p class="muted">Revoking the Minga app's permission inside your social provider's settings <em>does not</em> automatically delete your Minga account — only future sign-ins. To fully delete, use the in-app flow above or email us. Provider-side revocation links:</p>
+  <ul class="muted">
+    <li>Facebook: <a href="https://www.facebook.com/settings?tab=applications">facebook.com/settings?tab=applications</a></li>
+    <li>Instagram: <a href="https://www.instagram.com/accounts/manage_access/">instagram.com/accounts/manage_access</a></li>
+    <li>Google: <a href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</a></li>
+  </ul>
+
+  <h2>What gets deleted</h2>
+  <ul class="muted">
+    <li>Your profile (display name, avatar, bio, country)</li>
+    <li>Every expedition you authored</li>
+    <li>Every activity, GPS track, and attached photo</li>
+    <li>Every comment, like, and rating you posted</li>
+    <li>Crash and error telemetry tied to your user ID in Sentry</li>
+    <li>WhatsApp opt-in records</li>
+  </ul>
+
+  <h2>What we retain (and why)</h2>
+  <p class="muted">Colombian law and standard financial-record retention require us to keep a minimal subset of data, redacted of direct identifiers where possible:</p>
+  <ul class="muted">
+    <li><strong>Payment receipts</strong> tied to bookings you made (your name + transaction amount + date) — retained for 5 years per DIAN tax record requirements</li>
+    <li><strong>Anonymized usage metrics</strong> (aggregate counters with no link back to you) — retained indefinitely</li>
+  </ul>
+  <p class="muted">Everything else is hard-deleted from our database within 30 days. Daily Postgres backups are aged out within 7 days, so your record fully disappears within that window.</p>
+
+  <h2>Timeline</h2>
+  <p class="muted">Most deletions complete within a few minutes (in-app flow) or within 24 hours (email request). The 30-day window is the upper bound for edge cases. Backups containing your data are purged within 7 days of the deletion request.</p>
+
+  <h2>Questions</h2>
+  <p class="muted"><a href="mailto:hello@minga.co">hello@minga.co</a></p>
+</main>
+</body>
+</html>
