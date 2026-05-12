@@ -4,8 +4,8 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTheme } from '@minga/theme';
 import { useT } from '@minga/i18n';
-import { fetchFeedExpeditions, fetchMyActivities, getSupabase } from '@minga/supabase';
-import type { ExpeditionWithAuthor, DbActivity, GeoLayerId } from '@minga/types';
+import { fetchExpeditionMarkers, fetchMyActivities, getSupabase, type ExpeditionMarker } from '@minga/supabase';
+import type { DbActivity, GeoLayerId } from '@minga/types';
 import { GEO_LAYERS, buildGeoTileUrl } from '@minga/types';
 import { supabase } from '../supabase';
 import { buildOsmStyle, COLOMBIA_BOUNDS } from '../map/style';
@@ -26,7 +26,7 @@ export function MapPage() {
   const nav = useNavigate();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
-  const [expeditions, setExpeditions] = useState<ExpeditionWithAuthor[]>([]);
+  const [expeditions, setExpeditions] = useState<ExpeditionMarker[]>([]);
   const [activities, setActivities] = useState<DbActivity[]>([]);
   const [ready, setReady] = useState(false);
   const [visibleLayers, setVisibleLayers] = useState<Record<GeoLayerId, boolean>>(() =>
@@ -38,7 +38,9 @@ export function MapPage() {
   useEffect(() => {
     (async () => {
       const [exp, acts] = await Promise.all([
-        fetchFeedExpeditions(supabase, { limit: 50 }).catch(() => []),
+        // Markers need ~9 columns — skipping the photo joins + per-row
+        // aggregate enrichment that `fetchFeedExpeditions` would do.
+        fetchExpeditionMarkers(supabase, { limit: 200 }).catch(() => [] as ExpeditionMarker[]),
         fetchMyActivities(supabase).catch(() => []),
       ]);
       setExpeditions(exp);

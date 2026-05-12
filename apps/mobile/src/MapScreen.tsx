@@ -3,8 +3,8 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 import { useTheme, spacing, fontSizes, fontWeights } from '@minga/theme';
 import { useT } from '@minga/i18n';
-import { fetchFeedExpeditions, fetchMyActivities, getSupabase } from '@minga/supabase';
-import type { ExpeditionWithAuthor, DbActivity } from '@minga/types';
+import { fetchExpeditionMarkers, fetchMyActivities, getSupabase, type ExpeditionMarker } from '@minga/supabase';
+import type { DbActivity } from '@minga/types';
 import { GEO_LAYERS } from '@minga/types';
 import { buildMapHtml, type MapPayload } from './mapHtml';
 
@@ -35,7 +35,7 @@ export function MapScreen({ onOpenExpedition }: { onOpenExpedition: (id: string)
       try {
         // Parallelize expeditions + activities; fetch track polylines afterwards.
         const [expeditions, activities] = await Promise.all([
-          fetchFeedExpeditions(getSupabase(), { limit: 50 }).catch(() => [] as ExpeditionWithAuthor[]),
+          fetchExpeditionMarkers(getSupabase(), { limit: 200 }).catch(() => [] as ExpeditionMarker[]),
           fetchMyActivities(getSupabase()).catch(() => [] as DbActivity[]),
         ]);
 

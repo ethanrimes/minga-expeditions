@@ -1,4 +1,5 @@
-import type { ExpeditionWithAuthor, DbActivity, GeoLayerDef } from '@minga/types';
+import type { DbActivity, GeoLayerDef } from '@minga/types';
+import type { ExpeditionMarker } from '@minga/supabase';
 
 // Builds a self-contained HTML document that:
 //  - loads MapLibre GL JS from a CDN
@@ -15,7 +16,7 @@ import type { ExpeditionWithAuthor, DbActivity, GeoLayerDef } from '@minga/types
 // rendering the real MapLibre GL engine on-device.
 
 export interface MapPayload {
-  expeditions: ExpeditionWithAuthor[];
+  expeditions: ExpeditionMarker[];
   activities: DbActivity[];
   tracks: Record<string, [number, number][]>; // activityId → [lng, lat][]
   primary: string;

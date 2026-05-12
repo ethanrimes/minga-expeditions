@@ -3,8 +3,8 @@ import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useTheme } from '@minga/theme';
 import { useT } from '@minga/i18n';
-import { fetchFeedExpeditions, fetchMyActivities, getSupabase } from '@minga/supabase';
-import type { ExpeditionWithAuthor, DbActivity, GeoLayerId } from '@minga/types';
+import { fetchExpeditionMarkers, fetchMyActivities, getSupabase, type ExpeditionMarker } from '@minga/supabase';
+import type { DbActivity, GeoLayerId } from '@minga/types';
 import { GEO_LAYERS, buildGeoTileUrl } from '@minga/types';
 import { buildOsmStyle, COLOMBIA_BOUNDS } from './mapStyle';
 
@@ -18,7 +18,7 @@ export function MapScreen({ onOpenExpedition }: { onOpenExpedition: (id: string)
   const { t } = useT();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
-  const [expeditions, setExpeditions] = useState<ExpeditionWithAuthor[]>([]);
+  const [expeditions, setExpeditions] = useState<ExpeditionMarker[]>([]);
   const [activities, setActivities] = useState<DbActivity[]>([]);
   const [ready, setReady] = useState(false);
   const [visibleLayers, setVisibleLayers] = useState<Record<GeoLayerId, boolean>>(() =>
@@ -29,7 +29,7 @@ export function MapScreen({ onOpenExpedition }: { onOpenExpedition: (id: string)
   useEffect(() => {
     (async () => {
       const [exp, acts] = await Promise.all([
-        fetchFeedExpeditions(getSupabase(), { limit: 50 }).catch(() => []),
+        fetchExpeditionMarkers(getSupabase(), { limit: 200 }).catch(() => [] as ExpeditionMarker[]),
         fetchMyActivities(getSupabase()).catch(() => []),
       ]);
       setExpeditions(exp);

@@ -90,31 +90,22 @@ export function ProfilePage() {
         ? identities.map((i) => i.provider)
         : ((data.user.app_metadata?.providers as string[] | undefined) ?? []);
       setIdentityProviders(Array.from(new Set(providers)));
-      const [p, a, phoneRow] = await Promise.all([
+      // fetchProfile now returns phone + instagram fields directly — no need
+      // for a second round-trip just to pick them up.
+      const [p, a] = await Promise.all([
         fetchProfile(supabase, data.user.id),
         fetchMyActivities(supabase),
-        supabase
-          .from('profiles')
-          .select('phone_country_code, phone_number, phone_verified_at, instagram_handle')
-          .eq('id', data.user.id)
-          .maybeSingle(),
       ]);
       setProfile(p);
       if (p?.display_name) setDisplayName(p.display_name);
       setActivities(a);
-      const ph = phoneRow.data as {
-        phone_country_code: string | null;
-        phone_number: string | null;
-        phone_verified_at: string | null;
-        instagram_handle: string | null;
-      } | null;
-      if (ph?.phone_country_code) setPhoneCode(ph.phone_country_code);
-      if (ph?.phone_number) setPhoneNumber(ph.phone_number);
-      if (ph?.phone_country_code && ph?.phone_number) {
-        setSavedPhoneE164(`${ph.phone_country_code}${ph.phone_number}`);
+      if (p?.phone_country_code) setPhoneCode(p.phone_country_code);
+      if (p?.phone_number) setPhoneNumber(p.phone_number);
+      if (p?.phone_country_code && p?.phone_number) {
+        setSavedPhoneE164(`${p.phone_country_code}${p.phone_number}`);
       }
-      setPhoneVerifiedAt(ph?.phone_verified_at ?? null);
-      if (ph?.instagram_handle) setInstagramHandle(ph.instagram_handle);
+      setPhoneVerifiedAt(p?.phone_verified_at ?? null);
+      if (p?.instagram_handle) setInstagramHandle(p.instagram_handle);
     })();
   }, []);
 

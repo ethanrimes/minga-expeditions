@@ -64,6 +64,31 @@ export async function fetchFeedExpeditions(
   return expeditions;
 }
 
+// Minimal projection for the map screens — they only need coordinates, name,
+// region and the official/community flag to colour the pin. Skipping the
+// EXPEDITION_SELECT joins and the per-row aggregate enrichment makes the map
+// load several orders of magnitude faster (~1 round-trip vs ~3N+1).
+export type ExpeditionMarker = Pick<
+  DbExpedition,
+  'id' | 'title' | 'location_name' | 'region' | 'country' | 'category' | 'is_official' | 'start_lat' | 'start_lng'
+>;
+
+export async function fetchExpeditionMarkers(
+  client: SupabaseClient,
+  opts: { limit?: number } = {},
+): Promise<ExpeditionMarker[]> {
+  const { data, error } = await client
+    .from('expeditions')
+    .select('id, title, location_name, region, country, category, is_official, start_lat, start_lng')
+    .eq('is_published', true)
+    .not('start_lat', 'is', null)
+    .not('start_lng', 'is', null)
+    .order('created_at', { ascending: false })
+    .limit(opts.limit ?? 200);
+  if (error) throw error;
+  return (data ?? []) as ExpeditionMarker[];
+}
+
 export async function fetchExpeditionById(
   client: SupabaseClient,
   id: string,
@@ -76,23 +101,49 @@ export async function fetchExpeditionById(
   return enriched;
 }
 
-// Aggregate counts aren't free in Supabase without views — do parallel head:true counts per row.
-// For larger scale, replace with a Postgres view or materialized view.
+// Aggregate counts aren't free in Supabase without views. We previously fired
+// three count(head:true) round-trips per row (3 × N), which dominated the feed
+// latency on slow networks. Bulk-fetch the three tables once each and group
+// in JS — 3 total round-trips instead of 3 × N. The transferred rows are
+// (uuid + tiny payload) so this stays cheap until likes/ratings grow to many
+// thousands per expedition (where a Postgres view becomes worthwhile).
 async function enrichAggregates(client: SupabaseClient, rows: ExpeditionWithAuthor[]): Promise<void> {
-  await Promise.all(
-    rows.map(async (row) => {
-      const [likes, comments, ratings] = await Promise.all([
-        client.from('likes').select('*', { count: 'exact', head: true }).eq('expedition_id', row.id),
-        client.from('comments').select('*', { count: 'exact', head: true }).eq('expedition_id', row.id),
-        client.from('ratings').select('stars').eq('expedition_id', row.id),
-      ]);
-      row.likes_count = likes.count ?? 0;
-      row.comments_count = comments.count ?? 0;
-      const stars = (ratings.data as { stars: number }[] | null) ?? [];
-      row.avg_rating = stars.length ? stars.reduce((s, r) => s + r.stars, 0) / stars.length : null;
-    }),
-  );
-  await attachNextSalida(client, rows);
+  for (const r of rows) {
+    r.likes_count = 0;
+    r.comments_count = 0;
+    r.avg_rating = null;
+  }
+  if (rows.length === 0) return;
+  const ids = rows.map((r) => r.id);
+  const [likesRes, commentsRes, ratingsRes] = await Promise.all([
+    client.from('likes').select('expedition_id').in('expedition_id', ids),
+    client.from('comments').select('expedition_id').in('expedition_id', ids),
+    client.from('ratings').select('expedition_id, stars').in('expedition_id', ids),
+    attachNextSalida(client, rows),
+  ]);
+
+  const likes = new Map<string, number>();
+  for (const r of (likesRes.data as { expedition_id: string }[] | null) ?? []) {
+    likes.set(r.expedition_id, (likes.get(r.expedition_id) ?? 0) + 1);
+  }
+  const comments = new Map<string, number>();
+  for (const r of (commentsRes.data as { expedition_id: string }[] | null) ?? []) {
+    comments.set(r.expedition_id, (comments.get(r.expedition_id) ?? 0) + 1);
+  }
+  const stars = new Map<string, { sum: number; n: number }>();
+  for (const r of (ratingsRes.data as { expedition_id: string; stars: number }[] | null) ?? []) {
+    const cur = stars.get(r.expedition_id) ?? { sum: 0, n: 0 };
+    cur.sum += r.stars;
+    cur.n += 1;
+    stars.set(r.expedition_id, cur);
+  }
+
+  for (const row of rows) {
+    row.likes_count = likes.get(row.id) ?? 0;
+    row.comments_count = comments.get(row.id) ?? 0;
+    const s = stars.get(row.id);
+    row.avg_rating = s ? s.sum / s.n : null;
+  }
 }
 
 // One round-trip for the whole page: pull every upcoming published salida for
@@ -195,8 +246,14 @@ export async function rateExpedition(
   if (error) throw error;
 }
 
+// Explicit column list (vs `select('*')`) so we never carry stray internal
+// fields back to clients and so callers don't need a second round-trip just
+// to pick up phone/instagram extras. Keep this in sync with DbProfile.
+const PROFILE_COLUMNS =
+  'id, username, display_name, avatar_url, bio, home_country, instagram_handle, phone_country_code, phone_number, phone_verified_at, total_distance_km, total_elevation_m, tier, role, created_at, updated_at';
+
 export async function fetchProfile(client: SupabaseClient, userId: string): Promise<DbProfile | null> {
-  const { data, error } = await client.from('profiles').select('*').eq('id', userId).maybeSingle();
+  const { data, error } = await client.from('profiles').select(PROFILE_COLUMNS).eq('id', userId).maybeSingle();
   if (error) throw error;
   return (data as DbProfile | null) ?? null;
 }

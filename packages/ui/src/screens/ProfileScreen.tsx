@@ -64,31 +64,21 @@ export function ProfileScreen({
 
   useEffect(() => {
     if (!user) return;
-    fetchProfile(getSupabase(), user.id).then((p) => {
+    // fetchProfile now returns phone + instagram fields directly, so we don't
+    // need a second round-trip to pick them up.
+    void fetchProfile(getSupabase(), user.id).then((p) => {
       setProfile(p);
       if (p?.display_name) setDisplayName(p.display_name);
+      if (p?.phone_country_code) setPhoneCode(p.phone_country_code);
+      if (p?.phone_number) setPhoneNumber(p.phone_number);
+      if (p?.phone_country_code && p?.phone_number) {
+        setSavedPhone(`${p.phone_country_code}${p.phone_number}`);
+      }
+      if (p?.instagram_handle) {
+        setInstagramHandle(p.instagram_handle);
+        setSavedInstagram(p.instagram_handle);
+      }
     });
-    void getSupabase()
-      .from('profiles')
-      .select('phone_country_code, phone_number, instagram_handle')
-      .eq('id', user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        const p = data as {
-          phone_country_code: string | null;
-          phone_number: string | null;
-          instagram_handle: string | null;
-        } | null;
-        if (p?.phone_country_code) setPhoneCode(p.phone_country_code);
-        if (p?.phone_number) setPhoneNumber(p.phone_number);
-        if (p?.phone_country_code && p?.phone_number) {
-          setSavedPhone(`${p.phone_country_code}${p.phone_number}`);
-        }
-        if (p?.instagram_handle) {
-          setInstagramHandle(p.instagram_handle);
-          setSavedInstagram(p.instagram_handle);
-        }
-      });
   }, [user?.id]);
 
   const savePhone = async () => {

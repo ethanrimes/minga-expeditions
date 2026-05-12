@@ -64,6 +64,13 @@ export interface DbProfile {
   // Optional connected social handle (no leading `@`, lowercased). Constraint
   // lives in supabase/migrations/20260511_000400_profile_instagram.sql.
   instagram_handle: string | null;
+  // Added by 20260511000100_profile_phone.sql. National significant number
+  // without the country dial code; pair with phone_country_code for E.164.
+  phone_country_code: string | null;
+  phone_number: string | null;
+  // ISO timestamp set by 20260511000200_phone_verifications.sql after a
+  // successful WhatsApp OTP. null means the number on file is unverified.
+  phone_verified_at: string | null;
   total_distance_km: number;
   total_elevation_m: number;
   tier: TierLevel;
