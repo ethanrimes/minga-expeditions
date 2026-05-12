@@ -30,6 +30,22 @@ export type Key =
   | 'sidebar.orders'
   | 'sidebar.comms'
   | 'sidebar.signOut'
+  | 'sidebar.group.expeditions'
+  | 'sidebar.group.users'
+  | 'sidebar.group.providers'
+  | 'sidebar.group.communications'
+  | 'sidebar.item.categories'
+  | 'sidebar.item.itineraries'
+  | 'sidebar.item.dates'
+  | 'sidebar.item.insights'
+  | 'sidebar.item.userProfiles'
+  | 'sidebar.item.orders'
+  | 'sidebar.item.propuestas'
+  | 'sidebar.item.directory'
+  | 'sidebar.item.communications'
+  | 'stub.title'
+  | 'stub.subtitle'
+  | 'stub.dataReady'
   | 'sidebar.language'
   | 'lang.english'
   | 'lang.spanish'
@@ -360,6 +376,22 @@ export const dict: Record<Locale, Record<Key, string>> = {
     'sidebar.comms': 'Communications',
     'sidebar.signOut': 'Sign out',
     'sidebar.language': 'Language',
+    'sidebar.group.expeditions': 'Expeditions',
+    'sidebar.group.users': 'Users',
+    'sidebar.group.providers': 'Providers',
+    'sidebar.group.communications': 'Communications',
+    'sidebar.item.categories': 'Categories',
+    'sidebar.item.itineraries': 'Itineraries',
+    'sidebar.item.dates': 'Dates',
+    'sidebar.item.insights': 'Insights',
+    'sidebar.item.userProfiles': 'User profiles',
+    'sidebar.item.orders': 'Orders',
+    'sidebar.item.propuestas': 'Proposals',
+    'sidebar.item.directory': 'Directory',
+    'sidebar.item.communications': 'Communications',
+    'stub.title': 'Coming soon',
+    'stub.subtitle': 'The page lives at this route — the UI is still being built. The underlying data model is already in place.',
+    'stub.dataReady': 'Underlying data ready ✓',
     'lang.english': 'English',
     'lang.spanish': 'Español',
 
@@ -707,6 +739,22 @@ export const dict: Record<Locale, Record<Key, string>> = {
     'sidebar.comms': 'Comunicaciones',
     'sidebar.signOut': 'Cerrar sesión',
     'sidebar.language': 'Idioma',
+    'sidebar.group.expeditions': 'Expediciones',
+    'sidebar.group.users': 'Usuarios',
+    'sidebar.group.providers': 'Proveedores',
+    'sidebar.group.communications': 'Comunicaciones',
+    'sidebar.item.categories': 'Categorías',
+    'sidebar.item.itineraries': 'Itinerarios',
+    'sidebar.item.dates': 'Fechas',
+    'sidebar.item.insights': 'Métricas',
+    'sidebar.item.userProfiles': 'Perfiles',
+    'sidebar.item.orders': 'Pedidos',
+    'sidebar.item.propuestas': 'Propuestas',
+    'sidebar.item.directory': 'Directorio',
+    'sidebar.item.communications': 'Comunicaciones',
+    'stub.title': 'Próximamente',
+    'stub.subtitle': 'La página vive en esta ruta — la UI aún está en construcción. El modelo de datos ya está listo.',
+    'stub.dataReady': 'Datos listos ✓',
     'lang.english': 'English',
     'lang.spanish': 'Español',
 

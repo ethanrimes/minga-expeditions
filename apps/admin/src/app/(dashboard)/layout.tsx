@@ -1,8 +1,9 @@
 import Link from 'next/link';
-import { LayoutGrid, ListTree, Mountain, Briefcase, Receipt, LogOut, CalendarDays, Mail } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import { requireAdmin } from '@/lib/auth';
 import { getT } from '@/lib/i18n/server';
 import { LanguageToggle } from '@/components/LanguageToggle';
+import { Sidebar } from '@/components/Sidebar';
 import { signOut } from '../login/actions';
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -11,7 +12,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
-      <aside className="md:w-60 shrink-0 bg-surface border-b md:border-b-0 md:border-r border-surface-border flex flex-col">
+      <aside className="md:w-64 shrink-0 bg-surface border-b md:border-b-0 md:border-r border-surface-border flex flex-col">
         <div className="p-5 border-b border-surface-border">
           <Link href="/" className="block">
             <div className="text-sm font-semibold tracking-wide text-primary">MINGA</div>
@@ -19,15 +20,28 @@ export default async function DashboardLayout({ children }: { children: React.Re
           </Link>
         </div>
 
-        <nav className="flex-1 px-3 py-4 flex flex-col gap-1 text-sm">
-          <NavLink href="/" icon={<LayoutGrid size={16} />}>{t('sidebar.dashboard')}</NavLink>
-          <NavLink href="/categories" icon={<ListTree size={16} />}>{t('sidebar.categories')}</NavLink>
-          <NavLink href="/expeditions" icon={<Mountain size={16} />}>{t('sidebar.expeditions')}</NavLink>
-          <NavLink href="/expeditions/calendar" icon={<CalendarDays size={16} />}>{t('sidebar.calendar')}</NavLink>
-          <NavLink href="/vendor-proposals" icon={<Briefcase size={16} />}>{t('sidebar.vendorProposals')}</NavLink>
-          <NavLink href="/orders" icon={<Receipt size={16} />}>{t('sidebar.orders')}</NavLink>
-          <NavLink href="/comms" icon={<Mail size={16} />}>{t('sidebar.comms')}</NavLink>
-        </nav>
+        <Sidebar
+          labels={{
+            dashboard: t('sidebar.dashboard'),
+            groups: {
+              expeditions: t('sidebar.group.expeditions'),
+              users: t('sidebar.group.users'),
+              providers: t('sidebar.group.providers'),
+              communications: t('sidebar.group.communications'),
+            },
+            items: {
+              categories: t('sidebar.item.categories'),
+              itineraries: t('sidebar.item.itineraries'),
+              dates: t('sidebar.item.dates'),
+              insights: t('sidebar.item.insights'),
+              userProfiles: t('sidebar.item.userProfiles'),
+              orders: t('sidebar.item.orders'),
+              propuestas: t('sidebar.item.propuestas'),
+              directory: t('sidebar.item.directory'),
+              communications: t('sidebar.item.communications'),
+            },
+          }}
+        />
 
         <div className="border-t border-surface-border">
           <LanguageToggle current={locale} />
@@ -46,17 +60,5 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
       <main className="flex-1 p-6 md:p-10 max-w-6xl">{children}</main>
     </div>
-  );
-}
-
-function NavLink({ href, icon, children }: { href: string; icon: React.ReactNode; children: React.ReactNode }) {
-  return (
-    <Link
-      href={href}
-      className="flex items-center gap-2 px-3 py-2 rounded-md text-ink-700 hover:bg-surface-alt hover:text-ink-900"
-    >
-      {icon}
-      <span>{children}</span>
-    </Link>
   );
 }
