@@ -26,8 +26,6 @@ export interface CalendarFilterModalProps {
   onClose: () => void;
   value: CalendarFilterState;
   onChange: (next: CalendarFilterState) => void;
-  view: CalendarViewMode;
-  onChangeView: (next: CalendarViewMode) => void;
   categories: DbCategory[];
   regions: string[];
   priceCeilingCents: number;
@@ -88,8 +86,6 @@ export function CalendarFilterModal({
   onClose,
   value,
   onChange,
-  view,
-  onChangeView,
   categories,
   regions,
   priceCeilingCents,
@@ -261,20 +257,6 @@ export function CalendarFilterModal({
               </View>
             </Section>
 
-            <Section title={t('cal.view.label')}>
-              <View style={{ flexDirection: 'row', gap: spacing.xs }}>
-                <Tile
-                  label={t('cal.view.grid')}
-                  active={view === 'grid'}
-                  onPress={() => onChangeView('grid')}
-                />
-                <Tile
-                  label={t('cal.view.agenda')}
-                  active={view === 'agenda'}
-                  onPress={() => onChangeView('agenda')}
-                />
-              </View>
-            </Section>
           </ScrollView>
 
           <View style={{ flexDirection: 'row', gap: spacing.sm }}>

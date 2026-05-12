@@ -520,6 +520,7 @@ export type ExpeditionInput = {
   cover_photo_url?: string | null;
   is_official?: boolean;
   is_published?: boolean;
+  terrain_tags?: TerrainTag[];
 };
 
 export async function adminListExpeditions(

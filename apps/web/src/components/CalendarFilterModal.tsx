@@ -22,8 +22,6 @@ export interface Props {
   onClose: () => void;
   value: CalendarFilterState;
   onChange: (next: CalendarFilterState) => void;
-  view: CalendarViewMode;
-  onChangeView: (next: CalendarViewMode) => void;
   categories: DbCategory[];
   regions: string[];
   priceCeilingCents: number;
@@ -84,8 +82,6 @@ export function CalendarFilterModal({
   onClose,
   value,
   onChange,
-  view,
-  onChangeView,
   categories,
   regions,
   priceCeilingCents,
@@ -271,20 +267,6 @@ export function CalendarFilterModal({
             </div>
           </Section>
 
-          <Section title={t('cal.view.label')}>
-            <TileRow>
-              <Tile
-                label={t('cal.view.grid')}
-                active={view === 'grid'}
-                onClick={() => onChangeView('grid')}
-              />
-              <Tile
-                label={t('cal.view.agenda')}
-                active={view === 'agenda'}
-                onClick={() => onChangeView('agenda')}
-              />
-            </TileRow>
-          </Section>
         </div>
 
         <footer

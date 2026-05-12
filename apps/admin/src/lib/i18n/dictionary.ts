@@ -123,6 +123,17 @@ export type Key =
   | 'expForm.coverPhoto'
   | 'expForm.coverPreviewAlt'
   | 'expForm.coverHelp'
+  | 'expForm.terrain'
+  | 'expForm.terrainHelp'
+  | 'expForm.terrain.mountain'
+  | 'expForm.terrain.flat'
+  | 'expForm.terrain.desert'
+  | 'expForm.terrain.river'
+  | 'expForm.terrain.forest'
+  | 'expForm.terrain.coast'
+  | 'expForm.terrain.urban'
+  | 'expForm.terrain.jungle'
+  | 'expForm.terrain.snow'
   | 'expForm.official'
   | 'expForm.published'
   | 'expForm.saving'
@@ -426,6 +437,17 @@ export const dict: Record<Locale, Record<Key, string>> = {
     'expForm.coverPreviewAlt': 'Cover preview',
     'expForm.coverHelp':
       'Uploads to the expedition-photos Supabase bucket. Leave empty to keep the existing photo.',
+    'expForm.terrain': 'Terrain / biome',
+    'expForm.terrainHelp': 'Pick every biome the expedition crosses — drives the calendar biome filter.',
+    'expForm.terrain.mountain': 'Mountain',
+    'expForm.terrain.flat': 'Flat',
+    'expForm.terrain.desert': 'Desert',
+    'expForm.terrain.river': 'River',
+    'expForm.terrain.forest': 'Forest',
+    'expForm.terrain.coast': 'Coast',
+    'expForm.terrain.urban': 'Urban',
+    'expForm.terrain.jungle': 'Jungle',
+    'expForm.terrain.snow': 'Snow',
     'expForm.official': 'Official Minga listing',
     'expForm.published': 'Published (visible in mobile feed)',
     'expForm.saving': 'Saving…',
@@ -741,6 +763,17 @@ export const dict: Record<Locale, Record<Key, string>> = {
     'expForm.coverPreviewAlt': 'Vista previa de portada',
     'expForm.coverHelp':
       'Sube al bucket expedition-photos de Supabase. Déjalo vacío para conservar la foto actual.',
+    'expForm.terrain': 'Terreno / bioma',
+    'expForm.terrainHelp': 'Marca cada bioma que cruza la expedición — alimenta el filtro de bioma del calendario.',
+    'expForm.terrain.mountain': 'Montaña',
+    'expForm.terrain.flat': 'Llano',
+    'expForm.terrain.desert': 'Desierto',
+    'expForm.terrain.river': 'Río',
+    'expForm.terrain.forest': 'Bosque',
+    'expForm.terrain.coast': 'Costa',
+    'expForm.terrain.urban': 'Urbano',
+    'expForm.terrain.jungle': 'Selva',
+    'expForm.terrain.snow': 'Nieve',
     'expForm.official': 'Listado oficial de Minga',
     'expForm.published': 'Publicada (visible en el feed móvil)',
     'expForm.saving': 'Guardando…',

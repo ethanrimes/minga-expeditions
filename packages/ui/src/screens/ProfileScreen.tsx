@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Linking, Pressable, Text, TextInput, View } from 'react-native';
 import { useTheme, spacing, fontSizes, fontWeights, radii } from '@minga/theme';
 import { fetchProfile, getSupabase, updateMyProfile, uploadAvatar } from '@minga/supabase';
-import { formatDistanceKm, formatElevation } from '@minga/logic';
+import { formatDistanceKm, formatElevation, DEFAULT_COUNTRY_CODE } from '@minga/logic';
 import { useT } from '@minga/i18n';
 import type { DbProfile } from '@minga/types';
 import { Screen } from '../primitives/Screen';
@@ -10,26 +10,29 @@ import { Avatar } from '../primitives/Avatar';
 import { Button } from '../primitives/Button';
 import { TierBadge } from '../primitives/TierBadge';
 import { StatBlock } from '../primitives/StatBlock';
+import { CountryCodeCombobox } from '../primitives/CountryCodeCombobox';
+import { GoogleGlyph } from '../primitives/BrandIcons';
 import { ActivityCard } from '../components/ActivityCard';
 import { SectionHeader } from '../components/SectionHeader';
 import { EmptyState } from '../components/EmptyState';
 import { TierProgress } from '../components/TierProgress';
+import { SocialRow, type SocialBrand } from '../components/SocialRow';
 import { useAuth } from '../hooks/useAuth';
 import { useMyActivities } from '../hooks/useMyActivities';
 import type { ActivityPhotoPicker } from './ActivityDetailScreen';
 
-// Keep this list in sync with apps/web/src/components/CheckoutDrawer.tsx +
-// apps/web/src/pages/ProfilePage.tsx so the country-code picker is
-// consistent across surfaces. Colombia first (launch market).
-const COUNTRY_CODES = ['+57', '+1', '+52', '+593', '+51', '+56', '+54', '+55', '+58', '+591', '+34', '+44'];
-
-// Brand names (Facebook, Google, Apple, GitHub) stay as-is across locales;
-// `email` and `anonymous` are translated at render time via the dictionary.
-const PROVIDER_LABELS: Record<string, string> = {
-  facebook: 'Facebook',
-  google: 'Google',
-  apple: 'Apple',
-  github: 'GitHub',
+// Brand presets for the social rows — same shape used on web so the icon
+// colours are identical across platforms.
+const BRANDS: Record<'email' | 'google' | 'whatsapp' | 'facebook' | 'instagram', SocialBrand> = {
+  email: { iconName: 'mail', iconBg: '#E5E7EB', iconColor: '#374151' },
+  google: {
+    iconNode: <GoogleGlyph size={18} color="#4285F4" strokeWidth={2.2} />,
+    iconBg: '#FFFFFF',
+    iconColor: '#4285F4',
+  },
+  whatsapp: { iconName: 'message', iconBg: '#25D366', iconColor: '#FFFFFF' },
+  facebook: { iconName: 'facebook', iconBg: '#1877F2', iconColor: '#FFFFFF' },
+  instagram: { iconName: 'instagram', iconBg: '#E4405F', iconColor: '#FFFFFF' },
 };
 
 export function ProfileScreen({
@@ -48,7 +51,7 @@ export function ProfileScreen({
   const { user, signOut, loading: authLoading } = useAuth();
   const { activities, loading: actsLoading } = useMyActivities();
   const [profile, setProfile] = useState<DbProfile | null>(null);
-  const [phoneCode, setPhoneCode] = useState<string>('+57');
+  const [phoneCode, setPhoneCode] = useState<string>(DEFAULT_COUNTRY_CODE);
   const [phoneNumber, setPhoneNumber] = useState<string>('');
   const [phoneSaveState, setPhoneSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [displayName, setDisplayName] = useState<string>('');
@@ -56,6 +59,8 @@ export function ProfileScreen({
   const [instagramHandle, setInstagramHandle] = useState<string>('');
   const [igSaveState, setIgSaveState] = useState<'idle' | 'saving' | 'saved' | 'error' | 'invalid'>('idle');
   const [avatarState, setAvatarState] = useState<'idle' | 'uploading' | 'error'>('idle');
+  const [savedInstagram, setSavedInstagram] = useState<string | null>(null);
+  const [savedPhone, setSavedPhone] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -63,9 +68,6 @@ export function ProfileScreen({
       setProfile(p);
       if (p?.display_name) setDisplayName(p.display_name);
     });
-    // Fetch phone + instagram fields directly — fetchProfile returns the
-    // typed DbProfile shape which doesn't include these columns yet, so we
-    // read once here.
     void getSupabase()
       .from('profiles')
       .select('phone_country_code, phone_number, instagram_handle')
@@ -79,7 +81,13 @@ export function ProfileScreen({
         } | null;
         if (p?.phone_country_code) setPhoneCode(p.phone_country_code);
         if (p?.phone_number) setPhoneNumber(p.phone_number);
-        if (p?.instagram_handle) setInstagramHandle(p.instagram_handle);
+        if (p?.phone_country_code && p?.phone_number) {
+          setSavedPhone(`${p.phone_country_code}${p.phone_number}`);
+        }
+        if (p?.instagram_handle) {
+          setInstagramHandle(p.instagram_handle);
+          setSavedInstagram(p.instagram_handle);
+        }
       });
   }, [user?.id]);
 
@@ -96,6 +104,7 @@ export function ProfileScreen({
       return;
     }
     setPhoneNumber(trimmed);
+    setSavedPhone(trimmed ? `${phoneCode}${trimmed}` : null);
     setPhoneSaveState('saved');
     setTimeout(() => setPhoneSaveState('idle'), 2000);
   };
@@ -128,6 +137,7 @@ export function ProfileScreen({
       const updated = await updateMyProfile(getSupabase(), { instagram_handle: normalized });
       setProfile(updated);
       setInstagramHandle(normalized);
+      setSavedInstagram(normalized || null);
       setIgSaveState('saved');
       setTimeout(() => setIgSaveState('idle'), 2000);
     } catch {
@@ -153,14 +163,15 @@ export function ProfileScreen({
     }
   };
 
+  // Identity providers — supabase populates `user.identities` per linked
+  // OAuth account; the first entry is the original signup method, which we
+  // surface as the "primary" sign-in (rendered as a star, no copy).
   const identities = (user?.identities ?? []) as Array<{ provider: string }>;
-  const identityProviders = Array.from(
-    new Set(
-      identities.length
-        ? identities.map((i) => i.provider)
-        : ((user?.app_metadata?.providers as string[] | undefined) ?? []),
-    ),
-  );
+  const providers = identities.length
+    ? identities.map((i) => i.provider)
+    : ((user?.app_metadata?.providers as string[] | undefined) ?? []);
+  const primaryProvider = providers[0] ?? 'email';
+  const providerSet = new Set(providers);
 
   if (authLoading) {
     return (
@@ -178,6 +189,11 @@ export function ProfileScreen({
       </Screen>
     );
   }
+
+  const trimmedPhone = phoneNumber.replace(/\D/g, '');
+  const phoneE164 = trimmedPhone ? `${phoneCode}${trimmedPhone}` : null;
+  const phoneLinked = !!savedPhone;
+  const instagramLinked = !!savedInstagram;
 
   return (
     <Screen>
@@ -300,212 +316,214 @@ export function ProfileScreen({
           borderWidth: 1,
           borderColor: theme.border,
           padding: spacing.lg,
-          gap: spacing.md,
+          gap: spacing.lg,
         }}
       >
-        <View>
-          <Text style={{ color: theme.text, fontWeight: fontWeights.bold }}>{t('profile.emailLabel')}</Text>
-          <Text style={{ color: theme.text }}>{user.email ?? '—'}</Text>
-        </View>
-        <View>
-          <Text style={{ color: theme.text, fontWeight: fontWeights.bold }}>{t('profile.signInMethodLabel')}</Text>
-          <Text style={{ color: theme.text }}>
-            {identityProviders.length
-              ? identityProviders
-                  .map((p) =>
-                    p === 'email'
-                      ? t('profile.signInMethodEmailPassword')
-                      : p === 'anonymous'
-                        ? t('profile.signInMethodGuest')
-                        : (PROVIDER_LABELS[p] ?? p),
-                  )
-                  .join(' · ')
-              : t('profile.signInMethodEmailPassword')}
-          </Text>
-        </View>
-        <View>
-          <Text style={{ color: theme.text, fontWeight: fontWeights.bold, marginBottom: spacing.xs }}>
-            {t('profile.whatsappLabel')}
-          </Text>
-          <Text style={{ color: theme.textMuted, fontSize: fontSizes.sm, marginBottom: spacing.sm }}>
-            {t('profile.whatsappHelp')}
-          </Text>
-          <View style={{ flexDirection: 'row', gap: spacing.xs, flexWrap: 'wrap' }}>
-            {COUNTRY_CODES.map((c) => {
-              const active = c === phoneCode;
-              return (
-                <Pressable
-                  key={c}
-                  onPress={() => setPhoneCode(c)}
+        <SocialRow
+          brand={BRANDS.email}
+          label={t('profile.emailLabel')}
+          value={user.email ?? null}
+          linked={!!user.email}
+          primary={primaryProvider === 'email'}
+          notLinkedLabel={t('profile.notLinked')}
+          primaryAriaLabel={t('profile.primaryLogin')}
+        />
+
+        <Divider />
+
+        <SocialRow
+          brand={BRANDS.google}
+          label={t('profile.googleLabel')}
+          value={providerSet.has('google') ? t('profile.linked') : null}
+          linked={providerSet.has('google')}
+          primary={primaryProvider === 'google'}
+          notLinkedLabel={t('profile.notLinked')}
+          primaryAriaLabel={t('profile.primaryLogin')}
+        />
+
+        <Divider />
+
+        <SocialRow
+          brand={BRANDS.whatsapp}
+          label={t('profile.whatsappLabel')}
+          value={savedPhone}
+          linked={phoneLinked}
+          notLinkedLabel={t('profile.notLinked')}
+        >
+          <View style={{ gap: spacing.sm }}>
+            <Text style={{ color: theme.textMuted, fontSize: fontSizes.sm }}>
+              {t('profile.whatsappHelp')}
+            </Text>
+            <View style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'flex-start' }}>
+              <CountryCodeCombobox value={phoneCode} onChange={(c) => setPhoneCode(c)} />
+              <View style={{ flex: 1 }}>
+                <TextInput
+                  value={phoneNumber}
+                  onChangeText={(v) => setPhoneNumber(v.replace(/\D/g, ''))}
+                  keyboardType="phone-pad"
+                  placeholder="3001234567"
+                  placeholderTextColor={theme.textMuted}
                   style={{
-                    backgroundColor: active ? theme.primary : theme.surfaceAlt,
-                    borderColor: active ? theme.primary : theme.border,
+                    backgroundColor: theme.surfaceAlt,
+                    color: theme.text,
+                    borderColor: theme.border,
                     borderWidth: 1,
-                    paddingHorizontal: spacing.sm,
-                    paddingVertical: spacing.xs,
-                    borderRadius: radii.pill,
+                    borderRadius: radii.md,
+                    paddingHorizontal: spacing.md,
+                    paddingVertical: spacing.sm,
+                    fontSize: fontSizes.md,
+                  }}
+                />
+              </View>
+            </View>
+            <View style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'center' }}>
+              <Pressable
+                onPress={() => void savePhone()}
+                disabled={phoneSaveState === 'saving' || phoneE164 === savedPhone}
+                style={{
+                  alignSelf: 'flex-start',
+                  backgroundColor: phoneSaveState === 'saved' ? theme.surfaceAlt : theme.primary,
+                  borderColor: phoneSaveState === 'saved' ? theme.border : 'transparent',
+                  borderWidth: phoneSaveState === 'saved' ? 1 : 0,
+                  paddingHorizontal: spacing.lg,
+                  paddingVertical: spacing.sm,
+                  borderRadius: radii.pill,
+                  opacity: phoneSaveState === 'saving' || phoneE164 === savedPhone ? 0.6 : 1,
+                }}
+              >
+                <Text
+                  style={{
+                    color: phoneSaveState === 'saved' ? theme.text : theme.onPrimary,
+                    fontWeight: fontWeights.bold,
+                    fontSize: fontSizes.sm,
                   }}
                 >
-                  <Text
-                    style={{
-                      color: active ? theme.onPrimary : theme.text,
-                      fontWeight: fontWeights.bold,
-                      fontSize: fontSizes.sm,
-                    }}
-                  >
-                    {c}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-          <TextInput
-            value={phoneNumber}
-            onChangeText={(v) => setPhoneNumber(v.replace(/\D/g, ''))}
-            keyboardType="phone-pad"
-            placeholder="3001234567"
-            placeholderTextColor={theme.textMuted}
-            style={{
-              backgroundColor: theme.surfaceAlt,
-              color: theme.text,
-              borderColor: theme.border,
-              borderWidth: 1,
-              borderRadius: radii.md,
-              paddingHorizontal: spacing.md,
-              paddingVertical: spacing.sm,
-              marginTop: spacing.sm,
-              fontSize: fontSizes.md,
-            }}
-          />
-          <Pressable
-            onPress={() => void savePhone()}
-            disabled={phoneSaveState === 'saving'}
-            style={{
-              alignSelf: 'flex-start',
-              marginTop: spacing.sm,
-              backgroundColor: phoneSaveState === 'saved' ? theme.surfaceAlt : theme.primary,
-              borderColor: phoneSaveState === 'saved' ? theme.border : 'transparent',
-              borderWidth: phoneSaveState === 'saved' ? 1 : 0,
-              paddingHorizontal: spacing.lg,
-              paddingVertical: spacing.sm,
-              borderRadius: radii.pill,
-              opacity: phoneSaveState === 'saving' ? 0.7 : 1,
-            }}
-          >
-            <Text
-              style={{
-                color: phoneSaveState === 'saved' ? theme.text : theme.onPrimary,
-                fontWeight: fontWeights.bold,
-                fontSize: fontSizes.sm,
-              }}
-            >
-              {phoneSaveState === 'saving'
-                ? t('profile.phoneSaving')
-                : phoneSaveState === 'saved'
-                ? t('profile.phoneSaved')
-                : phoneSaveState === 'error'
-                ? t('profile.phoneRetry')
-                : t('profile.phoneSave')}
-            </Text>
-          </Pressable>
-        </View>
-        <View>
-          <Text style={{ color: theme.text, fontWeight: fontWeights.bold, marginBottom: spacing.xs }}>
-            {t('profile.instagramLabel')}
-          </Text>
-          <Text style={{ color: theme.textMuted, fontSize: fontSizes.sm, marginBottom: spacing.sm }}>
-            {t('profile.instagramHelp')}
-          </Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-            <View
-              style={{
-                backgroundColor: theme.surfaceAlt,
-                borderColor: theme.border,
-                borderWidth: 1,
-                borderTopLeftRadius: radii.md,
-                borderBottomLeftRadius: radii.md,
-                paddingHorizontal: spacing.md,
-                paddingVertical: spacing.sm,
-              }}
-            >
-              <Text style={{ color: theme.textMuted, fontSize: fontSizes.md }}>@</Text>
-            </View>
-            <TextInput
-              value={instagramHandle}
-              onChangeText={(v) => {
-                setInstagramHandle(v.replace(/^@+/, '').toLowerCase());
-                if (igSaveState === 'invalid') setIgSaveState('idle');
-              }}
-              autoCapitalize="none"
-              autoCorrect={false}
-              placeholder={t('profile.instagramPlaceholder')}
-              placeholderTextColor={theme.textMuted}
-              maxLength={30}
-              style={{
-                flex: 1,
-                backgroundColor: theme.surfaceAlt,
-                color: theme.text,
-                borderColor: theme.border,
-                borderWidth: 1,
-                borderLeftWidth: 0,
-                borderTopRightRadius: radii.md,
-                borderBottomRightRadius: radii.md,
-                paddingHorizontal: spacing.md,
-                paddingVertical: spacing.sm,
-                fontSize: fontSizes.md,
-              }}
-            />
-          </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.sm }}>
-            <Pressable
-              onPress={() => void saveInstagram()}
-              disabled={igSaveState === 'saving'}
-              style={{
-                backgroundColor: igSaveState === 'saved' ? theme.surfaceAlt : theme.primary,
-                borderColor: igSaveState === 'saved' ? theme.border : 'transparent',
-                borderWidth: igSaveState === 'saved' ? 1 : 0,
-                paddingHorizontal: spacing.lg,
-                paddingVertical: spacing.sm,
-                borderRadius: radii.pill,
-                opacity: igSaveState === 'saving' ? 0.7 : 1,
-              }}
-            >
-              <Text
-                style={{
-                  color: igSaveState === 'saved' ? theme.text : theme.onPrimary,
-                  fontWeight: fontWeights.bold,
-                  fontSize: fontSizes.sm,
-                }}
-              >
-                {igSaveState === 'saving'
-                  ? t('profile.phoneSaving')
-                  : igSaveState === 'saved'
-                    ? t('profile.phoneSaved')
-                    : igSaveState === 'error' || igSaveState === 'invalid'
-                      ? t('profile.phoneRetry')
-                      : t('profile.phoneSave')}
-              </Text>
-            </Pressable>
-            {instagramHandle && profile?.instagram_handle === instagramHandle ? (
-              <Pressable
-                onPress={() => void Linking.openURL(`https://instagram.com/${instagramHandle}`)}
-                style={{
-                  paddingHorizontal: spacing.sm,
-                  paddingVertical: spacing.xs,
-                }}
-              >
-                <Text style={{ color: theme.primary, fontWeight: fontWeights.bold, fontSize: fontSizes.sm }}>
-                  {t('profile.instagramOpen')}
+                  {phoneSaveState === 'saving'
+                    ? t('profile.phoneSaving')
+                    : phoneSaveState === 'saved'
+                      ? t('profile.phoneSaved')
+                      : phoneSaveState === 'error'
+                        ? t('profile.phoneRetry')
+                        : t('profile.phoneSave')}
                 </Text>
               </Pressable>
+            </View>
+          </View>
+        </SocialRow>
+
+        <Divider />
+
+        <SocialRow
+          brand={BRANDS.facebook}
+          label={t('profile.facebookLabel')}
+          value={providerSet.has('facebook') ? t('profile.linked') : null}
+          linked={providerSet.has('facebook')}
+          primary={primaryProvider === 'facebook'}
+          notLinkedLabel={t('profile.notLinked')}
+          primaryAriaLabel={t('profile.primaryLogin')}
+        />
+
+        <Divider />
+
+        <SocialRow
+          brand={BRANDS.instagram}
+          label={t('profile.instagramLabel')}
+          value={savedInstagram ? `@${savedInstagram}` : null}
+          linked={instagramLinked}
+          notLinkedLabel={t('profile.notLinked')}
+        >
+          <View style={{ gap: spacing.sm }}>
+            <Text style={{ color: theme.textMuted, fontSize: fontSizes.sm }}>
+              {t('profile.instagramHelp')}
+            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+              <View
+                style={{
+                  backgroundColor: theme.surfaceAlt,
+                  borderColor: theme.border,
+                  borderWidth: 1,
+                  borderTopLeftRadius: radii.md,
+                  borderBottomLeftRadius: radii.md,
+                  paddingHorizontal: spacing.md,
+                  paddingVertical: spacing.sm,
+                }}
+              >
+                <Text style={{ color: theme.textMuted, fontSize: fontSizes.md }}>@</Text>
+              </View>
+              <TextInput
+                value={instagramHandle}
+                onChangeText={(v) => {
+                  setInstagramHandle(v.replace(/^@+/, '').toLowerCase());
+                  if (igSaveState === 'invalid') setIgSaveState('idle');
+                }}
+                autoCapitalize="none"
+                autoCorrect={false}
+                placeholder={t('profile.instagramPlaceholder')}
+                placeholderTextColor={theme.textMuted}
+                maxLength={30}
+                style={{
+                  flex: 1,
+                  backgroundColor: theme.surfaceAlt,
+                  color: theme.text,
+                  borderColor: theme.border,
+                  borderWidth: 1,
+                  borderLeftWidth: 0,
+                  borderTopRightRadius: radii.md,
+                  borderBottomRightRadius: radii.md,
+                  paddingHorizontal: spacing.md,
+                  paddingVertical: spacing.sm,
+                  fontSize: fontSizes.md,
+                }}
+              />
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+              <Pressable
+                onPress={() => void saveInstagram()}
+                disabled={igSaveState === 'saving'}
+                style={{
+                  backgroundColor: igSaveState === 'saved' ? theme.surfaceAlt : theme.primary,
+                  borderColor: igSaveState === 'saved' ? theme.border : 'transparent',
+                  borderWidth: igSaveState === 'saved' ? 1 : 0,
+                  paddingHorizontal: spacing.lg,
+                  paddingVertical: spacing.sm,
+                  borderRadius: radii.pill,
+                  opacity: igSaveState === 'saving' ? 0.7 : 1,
+                }}
+              >
+                <Text
+                  style={{
+                    color: igSaveState === 'saved' ? theme.text : theme.onPrimary,
+                    fontWeight: fontWeights.bold,
+                    fontSize: fontSizes.sm,
+                  }}
+                >
+                  {igSaveState === 'saving'
+                    ? t('profile.phoneSaving')
+                    : igSaveState === 'saved'
+                      ? t('profile.phoneSaved')
+                      : igSaveState === 'error' || igSaveState === 'invalid'
+                        ? t('profile.phoneRetry')
+                        : t('profile.phoneSave')}
+                </Text>
+              </Pressable>
+              {savedInstagram && savedInstagram === instagramHandle ? (
+                <Pressable
+                  onPress={() => void Linking.openURL(`https://instagram.com/${savedInstagram}`)}
+                  style={{ paddingHorizontal: spacing.sm, paddingVertical: spacing.xs }}
+                >
+                  <Text style={{ color: theme.primary, fontWeight: fontWeights.bold, fontSize: fontSizes.sm }}>
+                    {t('profile.instagramOpen')}
+                  </Text>
+                </Pressable>
+              ) : null}
+            </View>
+            {igSaveState === 'invalid' ? (
+              <Text style={{ color: theme.danger, fontSize: fontSizes.sm }}>
+                {t('profile.instagramInvalid')}
+              </Text>
             ) : null}
           </View>
-          {igSaveState === 'invalid' ? (
-            <Text style={{ color: theme.danger, fontSize: fontSizes.sm, marginTop: spacing.xs }}>
-              {t('profile.instagramInvalid')}
-            </Text>
-          ) : null}
-        </View>
+        </SocialRow>
       </View>
 
       <SectionHeader title={t('profile.recentActivities')} />
@@ -528,4 +546,9 @@ export function ProfileScreen({
       <Button label={t('profile.signOut')} variant="ghost" onPress={signOut} />
     </Screen>
   );
+}
+
+function Divider() {
+  const { theme } = useTheme();
+  return <View style={{ height: 1, backgroundColor: theme.border, opacity: 0.6 }} />;
 }

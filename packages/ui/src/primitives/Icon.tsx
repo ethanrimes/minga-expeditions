@@ -30,6 +30,10 @@ import {
   Flag,
   Share2,
   SlidersHorizontal,
+  Mail,
+  Facebook,
+  Instagram,
+  Search,
 } from 'lucide-react-native';
 
 // Name union — keep it tight so callers can't typo a nonexistent icon, and so
@@ -65,7 +69,11 @@ export type IconName =
   | 'flag'
   | 'dollar'
   | 'share'
-  | 'sliders';
+  | 'sliders'
+  | 'mail'
+  | 'facebook'
+  | 'instagram'
+  | 'search';
 
 const MAP: Record<IconName, React.ComponentType<any>> = {
   activity: Activity,
@@ -98,6 +106,10 @@ const MAP: Record<IconName, React.ComponentType<any>> = {
   dollar: CircleDollarSign,
   share: Share2,
   sliders: SlidersHorizontal,
+  mail: Mail,
+  facebook: Facebook,
+  instagram: Instagram,
+  search: Search,
 };
 
 export interface IconProps {

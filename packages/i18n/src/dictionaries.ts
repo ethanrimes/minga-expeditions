@@ -198,6 +198,15 @@ export type TranslationKey =
   | 'profile.signInMethodLabel'
   | 'profile.signInMethodEmailPassword'
   | 'profile.signInMethodGuest'
+  | 'profile.googleLabel'
+  | 'profile.facebookLabel'
+  | 'profile.linked'
+  | 'profile.notLinked'
+  | 'profile.primaryLogin'
+  | 'profile.connect'
+  | 'profile.disconnect'
+  | 'profile.countryPickerTitle'
+  | 'profile.countrySearchPlaceholder'
   | 'profile.whatsappLabel'
   | 'profile.whatsappHelp'
   | 'profile.phoneSaving'
@@ -335,6 +344,7 @@ export type TranslationKey =
   | 'checkout.fieldEmailPlaceholder'
   | 'checkout.fieldPhone'
   | 'checkout.fieldPhonePlaceholder'
+  | 'checkout.fieldPhoneHelp'
   | 'checkout.confirmationEmail'
   | 'checkout.confirmationEmailWhatsapp'
   | 'checkout.payButton'
@@ -562,6 +572,15 @@ export const en: Record<TranslationKey, string> = {
   'profile.signInMethodLabel': 'Sign-in method',
   'profile.signInMethodEmailPassword': 'Email + password',
   'profile.signInMethodGuest': 'Guest session',
+  'profile.googleLabel': 'Google',
+  'profile.facebookLabel': 'Facebook',
+  'profile.linked': 'Linked',
+  'profile.notLinked': 'Not linked',
+  'profile.primaryLogin': 'Primary sign-in method',
+  'profile.connect': 'Connect',
+  'profile.disconnect': 'Disconnect',
+  'profile.countryPickerTitle': 'Country code',
+  'profile.countrySearchPlaceholder': 'Search by name or dial code',
   'profile.whatsappLabel': 'WhatsApp',
   'profile.whatsappHelp': 'Used to send booking confirmations and trip reminders.',
   'profile.phoneSaving': 'Saving…',
@@ -704,8 +723,10 @@ export const en: Record<TranslationKey, string> = {
   'checkout.fieldNamePlaceholder': 'Optional',
   'checkout.fieldEmail': 'Email',
   'checkout.fieldEmailPlaceholder': 'you@email.com',
-  'checkout.fieldPhone': 'WhatsApp phone',
+  'checkout.fieldPhone': 'WhatsApp phone (optional)',
   'checkout.fieldPhonePlaceholder': '3001234567',
+  'checkout.fieldPhoneHelp':
+    "Optional but recommended — we'll send your booking confirmation and any last-minute trip updates via WhatsApp.",
   'checkout.confirmationEmail': 'We send the booking confirmation to your email.',
   'checkout.confirmationEmailWhatsapp':
     'We send the booking confirmation to your email and a WhatsApp message with trip details.',
@@ -937,6 +958,15 @@ export const es: Record<TranslationKey, string> = {
   'profile.signInMethodLabel': 'Método de inicio de sesión',
   'profile.signInMethodEmailPassword': 'Correo + contraseña',
   'profile.signInMethodGuest': 'Sesión de invitado',
+  'profile.googleLabel': 'Google',
+  'profile.facebookLabel': 'Facebook',
+  'profile.linked': 'Vinculado',
+  'profile.notLinked': 'Sin vincular',
+  'profile.primaryLogin': 'Método principal de inicio de sesión',
+  'profile.connect': 'Vincular',
+  'profile.disconnect': 'Desvincular',
+  'profile.countryPickerTitle': 'Código de país',
+  'profile.countrySearchPlaceholder': 'Busca por nombre o código',
   'profile.whatsappLabel': 'WhatsApp',
   'profile.whatsappHelp': 'Se usa para enviar confirmaciones de reserva y recordatorios de viaje.',
   'profile.phoneSaving': 'Guardando…',
@@ -1081,8 +1111,10 @@ export const es: Record<TranslationKey, string> = {
   'checkout.fieldNamePlaceholder': 'Opcional',
   'checkout.fieldEmail': 'Correo',
   'checkout.fieldEmailPlaceholder': 'tu@correo.com',
-  'checkout.fieldPhone': 'Teléfono de WhatsApp',
+  'checkout.fieldPhone': 'Teléfono de WhatsApp (opcional)',
   'checkout.fieldPhonePlaceholder': '3001234567',
+  'checkout.fieldPhoneHelp':
+    'Opcional pero recomendado — te enviaremos la confirmación de tu reserva y avisos de último momento por WhatsApp.',
   'checkout.confirmationEmail': 'Enviamos la confirmación de la reserva a tu correo.',
   'checkout.confirmationEmailWhatsapp':
     'Enviamos la confirmación al correo y un mensaje por WhatsApp con los detalles del viaje.',

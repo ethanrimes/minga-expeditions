@@ -164,7 +164,14 @@ export function CalendarScreen({ variant = 'grid', onOpenExpedition, monthsAhead
         <Text style={{ color: theme.textMuted, fontSize: fontSizes.sm }}>{t('cal.subtitle')}</Text>
       </View>
 
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: spacing.sm,
+        }}
+      >
         <Pressable
           accessibilityLabel={t('cal.filters.open')}
           testID="calendar-filter-open"
@@ -193,9 +200,7 @@ export function CalendarScreen({ variant = 'grid', onOpenExpedition, monthsAhead
             {activeCount > 0 ? `  ·  ${t('cal.filters.activeCount').replace('{n}', String(activeCount))}` : ''}
           </Text>
         </Pressable>
-        <Text style={{ color: theme.textMuted, fontSize: fontSizes.xs }}>
-          {view === 'grid' ? t('cal.view.grid') : t('cal.view.agenda')}
-        </Text>
+        <ViewToggle view={view} onChange={setView} t={t} />
       </View>
 
       {loading ? (
@@ -233,14 +238,64 @@ export function CalendarScreen({ variant = 'grid', onOpenExpedition, monthsAhead
         onClose={() => setFilterOpen(false)}
         value={filters}
         onChange={setFilters}
-        view={view}
-        onChangeView={setView}
         categories={categories}
         regions={regions}
         priceCeilingCents={priceCeiling}
         currency={currency}
       />
     </Screen>
+  );
+}
+
+function ViewToggle({
+  view,
+  onChange,
+  t,
+}: {
+  view: CalendarViewMode;
+  onChange: (v: CalendarViewMode) => void;
+  t: (k: any) => string;
+}) {
+  const { theme } = useTheme();
+  return (
+    <View
+      accessibilityLabel={t('cal.view.label')}
+      style={{
+        flexDirection: 'row',
+        backgroundColor: theme.surface,
+        borderWidth: 1,
+        borderColor: theme.border,
+        borderRadius: radii.pill,
+        padding: 2,
+      }}
+    >
+      {(['grid', 'agenda'] as const).map((mode) => {
+        const active = view === mode;
+        return (
+          <Pressable
+            key={mode}
+            onPress={() => onChange(mode)}
+            accessibilityRole="button"
+            style={{
+              backgroundColor: active ? theme.primary : 'transparent',
+              borderRadius: radii.pill,
+              paddingVertical: 6,
+              paddingHorizontal: spacing.sm,
+            }}
+          >
+            <Text
+              style={{
+                color: active ? theme.onPrimary : theme.text,
+                fontSize: fontSizes.xs,
+                fontWeight: fontWeights.bold,
+              }}
+            >
+              {mode === 'grid' ? t('cal.view.grid') : t('cal.view.agenda')}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
   );
 }
 

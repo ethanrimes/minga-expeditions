@@ -370,8 +370,6 @@ export function CalendarPage() {
         onClose={() => setFilterOpen(false)}
         value={filters}
         onChange={setFilters}
-        view={view}
-        onChangeView={setView}
         categories={categories}
         regions={regions}
         priceCeilingCents={priceCeiling}

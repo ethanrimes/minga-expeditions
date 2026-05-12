@@ -1,37 +1,31 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { User as UserIcon } from 'lucide-react';
+import { Mail, MessageCircle, User as UserIcon } from 'lucide-react';
+import { FacebookIcon, GoogleIcon, InstagramIcon } from '../components/BrandIcons';
 import { useTheme, tierColors } from '@minga/theme';
 import { useT } from '@minga/i18n';
 import { fetchMyActivities, fetchProfile, updateMyProfile, uploadAvatar } from '@minga/supabase';
-import { formatDistanceKm, formatDuration, formatElevation, progressToNextTier, TIER_THRESHOLDS_KM } from '@minga/logic';
+import {
+  DEFAULT_COUNTRY_CODE,
+  formatDistanceKm,
+  formatDuration,
+  formatElevation,
+  progressToNextTier,
+  TIER_THRESHOLDS_KM,
+} from '@minga/logic';
 import type { ActivityType, DbActivity, DbProfile, TierLevel } from '@minga/types';
 import { supabase } from '../supabase';
+import { CountryCodeCombobox } from '../components/CountryCodeCombobox';
+import { SocialRow, type SocialBrand } from '../components/SocialRow';
 
-const COUNTRY_CODES: { code: string; label: string }[] = [
-  { code: '+57', label: '🇨🇴 +57' },
-  { code: '+1', label: '🇺🇸 +1' },
-  { code: '+52', label: '🇲🇽 +52' },
-  { code: '+593', label: '🇪🇨 +593' },
-  { code: '+51', label: '🇵🇪 +51' },
-  { code: '+56', label: '🇨🇱 +56' },
-  { code: '+54', label: '🇦🇷 +54' },
-  { code: '+55', label: '🇧🇷 +55' },
-  { code: '+58', label: '🇻🇪 +58' },
-  { code: '+591', label: '🇧🇴 +591' },
-  { code: '+34', label: '🇪🇸 +34' },
-  { code: '+44', label: '🇬🇧 +44' },
-  { code: '+49', label: '🇩🇪 +49' },
-  { code: '+33', label: '🇫🇷 +33' },
-];
-
-const PROVIDER_META: Record<string, { label: string; emoji: string }> = {
-  email: { label: 'Email + password', emoji: '✉️' },
-  facebook: { label: 'Facebook', emoji: '📘' },
-  google: { label: 'Google', emoji: '🔵' },
-  apple: { label: 'Apple', emoji: '🍎' },
-  github: { label: 'GitHub', emoji: '🐙' },
-  anonymous: { label: 'Guest session', emoji: '👻' },
+// Brand presets — same colours as the RN profile screen so all three
+// platforms render the connected-accounts list identically.
+const BRANDS: Record<'email' | 'google' | 'whatsapp' | 'facebook' | 'instagram', SocialBrand> = {
+  email: { Icon: Mail, iconBg: '#E5E7EB', iconColor: '#374151' },
+  google: { Icon: GoogleIcon, iconBg: '#FFFFFF', iconColor: '#4285F4' },
+  whatsapp: { Icon: MessageCircle, iconBg: '#25D366', iconColor: '#FFFFFF' },
+  facebook: { Icon: FacebookIcon, iconBg: '#1877F2', iconColor: '#FFFFFF' },
+  instagram: { Icon: InstagramIcon, iconBg: '#E4405F', iconColor: '#FFFFFF' },
 };
 
 const TIER_KEY: Record<TierLevel, any> = {
@@ -65,7 +59,7 @@ export function ProfilePage() {
   const [igSaveState, setIgSaveState] = useState<'idle' | 'saving' | 'saved' | 'error' | 'invalid'>('idle');
   const [avatarState, setAvatarState] = useState<'idle' | 'uploading' | 'error'>('idle');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [phoneCode, setPhoneCode] = useState<string>('+57');
+  const [phoneCode, setPhoneCode] = useState<string>(DEFAULT_COUNTRY_CODE);
   const [phoneNumber, setPhoneNumber] = useState<string>('');
   // Snapshot of what's currently saved (verified) on the profile. Lets us
   // compare against the input to know if the user is still on the verified
@@ -455,173 +449,79 @@ export function ProfilePage() {
           marginBottom: 32,
         }}
       >
-        <h2 style={{ color: theme.text, margin: '0 0 16px' }}>Connected accounts</h2>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <ContactRow theme={theme} icon="✉️" label="Email" value={email ?? '—'} hint="From your account" />
-          <ContactRow
-            theme={theme}
-            icon="🔐"
-            label="Sign-in method"
-            value={
-              identityProviders.length
-                ? identityProviders
-                    .map((p) => PROVIDER_META[p]?.label ?? p)
-                    .join(' · ')
-                : 'Email + password'
-            }
-            hint={
-              identityProviders.includes('facebook') || identityProviders.includes('google')
-                ? 'OAuth-linked at signup'
-                : 'Linked OAuth providers will show here'
-            }
+        <h2 style={{ color: theme.text, margin: '0 0 16px' }}>{t('profile.connectedAccounts')}</h2>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+          <SocialRow
+            brand={BRANDS.email}
+            label={t('profile.emailLabel')}
+            value={email}
+            linked={!!email}
+            primary={(identityProviders[0] ?? 'email') === 'email'}
+            primaryAriaLabel={t('profile.primaryLogin')}
+            notLinkedLabel={t('profile.notLinked')}
           />
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 10,
-              padding: '12px 0',
-              borderTop: `1px solid ${theme.border}`,
-            }}
+          <Divider theme={theme} />
+          <SocialRow
+            brand={BRANDS.google}
+            label={t('profile.googleLabel')}
+            value={identityProviders.includes('google') ? t('profile.linked') : null}
+            linked={identityProviders.includes('google')}
+            primary={identityProviders[0] === 'google'}
+            primaryAriaLabel={t('profile.primaryLogin')}
+            notLinkedLabel={t('profile.notLinked')}
+          />
+          <Divider theme={theme} />
+          <SocialRow
+            brand={BRANDS.whatsapp}
+            label={t('profile.whatsappLabel')}
+            value={savedPhoneE164}
+            linked={!!savedPhoneE164}
+            verified={phoneIsVerified}
+            notLinkedLabel={t('profile.notLinked')}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <span style={{ fontSize: 20, lineHeight: 1 }}>💬</span>
-              <div style={{ flex: 1 }}>
-                <div style={{ color: theme.text, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  WhatsApp
-                  {phoneIsVerified ? (
-                    <span
-                      style={{
-                        background: '#10b981',
-                        color: '#fff',
-                        fontSize: 11,
-                        fontWeight: 700,
-                        padding: '2px 8px',
-                        borderRadius: 999,
-                        letterSpacing: 0.3,
-                      }}
-                    >
-                      ✓ VERIFIED
-                    </span>
-                  ) : null}
-                </div>
-                <div style={{ color: theme.textMuted, fontSize: 12 }}>
-                  {phoneIsVerified
-                    ? `Verified ${new Date(phoneVerifiedAt!).toLocaleDateString(locale)}. Used for booking confirmations.`
-                    : 'Verify your number to receive WhatsApp booking confirmations.'}
-                </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ color: theme.textMuted, fontSize: 13 }}>
+                {phoneIsVerified
+                  ? `Verified ${new Date(phoneVerifiedAt!).toLocaleDateString(locale)}.`
+                  : t('profile.whatsappHelp')}
               </div>
-            </div>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <select
-                value={phoneCode}
-                onChange={(e) => {
-                  setPhoneCode(e.target.value);
-                  setOtpState('idle');
-                  setOtpSentTo(null);
-                }}
-                disabled={otpState !== 'idle'}
-                style={{
-                  background: theme.surfaceAlt,
-                  color: theme.text,
-                  border: `1px solid ${theme.border}`,
-                  borderRadius: 10,
-                  padding: '10px',
-                  fontSize: 14,
-                  minWidth: 110,
-                  opacity: otpState === 'idle' ? 1 : 0.6,
-                }}
-              >
-                {COUNTRY_CODES.map((c) => (
-                  <option key={c.code} value={c.code}>{c.label}</option>
-                ))}
-              </select>
-              <input
-                value={phoneNumber}
-                onChange={(e) => {
-                  setPhoneNumber(e.target.value.replace(/\D/g, ''));
-                  setOtpState('idle');
-                  setOtpSentTo(null);
-                }}
-                disabled={otpState !== 'idle'}
-                type="tel"
-                placeholder="3001234567"
-                style={{
-                  background: theme.surfaceAlt,
-                  color: theme.text,
-                  border: `1px solid ${theme.border}`,
-                  borderRadius: 10,
-                  padding: '10px 12px',
-                  fontSize: 14,
-                  flex: 1,
-                  opacity: otpState === 'idle' ? 1 : 0.6,
-                }}
-              />
-              {otpState === 'idle' && !phoneIsVerified ? (
-                <button
-                  type="button"
-                  onClick={() => void sendOtp()}
-                  disabled={!phoneNumber.replace(/\D/g, '')}
-                  style={{
-                    background: theme.primary,
-                    color: theme.onPrimary,
-                    border: 0,
-                    borderRadius: 999,
-                    padding: '10px 18px',
-                    fontWeight: 700,
-                    fontSize: 13,
-                    cursor: phoneNumber.replace(/\D/g, '') ? 'pointer' : 'not-allowed',
-                    opacity: phoneNumber.replace(/\D/g, '') ? 1 : 0.5,
-                    whiteSpace: 'nowrap',
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                <CountryCodeCombobox
+                  value={phoneCode}
+                  onChange={(c) => {
+                    setPhoneCode(c);
+                    setOtpState('idle');
+                    setOtpSentTo(null);
                   }}
-                >
-                  Send code
-                </button>
-              ) : null}
-              {otpState === 'sending' ? (
-                <span style={{ color: theme.textMuted, fontSize: 13 }}>Sending…</span>
-              ) : null}
-            </div>
-            {otpState === 'code' ? (
-              <div
-                style={{
-                  background: theme.surfaceAlt,
-                  border: `1px solid ${theme.border}`,
-                  borderRadius: 12,
-                  padding: 14,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 10,
-                }}
-              >
-                <div style={{ color: theme.text, fontSize: 13 }}>
-                  We sent a 6-digit code to <strong>{otpSentTo}</strong>. Enter it below to verify the number.
-                </div>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <input
-                    value={otpCode}
-                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    type="tel"
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
-                    placeholder="123456"
-                    autoFocus
-                    style={{
-                      background: theme.surface,
-                      color: theme.text,
-                      border: `1px solid ${theme.border}`,
-                      borderRadius: 10,
-                      padding: '10px 12px',
-                      fontSize: 18,
-                      letterSpacing: 6,
-                      width: 130,
-                      fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-                    }}
-                  />
+                  disabled={otpState !== 'idle'}
+                />
+                <input
+                  value={phoneNumber}
+                  onChange={(e) => {
+                    setPhoneNumber(e.target.value.replace(/\D/g, ''));
+                    setOtpState('idle');
+                    setOtpSentTo(null);
+                  }}
+                  disabled={otpState !== 'idle'}
+                  type="tel"
+                  placeholder="3001234567"
+                  style={{
+                    background: theme.surfaceAlt,
+                    color: theme.text,
+                    border: `1px solid ${theme.border}`,
+                    borderRadius: 10,
+                    padding: '10px 12px',
+                    fontSize: 14,
+                    flex: '1 1 180px',
+                    minWidth: 160,
+                    opacity: otpState === 'idle' ? 1 : 0.6,
+                  }}
+                />
+                {otpState === 'idle' && !phoneIsVerified ? (
                   <button
                     type="button"
-                    onClick={() => void verifyOtp()}
-                    disabled={otpCode.length < 6}
+                    onClick={() => void sendOtp()}
+                    disabled={!phoneNumber.replace(/\D/g, '')}
                     style={{
                       background: theme.primary,
                       color: theme.onPrimary,
@@ -630,135 +530,199 @@ export function ProfilePage() {
                       padding: '10px 18px',
                       fontWeight: 700,
                       fontSize: 13,
-                      cursor: otpCode.length >= 6 ? 'pointer' : 'not-allowed',
-                      opacity: otpCode.length >= 6 ? 1 : 0.5,
+                      cursor: phoneNumber.replace(/\D/g, '') ? 'pointer' : 'not-allowed',
+                      opacity: phoneNumber.replace(/\D/g, '') ? 1 : 0.5,
+                      whiteSpace: 'nowrap',
                     }}
                   >
-                    Verify
+                    Send code
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setOtpState('idle');
-                      setOtpSentTo(null);
-                      setOtpCode('');
-                      setOtpError(null);
-                    }}
-                    style={{
-                      background: 'transparent',
-                      color: theme.textMuted,
-                      border: 0,
-                      fontSize: 13,
-                      cursor: 'pointer',
-                      textDecoration: 'underline',
-                    }}
-                  >
-                    Cancel
-                  </button>
+                ) : null}
+                {otpState === 'sending' ? (
+                  <span style={{ color: theme.textMuted, fontSize: 13 }}>Sending…</span>
+                ) : null}
+              </div>
+              {otpState === 'code' ? (
+                <div
+                  style={{
+                    background: theme.surfaceAlt,
+                    border: `1px solid ${theme.border}`,
+                    borderRadius: 12,
+                    padding: 14,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 10,
+                  }}
+                >
+                  <div style={{ color: theme.text, fontSize: 13 }}>
+                    We sent a 6-digit code to <strong>{otpSentTo}</strong>. Enter it below to verify the number.
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <input
+                      value={otpCode}
+                      onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      type="tel"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      placeholder="123456"
+                      autoFocus
+                      style={{
+                        background: theme.surface,
+                        color: theme.text,
+                        border: `1px solid ${theme.border}`,
+                        borderRadius: 10,
+                        padding: '10px 12px',
+                        fontSize: 18,
+                        letterSpacing: 6,
+                        width: 130,
+                        fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => void verifyOtp()}
+                      disabled={otpCode.length < 6}
+                      style={{
+                        background: theme.primary,
+                        color: theme.onPrimary,
+                        border: 0,
+                        borderRadius: 999,
+                        padding: '10px 18px',
+                        fontWeight: 700,
+                        fontSize: 13,
+                        cursor: otpCode.length >= 6 ? 'pointer' : 'not-allowed',
+                        opacity: otpCode.length >= 6 ? 1 : 0.5,
+                      }}
+                    >
+                      Verify
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOtpState('idle');
+                        setOtpSentTo(null);
+                        setOtpCode('');
+                        setOtpError(null);
+                      }}
+                      style={{
+                        background: 'transparent',
+                        color: theme.textMuted,
+                        border: 0,
+                        fontSize: 13,
+                        cursor: 'pointer',
+                        textDecoration: 'underline',
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ) : null}
-            {otpState === 'verifying' ? (
-              <div style={{ color: theme.textMuted, fontSize: 13 }}>Verifying…</div>
-            ) : null}
-            {otpError ? (
-              <div style={{ color: theme.danger, fontSize: 13 }}>{otpError}</div>
-            ) : null}
-          </div>
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 10,
-              padding: '12px 0',
-              borderTop: `1px solid ${theme.border}`,
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <span style={{ fontSize: 20, lineHeight: 1 }}>📸</span>
-              <div style={{ flex: 1 }}>
-                <div style={{ color: theme.text, fontWeight: 700 }}>{t('profile.instagramLabel')}</div>
-                <div style={{ color: theme.textMuted, fontSize: 12 }}>{t('profile.instagramHelp')}</div>
-              </div>
+              ) : null}
+              {otpState === 'verifying' ? (
+                <div style={{ color: theme.textMuted, fontSize: 13 }}>Verifying…</div>
+              ) : null}
+              {otpError ? <div style={{ color: theme.danger, fontSize: 13 }}>{otpError}</div> : null}
             </div>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-              <div style={{ display: 'flex', alignItems: 'stretch', flex: '1 1 220px', minWidth: 200 }}>
-                <span
+          </SocialRow>
+          <Divider theme={theme} />
+          <SocialRow
+            brand={BRANDS.facebook}
+            label={t('profile.facebookLabel')}
+            value={identityProviders.includes('facebook') ? t('profile.linked') : null}
+            linked={identityProviders.includes('facebook')}
+            primary={identityProviders[0] === 'facebook'}
+            primaryAriaLabel={t('profile.primaryLogin')}
+            notLinkedLabel={t('profile.notLinked')}
+          />
+          <Divider theme={theme} />
+          <SocialRow
+            brand={BRANDS.instagram}
+            label={t('profile.instagramLabel')}
+            value={profile?.instagram_handle ? `@${profile.instagram_handle}` : null}
+            linked={!!profile?.instagram_handle}
+            notLinkedLabel={t('profile.notLinked')}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ color: theme.textMuted, fontSize: 13 }}>{t('profile.instagramHelp')}</div>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'stretch', flex: '1 1 220px', minWidth: 200 }}>
+                  <span
+                    style={{
+                      background: theme.surfaceAlt,
+                      color: theme.textMuted,
+                      border: `1px solid ${theme.border}`,
+                      borderRight: 'none',
+                      borderRadius: '10px 0 0 10px',
+                      padding: '10px 12px',
+                      fontSize: 14,
+                    }}
+                  >
+                    @
+                  </span>
+                  <input
+                    value={instagramHandle}
+                    onChange={(e) => {
+                      setInstagramHandle(e.target.value.replace(/^@+/, '').toLowerCase());
+                      if (igSaveState === 'invalid') setIgSaveState('idle');
+                    }}
+                    type="text"
+                    maxLength={30}
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    placeholder={t('profile.instagramPlaceholder')}
+                    style={{
+                      background: theme.surfaceAlt,
+                      color: theme.text,
+                      border: `1px solid ${theme.border}`,
+                      borderRadius: '0 10px 10px 0',
+                      padding: '10px 12px',
+                      fontSize: 14,
+                      flex: 1,
+                    }}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void saveInstagram()}
+                  disabled={igSaveState === 'saving'}
                   style={{
-                    background: theme.surfaceAlt,
-                    color: theme.textMuted,
-                    border: `1px solid ${theme.border}`,
-                    borderRight: 'none',
-                    borderRadius: '10px 0 0 10px',
-                    padding: '10px 12px',
-                    fontSize: 14,
+                    background: igSaveState === 'saved' ? theme.surfaceAlt : theme.primary,
+                    color: igSaveState === 'saved' ? theme.text : theme.onPrimary,
+                    border: igSaveState === 'saved' ? `1px solid ${theme.border}` : 0,
+                    borderRadius: 999,
+                    padding: '10px 18px',
+                    fontWeight: 700,
+                    fontSize: 13,
+                    cursor: igSaveState === 'saving' ? 'wait' : 'pointer',
+                    opacity: igSaveState === 'saving' ? 0.7 : 1,
+                    whiteSpace: 'nowrap',
                   }}
                 >
-                  @
-                </span>
-                <input
-                  value={instagramHandle}
-                  onChange={(e) => {
-                    setInstagramHandle(e.target.value.replace(/^@+/, '').toLowerCase());
-                    if (igSaveState === 'invalid') setIgSaveState('idle');
-                  }}
-                  type="text"
-                  maxLength={30}
-                  autoCapitalize="none"
-                  autoCorrect="off"
-                  spellCheck={false}
-                  placeholder={t('profile.instagramPlaceholder')}
-                  style={{
-                    background: theme.surfaceAlt,
-                    color: theme.text,
-                    border: `1px solid ${theme.border}`,
-                    borderRadius: '0 10px 10px 0',
-                    padding: '10px 12px',
-                    fontSize: 14,
-                    flex: 1,
-                  }}
-                />
+                  {igSaveState === 'saving'
+                    ? t('profile.phoneSaving')
+                    : igSaveState === 'saved'
+                      ? t('profile.phoneSaved')
+                      : igSaveState === 'error' || igSaveState === 'invalid'
+                        ? t('profile.phoneRetry')
+                        : t('profile.phoneSave')}
+                </button>
+                {instagramHandle && profile?.instagram_handle === instagramHandle ? (
+                  <a
+                    href={`https://instagram.com/${instagramHandle}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: theme.primary, fontWeight: 700, fontSize: 13 }}
+                  >
+                    {t('profile.instagramOpen')}
+                  </a>
+                ) : null}
               </div>
-              <button
-                type="button"
-                onClick={() => void saveInstagram()}
-                disabled={igSaveState === 'saving'}
-                style={{
-                  background: igSaveState === 'saved' ? theme.surfaceAlt : theme.primary,
-                  color: igSaveState === 'saved' ? theme.text : theme.onPrimary,
-                  border: igSaveState === 'saved' ? `1px solid ${theme.border}` : 0,
-                  borderRadius: 999,
-                  padding: '10px 18px',
-                  fontWeight: 700,
-                  fontSize: 13,
-                  cursor: igSaveState === 'saving' ? 'wait' : 'pointer',
-                  opacity: igSaveState === 'saving' ? 0.7 : 1,
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {igSaveState === 'saving'
-                  ? t('profile.phoneSaving')
-                  : igSaveState === 'saved'
-                    ? t('profile.phoneSaved')
-                    : igSaveState === 'error' || igSaveState === 'invalid'
-                      ? t('profile.phoneRetry')
-                      : t('profile.phoneSave')}
-              </button>
-              {instagramHandle && profile?.instagram_handle === instagramHandle ? (
-                <a
-                  href={`https://instagram.com/${instagramHandle}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ color: theme.primary, fontWeight: 700, fontSize: 13 }}
-                >
-                  {t('profile.instagramOpen')}
-                </a>
+              {igSaveState === 'invalid' ? (
+                <div style={{ color: theme.danger, fontSize: 13 }}>{t('profile.instagramInvalid')}</div>
               ) : null}
             </div>
-            {igSaveState === 'invalid' ? (
-              <div style={{ color: theme.danger, fontSize: 13 }}>{t('profile.instagramInvalid')}</div>
-            ) : null}
-          </div>
+          </SocialRow>
         </div>
       </section>
 
@@ -814,41 +778,8 @@ export function ProfilePage() {
   );
 }
 
-function ContactRow({
-  theme,
-  icon,
-  label,
-  value,
-  hint,
-}: {
-  theme: any;
-  icon: string;
-  label: string;
-  value: string;
-  hint?: string;
-}) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-      <span style={{ fontSize: 20, lineHeight: 1 }}>{icon}</span>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ color: theme.text, fontWeight: 700 }}>{label}</div>
-        <div
-          style={{
-            color: theme.text,
-            fontSize: 14,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {value}
-        </div>
-        {hint ? (
-          <div style={{ color: theme.textMuted, fontSize: 12 }}>{hint}</div>
-        ) : null}
-      </div>
-    </div>
-  );
+function Divider({ theme }: { theme: any }) {
+  return <div style={{ height: 1, background: theme.border, opacity: 0.6 }} />;
 }
 
 function Stat({ theme, label, value, small }: { theme: any; label: string; value: string; small?: boolean }) {

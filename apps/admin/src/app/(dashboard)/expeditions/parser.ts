@@ -2,6 +2,20 @@
 // can unit-test all the field coercion + validation rules without booting the
 // Supabase server-side helpers.
 
+import type { TerrainTag } from '@minga/types';
+
+const TERRAIN_TAGS = [
+  'mountain',
+  'flat',
+  'desert',
+  'river',
+  'forest',
+  'coast',
+  'urban',
+  'jungle',
+  'snow',
+] as const satisfies readonly TerrainTag[];
+
 export interface ExpeditionFormValue {
   title: string;
   description: string;
@@ -18,6 +32,7 @@ export interface ExpeditionFormValue {
   currency: string;
   is_official: boolean;
   is_published: boolean;
+  terrain_tags: TerrainTag[];
 }
 
 // Errors are returned as i18n keys so the server action can translate them in
@@ -58,6 +73,9 @@ export function parseExpeditionFormFields(formData: FormData): ExpeditionFormPar
   const currency = (String(formData.get('currency') ?? 'COP').trim() || 'COP').toUpperCase();
   const is_official = formData.get('is_official') === 'on';
   const is_published = formData.get('is_published') === 'on';
+  const terrain_tags = (formData.getAll('terrain_tags') as string[])
+    .map((v) => v.trim())
+    .filter((v): v is TerrainTag => (TERRAIN_TAGS as readonly string[]).includes(v));
 
   if (!title || !description || !category_id || !location_name) {
     return { errorKey: 'error.expedition.required' };
@@ -80,6 +98,7 @@ export function parseExpeditionFormFields(formData: FormData): ExpeditionFormPar
       currency,
       is_official,
       is_published,
+      terrain_tags,
     },
   };
 }

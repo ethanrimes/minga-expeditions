@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useTheme } from '@minga/theme';
-import { formatPriceCents, formatSalidaDate } from '@minga/logic';
+import { DEFAULT_COUNTRY_CODE, formatPriceCents, formatSalidaDate } from '@minga/logic';
 import { useT } from '@minga/i18n';
 import { supabase } from '../supabase';
+import { CountryCodeCombobox } from './CountryCodeCombobox';
 
 type CheckoutMode = 'collect-info' | 'opening-widget' | 'redirecting';
 
@@ -60,28 +61,6 @@ interface WompiCheckoutOptions {
     phoneNumberPrefix?: string;
   };
 }
-
-// Country code dropdown options, ordered by relevance to Minga's audience.
-// Add more here as they come up; format is { code: '+57', label: '🇨🇴 +57' }.
-// Labels include the country flag emoji for quick visual identification.
-const COUNTRY_CODES: { code: string; label: string }[] = [
-  { code: '+57', label: '🇨🇴 +57' },
-  { code: '+1', label: '🇺🇸 +1' },
-  { code: '+52', label: '🇲🇽 +52' },
-  { code: '+593', label: '🇪🇨 +593' },
-  { code: '+51', label: '🇵🇪 +51' },
-  { code: '+56', label: '🇨🇱 +56' },
-  { code: '+54', label: '🇦🇷 +54' },
-  { code: '+55', label: '🇧🇷 +55' },
-  { code: '+58', label: '🇻🇪 +58' },
-  { code: '+591', label: '🇧🇴 +591' },
-  { code: '+34', label: '🇪🇸 +34' },
-  { code: '+44', label: '🇬🇧 +44' },
-  { code: '+49', label: '🇩🇪 +49' },
-  { code: '+33', label: '🇫🇷 +33' },
-];
-
-const DEFAULT_COUNTRY_CODE = '+57';
 
 interface WompiCheckoutInstance {
   open(cb: (result: { transaction: { id: string; status: string } | null }) => void): void;
@@ -178,10 +157,8 @@ export function CheckoutDrawer({
       return;
     }
     const trimmedNumber = phoneNumber.replace(/\D/g, '');
-    if (WHATSAPP_ENABLED && !trimmedNumber) {
-      setError(t('checkout.errorPhoneRequired'));
-      return;
-    }
+    // WhatsApp number is requested but no longer required — if the user skips
+    // it we fall back to email-only confirmations.
     const phoneE164 = trimmedNumber ? `${phoneCode}${trimmedNumber}` : '';
     setMode('opening-widget');
     try {
@@ -351,24 +328,8 @@ export function CheckoutDrawer({
           )}
           {WHATSAPP_ENABLED ? (
             <Field label={t('checkout.fieldPhone')} theme={theme}>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <select
-                  value={phoneCode}
-                  onChange={(e) => setPhoneCode(e.target.value)}
-                  style={{
-                    background: theme.surface,
-                    color: theme.text,
-                    border: `1px solid ${theme.border}`,
-                    borderRadius: 10,
-                    padding: '12px 10px',
-                    fontSize: 15,
-                    minWidth: 110,
-                  }}
-                >
-                  {COUNTRY_CODES.map((c) => (
-                    <option key={c.code} value={c.code}>{c.label}</option>
-                  ))}
-                </select>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <CountryCodeCombobox value={phoneCode} onChange={(c) => setPhoneCode(c)} />
                 <div style={{ flex: 1 }}>
                   <Input
                     value={phoneNumber}
@@ -379,6 +340,9 @@ export function CheckoutDrawer({
                   />
                 </div>
               </div>
+              <span style={{ color: theme.textMuted, fontSize: 12, marginTop: 6, display: 'block' }}>
+                {t('checkout.fieldPhoneHelp')}
+              </span>
             </Field>
           ) : null}
 

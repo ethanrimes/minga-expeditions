@@ -2,9 +2,21 @@
 
 import Link from 'next/link';
 import { useActionState, useState } from 'react';
-import type { DbCategory, DbExpedition } from '@minga/types';
+import type { DbCategory, DbExpedition, TerrainTag } from '@minga/types';
 import { LocationPicker } from '@/components/LocationPicker';
 import type { ExpeditionFormState } from './actions';
+
+const TERRAIN_TAGS: TerrainTag[] = [
+  'mountain',
+  'flat',
+  'desert',
+  'river',
+  'forest',
+  'coast',
+  'urban',
+  'jungle',
+  'snow',
+];
 
 interface Labels {
   title: string;
@@ -30,6 +42,9 @@ interface Labels {
   coverPhoto: string;
   coverPreviewAlt: string;
   coverHelp: string;
+  terrain: string;
+  terrainHelp: string;
+  terrainTags: Record<TerrainTag, string>;
   official: string;
   published: string;
   saving: string;
@@ -189,6 +204,31 @@ export function ExpeditionForm({ action, categories, initial, labels, locale }: 
         />
         <span className="text-xs text-ink-500">{labels.priceHelp}</span>
       </label>
+
+      <fieldset className="field">
+        <span className="field-label">{labels.terrain}</span>
+        <div className="flex flex-wrap gap-2 mt-1">
+          {TERRAIN_TAGS.map((tag) => {
+            const checked = (initial?.terrain_tags ?? []).includes(tag);
+            return (
+              <label
+                key={tag}
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-surface-border bg-surface text-sm cursor-pointer has-[:checked]:bg-primary has-[:checked]:text-on-primary has-[:checked]:border-primary"
+              >
+                <input
+                  type="checkbox"
+                  name="terrain_tags"
+                  value={tag}
+                  defaultChecked={checked}
+                  className="sr-only"
+                />
+                <span>{labels.terrainTags[tag]}</span>
+              </label>
+            );
+          })}
+        </div>
+        <p className="text-xs text-ink-500 mt-2">{labels.terrainHelp}</p>
+      </fieldset>
 
       <fieldset className="field">
         <span className="field-label">{labels.coverPhoto}</span>

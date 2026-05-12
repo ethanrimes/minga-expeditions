@@ -10,31 +10,14 @@ import React, { useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useTheme, spacing, radii, fontSizes, fontWeights } from '@minga/theme';
 import { useT } from '@minga/i18n';
-import { formatPriceCents, formatSalidaDate } from '@minga/logic';
+import { formatPriceCents, formatSalidaDate, DEFAULT_COUNTRY_CODE } from '@minga/logic';
 import { getSupabase } from '@minga/supabase';
 import { Button } from '../primitives/Button';
 import { Input } from '../primitives/Input';
+import { CountryCodeCombobox } from '../primitives/CountryCodeCombobox';
 
 type Mode = 'collect-info' | 'opening-widget' | 'redirecting';
 
-const COUNTRY_CODES: { code: string; label: string }[] = [
-  { code: '+57', label: '🇨🇴 +57' },
-  { code: '+1', label: '🇺🇸 +1' },
-  { code: '+52', label: '🇲🇽 +52' },
-  { code: '+593', label: '🇪🇨 +593' },
-  { code: '+51', label: '🇵🇪 +51' },
-  { code: '+56', label: '🇨🇱 +56' },
-  { code: '+54', label: '🇦🇷 +54' },
-  { code: '+55', label: '🇧🇷 +55' },
-  { code: '+58', label: '🇻🇪 +58' },
-  { code: '+591', label: '🇧🇴 +591' },
-  { code: '+34', label: '🇪🇸 +34' },
-  { code: '+44', label: '🇬🇧 +44' },
-  { code: '+49', label: '🇩🇪 +49' },
-  { code: '+33', label: '🇫🇷 +33' },
-];
-
-const DEFAULT_COUNTRY_CODE = '+57';
 const WOMPI_HOSTED_CHECKOUT_URL = 'https://checkout.wompi.co/p/';
 
 export interface CheckoutScreenProps {
@@ -136,10 +119,8 @@ export function CheckoutScreen({
       return;
     }
     const trimmedNumber = phoneNumber.replace(/\D/g, '');
-    if (whatsappEnabled && !trimmedNumber) {
-      setError(t('checkout.errorPhoneRequired'));
-      return;
-    }
+    // Phone is requested but not required — see CheckoutDrawer for the same
+    // policy on web.
     const phoneE164 = trimmedNumber ? `${phoneCode}${trimmedNumber}` : '';
     setMode('opening-widget');
     try {
@@ -335,10 +316,8 @@ export function CheckoutScreen({
             >
               {t('checkout.fieldPhone')}
             </Text>
-            <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-              <View style={{ width: 120 }}>
-                <CountryCodePicker value={phoneCode} onChange={setPhoneCode} />
-              </View>
+            <View style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'flex-start' }}>
+              <CountryCodeCombobox value={phoneCode} onChange={(c) => setPhoneCode(c)} />
               <View style={{ flex: 1 }}>
                 <Input
                   value={phoneNumber}
@@ -348,6 +327,9 @@ export function CheckoutScreen({
                 />
               </View>
             </View>
+            <Text style={{ color: theme.textMuted, fontSize: fontSizes.xs, lineHeight: 18 }}>
+              {t('checkout.fieldPhoneHelp')}
+            </Text>
           </View>
         ) : null}
 
@@ -379,48 +361,3 @@ export function CheckoutScreen({
   );
 }
 
-// Inline country-code picker. RN doesn't ship a select primitive; on
-// react-native-web a real <select> is available via a small native element,
-// but to keep this shared we render a horizontally-scrolling chip list. Small
-// enough to be inline since this only matters when WhatsApp is enabled.
-function CountryCodePicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const { theme } = useTheme();
-  return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={{ gap: spacing.xs }}
-      style={{ maxHeight: 48 }}
-    >
-      {COUNTRY_CODES.map((c) => {
-        const active = c.code === value;
-        return (
-          <Pressable
-            key={c.code}
-            onPress={() => onChange(c.code)}
-            style={{
-              paddingHorizontal: spacing.sm,
-              paddingVertical: spacing.sm,
-              borderRadius: radii.md,
-              borderWidth: 1,
-              borderColor: active ? theme.primary : theme.border,
-              backgroundColor: active ? theme.primary : theme.surface,
-              justifyContent: 'center',
-            }}
-          >
-            <Text
-              style={{
-                color: active ? theme.onPrimary : theme.text,
-                fontSize: fontSizes.sm,
-                fontWeight: fontWeights.semibold,
-              }}
-              numberOfLines={1}
-            >
-              {c.label}
-            </Text>
-          </Pressable>
-        );
-      })}
-    </ScrollView>
-  );
-}
