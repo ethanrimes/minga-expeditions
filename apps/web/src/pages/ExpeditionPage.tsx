@@ -231,30 +231,28 @@ export function ExpeditionPage() {
                           {formatPriceCents(price_cents, { currency, freeLabel: t('common.free') })}
                         </div>
                       </div>
-                      {price_cents > 0 ? (
-                        <button
-                          onClick={() => bookSalida(s)}
-                          disabled={sold}
-                          style={{
-                            background: sold ? theme.surfaceAlt : theme.primary,
-                            color: sold ? theme.textMuted : theme.onPrimary,
-                            border: sold ? `1px solid ${theme.border}` : 0,
-                            borderRadius: 999,
-                            padding: '10px 20px',
-                            fontWeight: 700,
-                            fontSize: 14,
-                            cursor: sold ? 'not-allowed' : 'pointer',
-                          }}
-                        >
-                          {sold ? t('salida.soldOut') : t('salida.book')}
-                        </button>
-                      ) : null}
+                      <button
+                        onClick={() => bookSalida(s)}
+                        disabled={sold}
+                        style={{
+                          background: sold ? theme.surfaceAlt : theme.primary,
+                          color: sold ? theme.textMuted : theme.onPrimary,
+                          border: sold ? `1px solid ${theme.border}` : 0,
+                          borderRadius: 999,
+                          padding: '10px 20px',
+                          fontWeight: 700,
+                          fontSize: 14,
+                          cursor: sold ? 'not-allowed' : 'pointer',
+                        }}
+                      >
+                        {sold ? t('salida.soldOut') : t('salida.book')}
+                      </button>
                     </div>
                   );
                 })}
               </div>
             )}
-            {expedition.price_cents > 0 && salidas.length === 0 ? (
+            {salidas.length === 0 ? (
               <button
                 onClick={openGenericCheckout}
                 style={{

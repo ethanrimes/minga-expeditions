@@ -23,11 +23,6 @@ interface Props {
 
 const env = import.meta.env as unknown as Record<string, string>;
 const FUNCTIONS_BASE = `${env.VITE_SUPABASE_URL}/functions/v1`;
-// Top-level flag from Minga: when WhatsApp is on, the booking form collects
-// a phone number (required) and the post-payment webhook fires a WhatsApp
-// utility message. Each WA utility message costs ~$0.008 in Colombia, so
-// turning this off is the cheap-default. Email is always collected.
-const WHATSAPP_ENABLED = env.VITE_WHATSAPP_ENABLED === 'true';
 
 // Wompi widget loader — script tag that becomes a global form-renderer.
 // Reference: https://docs.wompi.co/docs/colombia/widget-checkout-web
@@ -326,30 +321,26 @@ export function CheckoutDrawer({
               </Field>
             </>
           )}
-          {WHATSAPP_ENABLED ? (
-            <Field label={t('checkout.fieldPhone')} theme={theme}>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <CountryCodeCombobox value={phoneCode} onChange={(c) => setPhoneCode(c)} />
-                <div style={{ flex: 1 }}>
-                  <Input
-                    value={phoneNumber}
-                    onChange={(v) => setPhoneNumber(v.replace(/[^\d]/g, ''))}
-                    type="tel"
-                    theme={theme}
-                    placeholder={t('checkout.fieldPhonePlaceholder')}
-                  />
-                </div>
+          <Field label={t('checkout.fieldPhone')} theme={theme}>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <CountryCodeCombobox value={phoneCode} onChange={(c) => setPhoneCode(c)} />
+              <div style={{ flex: 1 }}>
+                <Input
+                  value={phoneNumber}
+                  onChange={(v) => setPhoneNumber(v.replace(/[^\d]/g, ''))}
+                  type="tel"
+                  theme={theme}
+                  placeholder={t('checkout.fieldPhonePlaceholder')}
+                />
               </div>
-              <span style={{ color: theme.textMuted, fontSize: 12, marginTop: 6, display: 'block' }}>
-                {t('checkout.fieldPhoneHelp')}
-              </span>
-            </Field>
-          ) : null}
+            </div>
+            <span style={{ color: theme.textMuted, fontSize: 12, marginTop: 6, display: 'block' }}>
+              {t('checkout.fieldPhoneHelp')}
+            </span>
+          </Field>
 
           <p style={{ color: theme.textMuted, fontSize: 12 }}>
-            {WHATSAPP_ENABLED
-              ? t('checkout.confirmationEmailWhatsapp')
-              : t('checkout.confirmationEmail')}
+            {t('checkout.confirmationEmailWhatsapp')}
           </p>
 
           {error ? <div style={{ color: theme.danger, fontSize: 14 }}>{error}</div> : null}

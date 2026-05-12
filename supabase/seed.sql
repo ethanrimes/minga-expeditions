@@ -77,7 +77,7 @@ insert into public.expeditions (
     'Classic day hike through cloud forest and the towering wax palms of Cocora. Leaves from Salento; loop version adds Acaime hummingbird house and a muddy ridge return.',
     'hiking', 'Valle de Cocora', 'Quindío', 'Colombia',
     4.6373, -75.4860, 12.5, 650, 3,
-    0, 'COP',
+    38000000, 'COP',
     'https://images.unsplash.com/photo-1568438350562-2cae6d394ad0?w=1600',
     false, true),
 
@@ -95,7 +95,7 @@ insert into public.expeditions (
     '82 km of continuous climbing from Mariquita to the páramo above Manizales — over 3,600m elevation gain. Bring warm kit for the descent.',
     'cycling', 'Alto de Letras', 'Tolima / Caldas', 'Colombia',
     5.0667, -75.3667, 82.0, 3650, 5,
-    0, 'COP',
+    85000000, 'COP',
     'https://images.unsplash.com/photo-1517649763962-0c623066013b?w=1600',
     false, true),
 
@@ -122,7 +122,7 @@ insert into public.expeditions (
     'Climb the 740 steps of El Peñón de Guatapé, then a 10 km lakeside walk through pueblito streets.',
     'hiking', 'Guatapé', 'Antioquia', 'Colombia',
     6.2328, -75.1597, 11.0, 370, 2,
-    0, 'COP',
+    52000000, 'COP',
     'https://images.unsplash.com/photo-1590424593747-80f6d9d1a7a7?w=1600',
     false, true),
 
@@ -140,7 +140,7 @@ insert into public.expeditions (
     'Early-morning trail run through frailejón-dotted páramo above Bogotá. 18 km with a steep kick at km 14.',
     'running', 'Parque Nacional Chingaza', 'Cundinamarca', 'Colombia',
     4.6872, -73.7536, 18.0, 700, 3,
-    0, 'COP',
+    42000000, 'COP',
     'https://images.unsplash.com/photo-1596728325488-58c87691e9af?w=1600',
     false, true),
 

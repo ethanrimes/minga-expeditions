@@ -29,6 +29,6 @@ export async function saveCommTemplateAction(
   } catch (e) {
     return { error: (e as Error).message };
   }
-  revalidatePath('/comms');
+  revalidatePath('/comms/automated');
   return { saved: true };
 }

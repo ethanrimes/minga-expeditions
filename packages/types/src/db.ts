@@ -284,6 +284,29 @@ export interface DbCommTemplate {
   updated_at: string;
 }
 
+// On-demand outbound (a.k.a. "broadcast") templates. Distinct from
+// `comm_templates` which are event-triggered: these are composed once and
+// fired manually from the admin (promos, announcements, new-trip launches).
+export type CommBroadcastCategory =
+  | 'announcement'
+  | 'promotion'
+  | 'new_trip'
+  | 'reminder'
+  | 'other';
+
+export interface DbCommBroadcastTemplate {
+  id: string;
+  name: string;
+  category: CommBroadcastCategory;
+  channel: CommChannel;
+  locale: CommLocale;
+  subject: string | null;
+  body: string;
+  is_archived: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface DbVendorProposal {
   id: string;
   vendor_name: string;

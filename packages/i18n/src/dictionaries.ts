@@ -360,6 +360,11 @@ export type TranslationKey =
   | 'order.backToExpedition'
   | 'order.done'
   | 'order.errorLoadFailed'
+  | 'order.celebrateTitle'
+  | 'order.celebrateBody'
+  | 'order.celebrateBodyGuest'
+  | 'order.celebrateCta'
+  | 'order.celebrateDismiss'
   | 'order.status.approvedTitle'
   | 'order.status.approvedSub'
   | 'order.status.declinedTitle'
@@ -723,10 +728,10 @@ export const en: Record<TranslationKey, string> = {
   'checkout.fieldNamePlaceholder': 'Optional',
   'checkout.fieldEmail': 'Email',
   'checkout.fieldEmailPlaceholder': 'you@email.com',
-  'checkout.fieldPhone': 'WhatsApp phone (optional)',
+  'checkout.fieldPhone': 'WhatsApp phone',
   'checkout.fieldPhonePlaceholder': '3001234567',
   'checkout.fieldPhoneHelp':
-    "Optional but recommended — we'll send your booking confirmation and any last-minute trip updates via WhatsApp.",
+    "We'll send your booking confirmation and any last-minute trip updates via WhatsApp.",
   'checkout.confirmationEmail': 'We send the booking confirmation to your email.',
   'checkout.confirmationEmailWhatsapp':
     'We send the booking confirmation to your email and a WhatsApp message with trip details.',
@@ -744,6 +749,13 @@ export const en: Record<TranslationKey, string> = {
   'order.backToExpedition': '← Back to expedition',
   'order.done': 'Done',
   'order.errorLoadFailed': 'Failed to load order',
+  'order.celebrateTitle': "🎉 You're booked!",
+  'order.celebrateBody':
+    "We've sent the confirmation to your inbox and WhatsApp. Get ready for an unforgettable trip.",
+  'order.celebrateBodyGuest':
+    "We've sent the confirmation to your inbox and WhatsApp. Create a Minga account to save this trip, chat with the guide, and track your activity.",
+  'order.celebrateCta': 'Save my trip · Sign up',
+  'order.celebrateDismiss': 'Continue',
   'order.status.approvedTitle': 'Payment confirmed.',
   'order.status.approvedSub': "We're sending your confirmation now.",
   'order.status.declinedTitle': 'Payment declined.',
@@ -1111,10 +1123,10 @@ export const es: Record<TranslationKey, string> = {
   'checkout.fieldNamePlaceholder': 'Opcional',
   'checkout.fieldEmail': 'Correo',
   'checkout.fieldEmailPlaceholder': 'tu@correo.com',
-  'checkout.fieldPhone': 'Teléfono de WhatsApp (opcional)',
+  'checkout.fieldPhone': 'Teléfono de WhatsApp',
   'checkout.fieldPhonePlaceholder': '3001234567',
   'checkout.fieldPhoneHelp':
-    'Opcional pero recomendado — te enviaremos la confirmación de tu reserva y avisos de último momento por WhatsApp.',
+    'Te enviaremos la confirmación de tu reserva y avisos de último momento por WhatsApp.',
   'checkout.confirmationEmail': 'Enviamos la confirmación de la reserva a tu correo.',
   'checkout.confirmationEmailWhatsapp':
     'Enviamos la confirmación al correo y un mensaje por WhatsApp con los detalles del viaje.',
@@ -1132,6 +1144,13 @@ export const es: Record<TranslationKey, string> = {
   'order.backToExpedition': '← Volver a la expedición',
   'order.done': 'Listo',
   'order.errorLoadFailed': 'No se pudo cargar el pedido',
+  'order.celebrateTitle': '🎉 ¡Tu reserva está lista!',
+  'order.celebrateBody':
+    'Te enviamos la confirmación por correo y WhatsApp. Prepárate para un viaje inolvidable.',
+  'order.celebrateBodyGuest':
+    'Te enviamos la confirmación por correo y WhatsApp. Crea una cuenta Minga para guardar este viaje, chatear con el guía y registrar tu actividad.',
+  'order.celebrateCta': 'Guardar viaje · Crear cuenta',
+  'order.celebrateDismiss': 'Continuar',
   'order.status.approvedTitle': 'Pago confirmado.',
   'order.status.approvedSub': 'Estamos enviando tu confirmación ahora.',
   'order.status.declinedTitle': 'Pago rechazado.',

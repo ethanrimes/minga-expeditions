@@ -136,10 +136,11 @@ function OAuthButton({
     setBusy(true);
     try {
       // Supabase handles the redirect to /auth/v1/callback?... and then back
-      // to redirectTo. The provider must be enabled in the Supabase dashboard.
+      // to redirectTo. Always send the user to the deployed Vercel origin —
+      // never window.location.origin, which would point at localhost in dev.
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
-        options: { redirectTo: `${window.location.origin}/profile` },
+        options: { redirectTo: 'https://minga-expeditions-web.vercel.app/profile' },
       });
       if (error) throw error;
     } catch (e: any) {

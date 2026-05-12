@@ -48,3 +48,16 @@ enable_confirmations = false
 # MVT tile endpoint is called anonymously by MapLibre in the apps — no JWT.
 [functions.geo-tile]
 verify_jwt = false
+
+# Order-status polling runs from the OrderSuccessPage immediately after Wompi
+# redirects the browser back. Guests have no session, so we open the function
+# to anonymous callers — the order UUID is the unguessable secret, the
+# function strips wompi_reference/PII before responding.
+[functions.wompi-order-status]
+verify_jwt = false
+
+# Order creation also runs unauthenticated for guest checkouts; the function
+# itself reads the optional Authorization header and trusts it only when
+# present.
+[functions.wompi-create-order]
+verify_jwt = false

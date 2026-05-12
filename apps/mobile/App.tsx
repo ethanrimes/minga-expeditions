@@ -39,7 +39,6 @@ const PUBLIC_SITE_URL =
   process.env.EXPO_PUBLIC_SITE_URL ?? 'https://minga-expeditions-web.vercel.app';
 const FUNCTIONS_BASE_URL = SUPABASE_URL ? `${SUPABASE_URL}/functions/v1` : '';
 const SHARE_CARD_BASE_URL = SUPABASE_URL ? `${SUPABASE_URL}/functions/v1/activity-share-card` : '';
-const WHATSAPP_ENABLED = process.env.EXPO_PUBLIC_WHATSAPP_ENABLED === 'true';
 
 // Deep-link target for the OAuth round-trip. Must match the "scheme" in
 // app.json AND be in the Supabase project's Authentication → URL
@@ -174,7 +173,6 @@ function Root() {
           salidaStartsAt={salida.starts_at}
           salidaTimezone={salida.timezone}
           functionsBaseUrl={FUNCTIONS_BASE_URL}
-          whatsappEnabled={WHATSAPP_ENABLED}
           returnOrigin={PUBLIC_SITE_URL}
           openCheckoutUrl={(url) => Linking.openURL(url)}
           onClose={() => setRoute({ kind: 'expedition', id: expedition.id })}

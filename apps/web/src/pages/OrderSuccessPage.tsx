@@ -1,9 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useTheme } from '@minga/theme';
 import { useT } from '@minga/i18n';
 import { formatPriceCents } from '@minga/logic';
 import type { OrderStatus } from '@minga/types';
+import { supabase } from '../supabase';
+import { PaymentCelebrationModal } from '../components/PaymentCelebrationModal';
 
 interface OrderResponse {
   id: string;
@@ -25,11 +27,31 @@ const FUNCTIONS_BASE = `${env.VITE_SUPABASE_URL}/functions/v1`;
 
 export function OrderSuccessPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { theme } = useTheme();
   const { t } = useT();
   const [order, setOrder] = useState<OrderResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Auth state for the post-payment popup. Guests get the sign-up CTA;
+  // signed-in users get a plain "continue" dismiss.
+  const [isGuest, setIsGuest] = useState<boolean>(true);
+  const [celebrateOpen, setCelebrateOpen] = useState(false);
+  const celebrateShown = useRef(false);
   const stopped = useRef(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const { data } = await supabase.auth.getSession();
+      if (cancelled) return;
+      const user = data.session?.user;
+      const isAnon = user?.is_anonymous === true;
+      setIsGuest(!user || isAnon);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Poll for status until terminal. Wompi delivers the webhook within seconds.
   useEffect(() => {
@@ -53,6 +75,10 @@ export function OrderSuccessPage() {
           }
           if (cancelled) return;
           setOrder(json);
+          if (json.status === 'approved' && !celebrateShown.current) {
+            celebrateShown.current = true;
+            setCelebrateOpen(true);
+          }
           if (json.status !== 'pending') return; // terminal
         } catch (e) {
           if (cancelled) return;
@@ -146,6 +172,17 @@ export function OrderSuccessPage() {
           </Link>
         </div>
       ) : null}
+
+      <PaymentCelebrationModal
+        open={celebrateOpen}
+        isGuest={isGuest}
+        expeditionTitle={order?.expedition?.title ?? null}
+        onClose={() => setCelebrateOpen(false)}
+        onSignIn={() => {
+          setCelebrateOpen(false);
+          navigate('/auth');
+        }}
+      />
     </div>
   );
 }

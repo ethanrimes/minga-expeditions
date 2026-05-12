@@ -13,6 +13,7 @@ import { formatPriceCents } from '@minga/logic';
 import { getSupabase } from '@minga/supabase';
 import type { OrderStatus } from '@minga/types';
 import { Button } from '../primitives/Button';
+import { PaymentCelebrationModal } from '../components/PaymentCelebrationModal';
 
 interface OrderResponse {
   id: string;
@@ -56,6 +57,10 @@ export function OrderSuccessScreen({
   // Whether the viewer is signed in. Drives whether we show the
   // "Create account" CTA after a successful payment.
   const [isGuest, setIsGuest] = useState<boolean>(true);
+  // Celebration modal pops on the first transition into "approved". After the
+  // user dismisses we don't auto-show it again on subsequent renders.
+  const [celebrateVisible, setCelebrateVisible] = useState(false);
+  const celebrateShown = useRef(false);
   const stopped = useRef(false);
 
   useEffect(() => {
@@ -94,6 +99,10 @@ export function OrderSuccessScreen({
           }
           if (cancelled) return;
           setOrder(json);
+          if (json.status === 'approved' && !celebrateShown.current) {
+            celebrateShown.current = true;
+            setCelebrateVisible(true);
+          }
           if (json.status !== 'pending') return; // terminal
         } catch (e) {
           if (cancelled) return;
@@ -207,6 +216,13 @@ export function OrderSuccessScreen({
         ) : null}
         {onBack ? <Button label={t('order.done')} variant="ghost" onPress={onBack} /> : null}
       </View>
+      <PaymentCelebrationModal
+        visible={celebrateVisible}
+        isGuest={isGuest}
+        expeditionTitle={order?.expedition?.title ?? null}
+        onClose={() => setCelebrateVisible(false)}
+        onSignIn={onSignUp}
+      />
     </ScrollView>
   );
 }

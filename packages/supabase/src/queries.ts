@@ -10,6 +10,8 @@ import type {
   DbActivityTrackPoint,
   DbCategory,
   DbComment,
+  CommBroadcastCategory,
+  DbCommBroadcastTemplate,
   DbCommEventType,
   DbCommTemplate,
   DbExpedition,
@@ -1309,5 +1311,69 @@ export async function upsertCommTemplate(
 
 export async function deleteCommTemplate(client: SupabaseClient, id: string): Promise<void> {
   const { error } = await client.from('comm_templates').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// =============================================================================
+// Broadcast (on-demand) comm templates — see migration ..._comm_broadcast_templates.
+// =============================================================================
+
+export async function fetchCommBroadcastTemplates(
+  client: SupabaseClient,
+  opts: { includeArchived?: boolean } = {},
+): Promise<DbCommBroadcastTemplate[]> {
+  let q = client
+    .from('comm_broadcast_templates')
+    .select('*')
+    .order('category', { ascending: true })
+    .order('created_at', { ascending: false });
+  if (!opts.includeArchived) q = q.eq('is_archived', false);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as DbCommBroadcastTemplate[];
+}
+
+export async function fetchCommBroadcastTemplate(
+  client: SupabaseClient,
+  id: string,
+): Promise<DbCommBroadcastTemplate | null> {
+  const { data, error } = await client
+    .from('comm_broadcast_templates')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle();
+  if (error) throw error;
+  return (data ?? null) as DbCommBroadcastTemplate | null;
+}
+
+export type CommBroadcastTemplateInput = {
+  id?: string;
+  name: string;
+  category: CommBroadcastCategory;
+  channel: CommChannel;
+  locale: CommLocale;
+  subject?: string | null;
+  body: string;
+  is_archived?: boolean;
+};
+
+export async function upsertCommBroadcastTemplate(
+  client: SupabaseClient,
+  input: CommBroadcastTemplateInput,
+): Promise<DbCommBroadcastTemplate> {
+  const { data, error } = await client
+    .from('comm_broadcast_templates')
+    .upsert(input)
+    .select('*')
+    .single();
+  if (error) throw error;
+  return data as DbCommBroadcastTemplate;
+}
+
+export async function deleteCommBroadcastTemplate(
+  client: SupabaseClient,
+  id: string,
+): Promise<void> {
+  const { error } = await client.from('comm_broadcast_templates').delete().eq('id', id);
   if (error) throw error;
 }

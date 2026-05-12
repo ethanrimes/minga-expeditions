@@ -22,18 +22,6 @@ import { ActivityMap } from './ActivityMap';
 import { photoPicker } from './photoPicker';
 import { shareAdapter } from './shareAdapter';
 
-// Same-tab redirect to the Supabase /authorize endpoint, which bounces back
-// to our origin with ?code=... The Supabase client's detectSessionInUrl
-// handles the exchange automatically on page load.
-async function signInWithOAuth(provider: 'google' | 'facebook'): Promise<boolean> {
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider,
-    options: { redirectTo: window.location.origin },
-  });
-  if (error) throw error;
-  return true;
-}
-
 const env = import.meta.env as unknown as Record<string, string>;
 const SUPABASE_URL = env.VITE_SUPABASE_URL ?? '';
 const SUPABASE_ANON_KEY = env.VITE_SUPABASE_ANON_KEY ?? '';
@@ -41,9 +29,22 @@ const SUPABASE_ANON_KEY = env.VITE_SUPABASE_ANON_KEY ?? '';
 // payment and as the prefix for activity share deep-links.
 const PUBLIC_SITE_URL =
   env.VITE_PUBLIC_SITE_URL ?? 'https://minga-expeditions-mobile-web.vercel.app';
+
+// Same-tab redirect to the Supabase /authorize endpoint, which bounces back
+// to our origin with ?code=... The Supabase client's detectSessionInUrl
+// handles the exchange automatically on page load. We always send Supabase
+// to the deployed Vercel origin — never window.location.origin, which would
+// point at localhost in dev.
+async function signInWithOAuth(provider: 'google' | 'facebook'): Promise<boolean> {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider,
+    options: { redirectTo: PUBLIC_SITE_URL },
+  });
+  if (error) throw error;
+  return true;
+}
 const FUNCTIONS_BASE_URL = SUPABASE_URL ? `${SUPABASE_URL}/functions/v1` : '';
 const SHARE_CARD_BASE_URL = SUPABASE_URL ? `${SUPABASE_URL}/functions/v1/activity-share-card` : '';
-const WHATSAPP_ENABLED = env.VITE_WHATSAPP_ENABLED === 'true';
 
 interface CheckoutContext {
   expedition: ExpeditionWithAuthor;
@@ -117,7 +118,6 @@ export function App() {
           salidaStartsAt={salida.starts_at}
           salidaTimezone={salida.timezone}
           functionsBaseUrl={FUNCTIONS_BASE_URL}
-          whatsappEnabled={WHATSAPP_ENABLED}
           returnOrigin={PUBLIC_SITE_URL}
           openCheckoutUrl={(url) => {
             // Same-tab redirect so the Wompi return URL brings the user back

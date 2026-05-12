@@ -303,6 +303,29 @@ export type Key =
   | 'comms.template.placeholdersHelp'
   | 'comms.channel.email'
   | 'comms.channel.whatsapp'
+  | 'comms.tabs.automated'
+  | 'comms.tabs.automatedDesc'
+  | 'comms.tabs.broadcasts'
+  | 'comms.tabs.broadcastsDesc'
+  | 'comms.broadcasts.back'
+  | 'comms.broadcasts.subtitle'
+  | 'comms.broadcasts.empty'
+  | 'comms.broadcasts.new'
+  | 'comms.broadcasts.newTitle'
+  | 'comms.broadcasts.delete'
+  | 'comms.broadcasts.save'
+  | 'comms.broadcasts.saved'
+  | 'comms.broadcasts.field.name'
+  | 'comms.broadcasts.field.category'
+  | 'comms.broadcasts.field.channel'
+  | 'comms.broadcasts.field.locale'
+  | 'comms.broadcasts.field.subject'
+  | 'comms.broadcasts.field.body'
+  | 'comms.broadcasts.category.announcement'
+  | 'comms.broadcasts.category.promotion'
+  | 'comms.broadcasts.category.new_trip'
+  | 'comms.broadcasts.category.reminder'
+  | 'comms.broadcasts.category.other'
   // photo gallery
   | 'photoGallery.heading'
   | 'photoGallery.subtitle'
@@ -625,6 +648,30 @@ export const dict: Record<Locale, Record<Key, string>> = {
       'Use {display_name}, {expedition_title}, {salida_starts_at}, {distance_km}, {elevation_m}, {new_tier}, {total_distance_km}.',
     'comms.channel.email': 'Email',
     'comms.channel.whatsapp': 'WhatsApp',
+    'comms.tabs.automated': 'Automated',
+    'comms.tabs.automatedDesc': 'Triggered by events',
+    'comms.tabs.broadcasts': 'Broadcasts',
+    'comms.tabs.broadcastsDesc': 'Sent manually by an admin',
+    'comms.broadcasts.back': '← Back to broadcasts',
+    'comms.broadcasts.subtitle':
+      'Reusable templates for one-off sends: promos, announcements, new-trip launches. Compose once, pick at send time.',
+    'comms.broadcasts.empty': 'No broadcast templates yet. Create one to get started.',
+    'comms.broadcasts.new': 'New broadcast template',
+    'comms.broadcasts.newTitle': 'New broadcast template',
+    'comms.broadcasts.delete': 'Delete template',
+    'comms.broadcasts.save': 'Save template',
+    'comms.broadcasts.saved': 'Saved ✓',
+    'comms.broadcasts.field.name': 'Internal name',
+    'comms.broadcasts.field.category': 'Category',
+    'comms.broadcasts.field.channel': 'Channel',
+    'comms.broadcasts.field.locale': 'Language',
+    'comms.broadcasts.field.subject': 'Subject (email only)',
+    'comms.broadcasts.field.body': 'Body',
+    'comms.broadcasts.category.announcement': 'Announcement',
+    'comms.broadcasts.category.promotion': 'Promotion',
+    'comms.broadcasts.category.new_trip': 'New trip',
+    'comms.broadcasts.category.reminder': 'Reminder',
+    'comms.broadcasts.category.other': 'Other',
 
     'photoGallery.heading': 'Photo gallery',
     'photoGallery.subtitle':
@@ -953,6 +1000,30 @@ export const dict: Record<Locale, Record<Key, string>> = {
       'Usa {display_name}, {expedition_title}, {salida_starts_at}, {distance_km}, {elevation_m}, {new_tier}, {total_distance_km}.',
     'comms.channel.email': 'Correo',
     'comms.channel.whatsapp': 'WhatsApp',
+    'comms.tabs.automated': 'Automáticas',
+    'comms.tabs.automatedDesc': 'Disparadas por eventos',
+    'comms.tabs.broadcasts': 'Envíos',
+    'comms.tabs.broadcastsDesc': 'Las envía un admin manualmente',
+    'comms.broadcasts.back': '← Volver a envíos',
+    'comms.broadcasts.subtitle':
+      'Plantillas reutilizables para envíos puntuales: promos, anuncios, lanzamientos de viajes. Las compones una vez y eliges al enviar.',
+    'comms.broadcasts.empty': 'Aún no hay plantillas de envío. Crea una para empezar.',
+    'comms.broadcasts.new': 'Nueva plantilla',
+    'comms.broadcasts.newTitle': 'Nueva plantilla de envío',
+    'comms.broadcasts.delete': 'Eliminar plantilla',
+    'comms.broadcasts.save': 'Guardar plantilla',
+    'comms.broadcasts.saved': 'Guardada ✓',
+    'comms.broadcasts.field.name': 'Nombre interno',
+    'comms.broadcasts.field.category': 'Categoría',
+    'comms.broadcasts.field.channel': 'Canal',
+    'comms.broadcasts.field.locale': 'Idioma',
+    'comms.broadcasts.field.subject': 'Asunto (solo correo)',
+    'comms.broadcasts.field.body': 'Cuerpo',
+    'comms.broadcasts.category.announcement': 'Anuncio',
+    'comms.broadcasts.category.promotion': 'Promoción',
+    'comms.broadcasts.category.new_trip': 'Nuevo viaje',
+    'comms.broadcasts.category.reminder': 'Recordatorio',
+    'comms.broadcasts.category.other': 'Otro',
 
     'photoGallery.heading': 'Galería de fotos',
     'photoGallery.subtitle':

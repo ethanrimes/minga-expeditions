@@ -31,9 +31,6 @@ export interface CheckoutScreenProps {
   // `${SUPABASE_URL}/functions/v1` — supplied by the host app so this shared
   // screen doesn't depend on Vite/Expo env shapes.
   functionsBaseUrl: string;
-  // When true, render the WhatsApp phone field and require it. Mirrors the
-  // VITE_WHATSAPP_ENABLED / EXPO_PUBLIC_WHATSAPP_ENABLED flag on the host.
-  whatsappEnabled?: boolean;
   // Origin Wompi will redirect to after the user completes/cancels payment.
   // The server appends `/orders/<id>/success` to this when minting the URL.
   returnOrigin: string;
@@ -56,7 +53,6 @@ export function CheckoutScreen({
   salidaStartsAt,
   salidaTimezone,
   functionsBaseUrl,
-  whatsappEnabled = false,
   returnOrigin,
   openCheckoutUrl,
   onClose,
@@ -309,34 +305,30 @@ export function CheckoutScreen({
           </View>
         )}
 
-        {whatsappEnabled ? (
-          <View style={{ gap: spacing.xs }}>
-            <Text
-              style={{ color: theme.text, fontSize: fontSizes.sm, fontWeight: fontWeights.semibold }}
-            >
-              {t('checkout.fieldPhone')}
-            </Text>
-            <View style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'flex-start' }}>
-              <CountryCodeCombobox value={phoneCode} onChange={(c) => setPhoneCode(c)} />
-              <View style={{ flex: 1 }}>
-                <Input
-                  value={phoneNumber}
-                  onChangeText={(v) => setPhoneNumber(v.replace(/[^\d]/g, ''))}
-                  placeholder={t('checkout.fieldPhonePlaceholder')}
-                  keyboardType="phone-pad"
-                />
-              </View>
+        <View style={{ gap: spacing.xs }}>
+          <Text
+            style={{ color: theme.text, fontSize: fontSizes.sm, fontWeight: fontWeights.semibold }}
+          >
+            {t('checkout.fieldPhone')}
+          </Text>
+          <View style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'flex-start' }}>
+            <CountryCodeCombobox value={phoneCode} onChange={(c) => setPhoneCode(c)} />
+            <View style={{ flex: 1 }}>
+              <Input
+                value={phoneNumber}
+                onChangeText={(v) => setPhoneNumber(v.replace(/[^\d]/g, ''))}
+                placeholder={t('checkout.fieldPhonePlaceholder')}
+                keyboardType="phone-pad"
+              />
             </View>
-            <Text style={{ color: theme.textMuted, fontSize: fontSizes.xs, lineHeight: 18 }}>
-              {t('checkout.fieldPhoneHelp')}
-            </Text>
           </View>
-        ) : null}
+          <Text style={{ color: theme.textMuted, fontSize: fontSizes.xs, lineHeight: 18 }}>
+            {t('checkout.fieldPhoneHelp')}
+          </Text>
+        </View>
 
         <Text style={{ color: theme.textMuted, fontSize: fontSizes.xs, lineHeight: 18 }}>
-          {whatsappEnabled
-            ? t('checkout.confirmationEmailWhatsapp')
-            : t('checkout.confirmationEmail')}
+          {t('checkout.confirmationEmailWhatsapp')}
         </Text>
 
         {error ? (

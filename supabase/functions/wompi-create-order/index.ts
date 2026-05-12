@@ -60,7 +60,8 @@ const WOMPI_INTEGRITY_KEY = Deno.env.get('WOMPI_INTEGRITY_KEY')!;
 // client may override via `return_origin` (apps/mobile and apps/mobile-web do
 // this so they land back in the same app); we validate against an allowlist
 // driven by env so it can't be used as an open redirect.
-const PUBLIC_SITE_URL = Deno.env.get('PUBLIC_SITE_URL') ?? 'http://localhost:5173';
+const PUBLIC_SITE_URL =
+  Deno.env.get('PUBLIC_SITE_URL') ?? 'https://minga-expeditions-web.vercel.app';
 // Comma-separated extra origins the client is allowed to request as the
 // post-payment redirect target. PUBLIC_SITE_URL is always allowed.
 const ALLOWED_RETURN_ORIGINS = (Deno.env.get('ALLOWED_RETURN_ORIGINS') ?? '')

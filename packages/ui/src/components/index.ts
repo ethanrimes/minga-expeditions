@@ -6,5 +6,6 @@ export * from './SectionHeader';
 export * from './EmptyState';
 export * from './TierProgress';
 export * from './SignInRequiredModal';
+export * from './PaymentCelebrationModal';
 export * from './CalendarFilterModal';
 export * from './SocialRow';
