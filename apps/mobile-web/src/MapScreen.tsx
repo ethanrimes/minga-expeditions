@@ -4,8 +4,11 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { useTheme } from '@minga/theme';
 import { useT } from '@minga/i18n';
 import { fetchFeedExpeditions, fetchMyActivities, getSupabase } from '@minga/supabase';
-import type { ExpeditionWithAuthor, DbActivity } from '@minga/types';
+import type { ExpeditionWithAuthor, DbActivity, GeoLayerId } from '@minga/types';
+import { GEO_LAYERS, buildGeoTileUrl } from '@minga/types';
 import { buildOsmStyle, COLOMBIA_BOUNDS } from './mapStyle';
+
+const env = import.meta.env as unknown as Record<string, string>;
 
 // Phone-shell friendly MapLibre viewport — deliberately uses DOM directly
 // (not react-native-web primitives) because MapLibre GL JS owns its own DOM
@@ -18,6 +21,10 @@ export function MapScreen({ onOpenExpedition }: { onOpenExpedition: (id: string)
   const [expeditions, setExpeditions] = useState<ExpeditionWithAuthor[]>([]);
   const [activities, setActivities] = useState<DbActivity[]>([]);
   const [ready, setReady] = useState(false);
+  const [visibleLayers, setVisibleLayers] = useState<Record<GeoLayerId, boolean>>(() =>
+    Object.fromEntries(GEO_LAYERS.map((l) => [l.id, l.defaultVisible])) as Record<GeoLayerId, boolean>,
+  );
+  const supabaseUrl = env.VITE_SUPABASE_URL ?? '';
 
   useEffect(() => {
     (async () => {
@@ -47,6 +54,50 @@ export function MapScreen({ onOpenExpedition }: { onOpenExpedition: (id: string)
       mapRef.current = null;
     };
   }, []);
+
+  // Geo reference overlays. Add once with initial visibility; second effect
+  // toggles visibility without tearing down sources.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !ready || !supabaseUrl) return;
+    for (const def of GEO_LAYERS) {
+      const sourceId = `geo-${def.id}`;
+      if (map.getSource(sourceId)) continue;
+      map.addSource(sourceId, {
+        type: 'vector',
+        tiles: [buildGeoTileUrl(supabaseUrl, def.id)],
+        minzoom: def.minzoom,
+        maxzoom: def.maxzoom,
+      });
+      const visible = visibleLayers[def.id];
+      def.styles.forEach((s, i) => {
+        map.addLayer({
+          id: `geo-${def.id}-${i}`,
+          type: s.type,
+          source: sourceId,
+          'source-layer': def.id,
+          minzoom: def.minzoom,
+          paint: s.paint as any,
+          layout: {
+            visibility: visible ? 'visible' : 'none',
+            ...(s.layout as any ?? {}),
+          },
+        } as any);
+      });
+    }
+  }, [ready, supabaseUrl]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !ready) return;
+    for (const def of GEO_LAYERS) {
+      const visible = visibleLayers[def.id];
+      def.styles.forEach((_, i) => {
+        const id = `geo-${def.id}-${i}`;
+        if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', visible ? 'visible' : 'none');
+      });
+    }
+  }, [visibleLayers, ready]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -149,7 +200,12 @@ export function MapScreen({ onOpenExpedition }: { onOpenExpedition: (id: string)
         <div style={{ color: theme.text, fontWeight: 800, fontSize: 22, marginTop: 2 }}>{t('map.title')}</div>
         <div style={{ color: theme.textMuted, fontSize: 12, marginTop: 2 }}>{t('map.subtitle')}</div>
       </div>
-      <div ref={containerRef} style={{ flex: 1, margin: '0 16px 16px', borderRadius: 14, overflow: 'hidden', border: `1px solid ${theme.border}` }} />
+      <div ref={containerRef} style={{ flex: 1, margin: '0 16px 8px', borderRadius: 14, overflow: 'hidden', border: `1px solid ${theme.border}` }} />
+      <GeoLayerChips
+        theme={theme}
+        visible={visibleLayers}
+        onToggle={(id) => setVisibleLayers((p) => ({ ...p, [id]: !p[id] }))}
+      />
       <div style={{ display: 'flex', gap: 10, padding: '0 16px 16px', fontSize: 11, color: theme.text, flexWrap: 'wrap' }}>
         <LegendDot color={theme.accent} label={t('map.legendOfficial')} theme={theme} />
         <LegendDot color={theme.primary} label={t('map.legendUser')} theme={theme} />
@@ -158,6 +214,71 @@ export function MapScreen({ onOpenExpedition }: { onOpenExpedition: (id: string)
           <span style={{ fontWeight: 700 }}>{t('map.legendMyTrack')}</span>
         </div>
       </div>
+    </div>
+  );
+}
+
+function GeoLayerChips({
+  theme,
+  visible,
+  onToggle,
+}: {
+  theme: any;
+  visible: Record<GeoLayerId, boolean>;
+  onToggle: (id: GeoLayerId) => void;
+}) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        gap: 6,
+        flexWrap: 'wrap',
+        padding: '0 16px 8px',
+        overflowX: 'auto',
+      }}
+    >
+      {GEO_LAYERS.map((def) => {
+        const on = visible[def.id];
+        const fillStyle = def.styles.find((s) => s.type === 'fill');
+        const lineStyle = def.styles.find((s) => s.type === 'line');
+        const swatch =
+          (fillStyle?.paint as any)?.['fill-color'] ||
+          (lineStyle?.paint as any)?.['line-color'] ||
+          theme.primary;
+        return (
+          <button
+            key={def.id}
+            type="button"
+            onClick={() => onToggle(def.id)}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 5,
+              padding: '4px 10px',
+              borderRadius: 999,
+              border: `1px solid ${on ? swatch : theme.border}`,
+              background: on ? swatch + '22' : 'transparent',
+              color: theme.text,
+              fontSize: 11,
+              fontWeight: 700,
+              cursor: 'pointer',
+              opacity: on ? 1 : 0.7,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            <span
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: 2,
+                background: swatch,
+                opacity: on ? 1 : 0.4,
+              }}
+            />
+            {def.label}
+          </button>
+        );
+      })}
     </div>
   );
 }

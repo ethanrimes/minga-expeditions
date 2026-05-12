@@ -11,7 +11,7 @@ import {
   seatsRemaining,
 } from '@minga/logic';
 import { useT } from '@minga/i18n';
-import type { DbExpeditionSalida, ExpeditionCategory } from '@minga/types';
+import type { DbExpeditionSalida, ExpeditionCategory, ExpeditionWithAuthor } from '@minga/types';
 import { Screen } from '../primitives/Screen';
 import { Button } from '../primitives/Button';
 import { Avatar } from '../primitives/Avatar';
@@ -23,6 +23,7 @@ import { Icon } from '../primitives/Icon';
 import { CommentThread } from '../components/CommentThread';
 import { PhotoAttribution } from '../components/PhotoAttribution';
 import { EmptyState } from '../components/EmptyState';
+import { SignInRequiredModal, isSignInRequiredError } from '../components/SignInRequiredModal';
 import { useExpedition } from '../hooks/useExpedition';
 
 const CATEGORY_KEY: Record<ExpeditionCategory, any> = {
@@ -39,13 +40,16 @@ export function ExpeditionDetailScreen({
   id,
   onBack,
   onBookSalida,
+  onSignIn,
 }: {
   id: string;
   onBack?: () => void;
   // Called when the user taps "Book this date" on a specific salida. Hosts
-  // wire this to their checkout — apps/web opens the CheckoutDrawer with
-  // salidaId; apps/mobile can route to a web checkout via Linking.
-  onBookSalida?: (salida: DbExpeditionSalida) => void;
+  // wire this to their checkout — apps/mobile + apps/mobile-web push to the
+  // shared CheckoutScreen. The full expedition is passed alongside so the
+  // host can resolve title/price without re-fetching.
+  onBookSalida?: (salida: DbExpeditionSalida, expedition: ExpeditionWithAuthor) => void;
+  onSignIn?: () => void;
 }) {
   const { theme } = useTheme();
   const { t } = useT();
@@ -53,13 +57,7 @@ export function ExpeditionDetailScreen({
   const [draft, setDraft] = useState('');
   const [posting, setPosting] = useState(false);
   const [myRating, setMyRating] = useState<number>(0);
-  const [rateNotice, setRateNotice] = useState<string | null>(null);
-  const [commentNotice, setCommentNotice] = useState<string | null>(null);
-
-  const isSignInRequired = (e: unknown): boolean => {
-    const msg = (e instanceof Error ? e.message : String(e ?? '')).toLowerCase();
-    return msg.includes('sign in');
-  };
+  const [signInPrompt, setSignInPrompt] = useState<string | null>(null);
 
   if (loading && !expedition) {
     return (
@@ -81,14 +79,22 @@ export function ExpeditionDetailScreen({
   const postRoot = async () => {
     if (!draft.trim()) return;
     setPosting(true);
-    setCommentNotice(null);
     try {
       await rootComment(draft.trim());
       setDraft('');
     } catch (e) {
-      setCommentNotice(isSignInRequired(e) ? t('detail.signInToComment') : t('empty.couldNotLoad'));
+      if (isSignInRequiredError(e)) setSignInPrompt(t('detail.signInToComment'));
     } finally {
       setPosting(false);
+    }
+  };
+
+  const replyGuarded = async (parentId: string, body: string) => {
+    try {
+      await reply(parentId, body);
+    } catch (e) {
+      if (isSignInRequiredError(e)) setSignInPrompt(t('detail.signInToComment'));
+      else throw e;
     }
   };
 
@@ -245,7 +251,7 @@ export function ExpeditionDetailScreen({
                   {onBookSalida ? (
                     <Button
                       label={t('salida.book')}
-                      onPress={() => onBookSalida(s)}
+                      onPress={() => onBookSalida(s, expedition)}
                       disabled={sold}
                       variant={sold ? 'secondary' : 'primary'}
                     />
@@ -264,7 +270,7 @@ export function ExpeditionDetailScreen({
           leftIcon={<Icon name="heart" size={14} color={theme.text} strokeWidth={2.2} />}
           onPress={() => {
             void like().catch((e) => {
-              setRateNotice(isSignInRequired(e) ? t('detail.signInToLike') : t('empty.couldNotLoad'));
+              if (isSignInRequiredError(e)) setSignInPrompt(t('detail.signInToLike'));
             });
           }}
         />
@@ -283,17 +289,13 @@ export function ExpeditionDetailScreen({
           size={fontSizes['2xl']}
           onChange={async (stars) => {
             setMyRating(stars);
-            setRateNotice(null);
             try {
               await rate(stars);
             } catch (e) {
-              setRateNotice(isSignInRequired(e) ? t('detail.signInToRate') : t('empty.couldNotLoad'));
+              if (isSignInRequiredError(e)) setSignInPrompt(t('detail.signInToRate'));
             }
           }}
         />
-        {rateNotice ? (
-          <Text style={{ color: theme.textMuted, fontSize: fontSizes.sm }}>{rateNotice}</Text>
-        ) : null}
       </View>
 
       <View style={{ gap: spacing.sm, marginTop: spacing.lg }}>
@@ -303,18 +305,19 @@ export function ExpeditionDetailScreen({
         <Input
           placeholder={t('detail.commentPlaceholder')}
           value={draft}
-          onChangeText={(v) => {
-            setDraft(v);
-            if (commentNotice) setCommentNotice(null);
-          }}
+          onChangeText={setDraft}
           multiline
         />
         <Button label={t('detail.post')} loading={posting} onPress={postRoot} />
-        {commentNotice ? (
-          <Text style={{ color: theme.textMuted, fontSize: fontSizes.sm }}>{commentNotice}</Text>
-        ) : null}
-        <CommentThread comments={comments} onReply={reply} />
+        <CommentThread comments={comments} onReply={replyGuarded} />
       </View>
+
+      <SignInRequiredModal
+        visible={signInPrompt != null}
+        message={signInPrompt ?? ''}
+        onClose={() => setSignInPrompt(null)}
+        onSignIn={onSignIn}
+      />
     </Screen>
   );
 }

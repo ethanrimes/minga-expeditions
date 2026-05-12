@@ -5,6 +5,7 @@ import { useTheme, spacing, fontSizes, fontWeights } from '@minga/theme';
 import { useT } from '@minga/i18n';
 import { fetchFeedExpeditions, fetchMyActivities, getSupabase } from '@minga/supabase';
 import type { ExpeditionWithAuthor, DbActivity } from '@minga/types';
+import { GEO_LAYERS } from '@minga/types';
 import { buildMapHtml, type MapPayload } from './mapHtml';
 
 // Native map screen: MapLibre GL JS rendered inside a WebView so it works
@@ -66,6 +67,8 @@ export function MapScreen({ onOpenExpedition }: { onOpenExpedition: (id: string)
           surface: theme.surface,
           surfaceAlt: theme.surfaceAlt,
           background: theme.background,
+          supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL ?? '',
+          geoLayers: GEO_LAYERS,
           labels,
         };
         setHtml(buildMapHtml(payload));

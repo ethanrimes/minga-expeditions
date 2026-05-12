@@ -1,25 +1,25 @@
 import React, { useState } from 'react';
 import { useTheme } from '@minga/theme';
+import { useT } from '@minga/i18n';
 import { submitVendorProposal } from '@minga/supabase';
 import type { VendorType } from '@minga/types';
 import { supabase } from '../supabase';
 
 // Public submission form. No auth required — vendor_proposals RLS allows anon
 // inserts. The admin reviews submissions in apps/admin/vendor-proposals.
-// i18n for these labels is intentionally inline for now; will be folded into
-// packages/i18n in a follow-up so the marketing site stays bilingual.
 
-const VENDOR_TYPES: { value: VendorType; label: string; hint: string }[] = [
-  { value: 'full_experience', label: 'Full experience', hint: 'A complete tour or expedition you operate end-to-end.' },
-  { value: 'transportation', label: 'Transportation', hint: 'Shuttles, 4×4 transfers, boat rides, etc.' },
-  { value: 'lodging',        label: 'Lodging',        hint: 'Cabins, glamping, hostels, eco-lodges.' },
-  { value: 'guide',          label: 'Guide',          hint: 'Certified individual or team guiding services.' },
-  { value: 'food',           label: 'Food',           hint: 'Catering, on-trail meals, restaurant partnerships.' },
-  { value: 'other',          label: 'Other',          hint: 'Equipment rentals, photography, anything else.' },
+const VENDOR_TYPE_VALUES: VendorType[] = [
+  'full_experience',
+  'transportation',
+  'lodging',
+  'guide',
+  'food',
+  'other',
 ];
 
 export function PartnersPage() {
   const { theme } = useTheme();
+  const { t } = useT();
   const [vendor_type, setVendorType] = useState<VendorType>('full_experience');
   const [vendor_name, setVendorName] = useState('');
   const [contact_email, setEmail] = useState('');
@@ -37,7 +37,7 @@ export function PartnersPage() {
     e.preventDefault();
     setError(null);
     if (!contact_email.trim() && !contact_phone.trim()) {
-      setError('Add at least one way for us to reach you (email or phone).');
+      setError(t('partners.errorContactRequired'));
       return;
     }
     setSubmitting(true);
@@ -64,10 +64,9 @@ export function PartnersPage() {
   if (done) {
     return (
       <div style={{ maxWidth: 720, margin: '0 auto', padding: '64px 24px' }}>
-        <h1 style={{ color: theme.text, fontSize: 32, fontWeight: 800 }}>Thanks — we got it.</h1>
+        <h1 style={{ color: theme.text, fontSize: 32, fontWeight: 800 }}>{t('partners.thanksTitle')}</h1>
         <p style={{ color: theme.textMuted, marginTop: 12, lineHeight: 1.6 }}>
-          A Minga team member will review your proposal and get back to you on the contact you
-          provided. Most reviews happen within five business days.
+          {t('partners.thanksBody')}
         </p>
         <button
           onClick={() => {
@@ -92,7 +91,7 @@ export function PartnersPage() {
             cursor: 'pointer',
           }}
         >
-          Submit another
+          {t('partners.submitAnother')}
         </button>
       </div>
     );
@@ -102,27 +101,26 @@ export function PartnersPage() {
     <div style={{ maxWidth: 720, margin: '0 auto', padding: '48px 24px 96px' }}>
       <header style={{ marginBottom: 32 }}>
         <p style={{ color: theme.primary, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', fontSize: 12 }}>
-          Become a partner
+          {t('partners.eyebrow')}
         </p>
         <h1 style={{ color: theme.text, fontSize: 36, fontWeight: 800, marginTop: 8 }}>
-          Offer your service to Minga travelers.
+          {t('partners.title')}
         </h1>
         <p style={{ color: theme.textMuted, marginTop: 12, lineHeight: 1.6 }}>
-          Tell us about an experience, route, transport, lodging, or any other service you offer.
-          We'll review it and reach out to you. No account required.
+          {t('partners.intro')}
         </p>
       </header>
 
       <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-        <Field label="What are you offering?" theme={theme}>
+        <Field label={t('partners.fieldOfferType')} theme={theme}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 8 }}>
-            {VENDOR_TYPES.map((t) => {
-              const selected = vendor_type === t.value;
+            {VENDOR_TYPE_VALUES.map((value) => {
+              const selected = vendor_type === value;
               return (
                 <button
-                  key={t.value}
+                  key={value}
                   type="button"
-                  onClick={() => setVendorType(t.value)}
+                  onClick={() => setVendorType(value)}
                   style={{
                     textAlign: 'left',
                     padding: '12px 14px',
@@ -134,47 +132,72 @@ export function PartnersPage() {
                     cursor: 'pointer',
                   }}
                 >
-                  <div>{t.label}</div>
-                  <div style={{ fontWeight: 400, fontSize: 12, marginTop: 4, opacity: 0.85 }}>{t.hint}</div>
+                  <div>{t(`partners.vendorType.${value}` as const)}</div>
+                  <div style={{ fontWeight: 400, fontSize: 12, marginTop: 4, opacity: 0.85 }}>
+                    {t(`partners.vendorHint.${value}` as const)}
+                  </div>
                 </button>
               );
             })}
           </div>
         </Field>
 
-        <Field label="Your business or organization name" theme={theme}>
+        <Field label={t('partners.fieldBusinessName')} theme={theme}>
           <Input value={vendor_name} onChange={setVendorName} required theme={theme} />
         </Field>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-          <Field label="Email" theme={theme}>
+          <Field label={t('partners.fieldEmail')} theme={theme}>
             <Input value={contact_email} onChange={setEmail} type="email" theme={theme} />
           </Field>
-          <Field label="Phone (WhatsApp)" theme={theme}>
-            <Input value={contact_phone} onChange={setPhone} type="tel" theme={theme} placeholder="+57 …" />
+          <Field label={t('partners.fieldPhone')} theme={theme}>
+            <Input
+              value={contact_phone}
+              onChange={setPhone}
+              type="tel"
+              theme={theme}
+              placeholder={t('partners.fieldPhonePlaceholder')}
+            />
           </Field>
         </div>
         <p style={{ color: theme.textMuted, fontSize: 12, marginTop: -12 }}>
-          At least one is required. We send all confirmations on WhatsApp.
+          {t('partners.fieldContactNote')}
         </p>
 
-        <Field label="Region or city served" theme={theme}>
-          <Input value={region} onChange={setRegion} theme={theme} placeholder="Antioquia · Sierra Nevada · …" />
+        <Field label={t('partners.fieldRegion')} theme={theme}>
+          <Input
+            value={region}
+            onChange={setRegion}
+            theme={theme}
+            placeholder={t('partners.fieldRegionPlaceholder')}
+          />
         </Field>
 
-        <Field label="Short title for your offer" theme={theme}>
-          <Input value={title} onChange={setTitle} required theme={theme} placeholder="2-day Cocora Valley wax-palm trek" />
+        <Field label={t('partners.fieldTitle')} theme={theme}>
+          <Input
+            value={title}
+            onChange={setTitle}
+            required
+            theme={theme}
+            placeholder={t('partners.fieldTitlePlaceholder')}
+          />
         </Field>
 
-        <Field label="Describe what's included, capacity, schedule, etc." theme={theme}>
+        <Field label={t('partners.fieldDescription')} theme={theme}>
           <Textarea value={description} onChange={setDescription} required theme={theme} rows={6} />
         </Field>
 
-        <Field label="Pricing notes (optional)" theme={theme}>
-          <Textarea value={pricing_notes} onChange={setPricingNotes} theme={theme} rows={3} placeholder="Per-person rate, group discounts, what's included…" />
+        <Field label={t('partners.fieldPricingNotes')} theme={theme}>
+          <Textarea
+            value={pricing_notes}
+            onChange={setPricingNotes}
+            theme={theme}
+            rows={3}
+            placeholder={t('partners.fieldPricingPlaceholder')}
+          />
         </Field>
 
-        <Field label="Brochure or photo gallery URL (optional)" theme={theme}>
+        <Field label={t('partners.fieldAttachments')} theme={theme}>
           <Input value={attachments_url} onChange={setAttachmentsUrl} type="url" theme={theme} placeholder="https://…" />
         </Field>
 
@@ -198,7 +221,7 @@ export function PartnersPage() {
             opacity: submitting ? 0.7 : 1,
           }}
         >
-          {submitting ? 'Submitting…' : 'Submit proposal'}
+          {submitting ? t('partners.submitting') : t('partners.submit')}
         </button>
       </form>
     </div>

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useTheme } from '@minga/theme';
+import { useT } from '@minga/i18n';
 import { formatPriceCents } from '@minga/logic';
 import type { OrderStatus } from '@minga/types';
 
@@ -25,6 +26,7 @@ const FUNCTIONS_BASE = `${env.VITE_SUPABASE_URL}/functions/v1`;
 export function OrderSuccessPage() {
   const { id } = useParams<{ id: string }>();
   const { theme } = useTheme();
+  const { t } = useT();
   const [order, setOrder] = useState<OrderResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const stopped = useRef(false);
@@ -47,7 +49,7 @@ export function OrderSuccessPage() {
           });
           const json = (await res.json()) as OrderResponse | { error: string };
           if (!res.ok || 'error' in json) {
-            throw new Error('error' in json ? json.error : 'Failed to load order');
+            throw new Error('error' in json ? json.error : t('order.errorLoadFailed'));
           }
           if (cancelled) return;
           setOrder(json);
@@ -70,7 +72,7 @@ export function OrderSuccessPage() {
 
   return (
     <div style={{ maxWidth: 640, margin: '0 auto', padding: '64px 24px' }}>
-      <Header status={order?.status} theme={theme} />
+      <Header status={order?.status} theme={theme} t={t} />
 
       {order ? (
         <div
@@ -85,7 +87,7 @@ export function OrderSuccessPage() {
           {order.expedition ? (
             <div>
               <div style={{ color: theme.textMuted, fontSize: 12, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase' }}>
-                Expedition
+                {t('order.expeditionLabel')}
               </div>
               <div style={{ color: theme.text, fontSize: 22, fontWeight: 800, marginTop: 4 }}>{order.expedition.title}</div>
               <div style={{ color: theme.textMuted, marginTop: 4 }}>
@@ -94,7 +96,7 @@ export function OrderSuccessPage() {
             </div>
           ) : null}
           <div style={{ marginTop: 16, color: theme.text }}>
-            <strong>{formatPriceCents(order.amount_cents, { currency: order.currency, freeLabel: 'Free' })}</strong>
+            <strong>{formatPriceCents(order.amount_cents, { currency: order.currency, freeLabel: t('common.free') })}</strong>
           </div>
           {order.wompi_status_message ? (
             <div style={{ marginTop: 16, color: theme.textMuted, fontSize: 14 }}>{order.wompi_status_message}</div>
@@ -112,10 +114,9 @@ export function OrderSuccessPage() {
             borderRadius: 16,
           }}
         >
-          <div style={{ color: theme.text, fontWeight: 700 }}>Save your booking — create a Minga account</div>
+          <div style={{ color: theme.text, fontWeight: 700 }}>{t('order.saveBookingTitle')}</div>
           <div style={{ color: theme.textMuted, fontSize: 14, marginTop: 6, lineHeight: 1.5 }}>
-            Sign up with the same email or WhatsApp number you just used and we'll attach this trip
-            to your profile so you can chat with other travelers and track your activity.
+            {t('order.saveBookingBody')}
           </div>
           <Link
             to="/auth"
@@ -129,7 +130,7 @@ export function OrderSuccessPage() {
               fontWeight: 800,
             }}
           >
-            Create account
+            {t('order.createAccount')}
           </Link>
         </div>
       ) : null}
@@ -141,7 +142,7 @@ export function OrderSuccessPage() {
       {order?.expedition ? (
         <div style={{ marginTop: 24 }}>
           <Link to={`/expeditions/${order.expedition.id}`} style={{ color: theme.primary, fontWeight: 700 }}>
-            ← Back to expedition
+            {t('order.backToExpedition')}
           </Link>
         </div>
       ) : null}
@@ -149,22 +150,30 @@ export function OrderSuccessPage() {
   );
 }
 
-function Header({ status, theme }: { status?: OrderStatus; theme: ReturnType<typeof useTheme>['theme'] }) {
+function Header({
+  status,
+  theme,
+  t,
+}: {
+  status?: OrderStatus;
+  theme: ReturnType<typeof useTheme>['theme'];
+  t: ReturnType<typeof useT>['t'];
+}) {
   const { title, sub, color } = (() => {
     switch (status) {
       case 'approved':
-        return { title: 'Payment confirmed.', sub: "We're sending your confirmation now.", color: theme.primary };
+        return { title: t('order.status.approvedTitle'), sub: t('order.status.approvedSub'), color: theme.primary };
       case 'declined':
-        return { title: 'Payment declined.', sub: 'Try again or use a different payment method.', color: theme.danger };
+        return { title: t('order.status.declinedTitle'), sub: t('order.status.declinedSub'), color: theme.danger };
       case 'voided':
-        return { title: 'Payment voided.', sub: 'No charge was applied.', color: theme.textMuted };
+        return { title: t('order.status.voidedTitle'), sub: t('order.status.voidedSub'), color: theme.textMuted };
       case 'error':
-        return { title: 'Something went wrong.', sub: 'No charge was applied. Please try again.', color: theme.danger };
+        return { title: t('order.status.errorTitle'), sub: t('order.status.errorSub'), color: theme.danger };
       case 'refunded':
-        return { title: 'Payment refunded.', sub: 'We sent the funds back to your card.', color: theme.textMuted };
+        return { title: t('order.status.refundedTitle'), sub: t('order.status.refundedSub'), color: theme.textMuted };
       case 'pending':
       default:
-        return { title: 'Confirming your payment…', sub: 'This usually takes a few seconds.', color: theme.textMuted };
+        return { title: t('order.status.pendingTitle'), sub: t('order.status.pendingSub'), color: theme.textMuted };
     }
   })();
   return (

@@ -92,6 +92,7 @@ export interface DbExpedition {
   cover_photo_url: string | null;
   is_official: boolean; // true for Minga-published expeditions
   is_published: boolean;
+  terrain_tags: TerrainTag[];
   created_at: string;
   updated_at: string;
 }

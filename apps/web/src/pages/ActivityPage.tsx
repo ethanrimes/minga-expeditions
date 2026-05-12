@@ -19,6 +19,7 @@ import type { ActivityType, DbActivity, DbActivityComment, DbActivityRating } fr
 import { supabase } from '../supabase';
 import { buildOsmStyle, COLOMBIA_BOUNDS } from '../map/style';
 import { shareStory } from '../storyExport';
+import { SignInRequiredModal, isSignInRequiredError } from '../components/SignInRequiredModal';
 
 const env = import.meta.env as unknown as Record<string, string>;
 const SUPABASE_URL = env.VITE_SUPABASE_URL ?? '';
@@ -53,6 +54,7 @@ export function ActivityPage() {
   const [rating, setRating] = useState<DbActivityRating | null>(null);
   const [draft, setDraft] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [signInPrompt, setSignInPrompt] = useState<string | null>(null);
 
   const load = async () => {
     if (!id) return;
@@ -157,7 +159,8 @@ export function ActivityPage() {
       setDraft('');
       await load();
     } catch (e: any) {
-      setError(e?.message ?? t('common.loadError'));
+      if (isSignInRequiredError(e)) setSignInPrompt(t('common.signInToComment'));
+      else setError(e?.message ?? t('common.loadError'));
     }
   };
   const remove = async (cid: string) => {
@@ -165,7 +168,8 @@ export function ActivityPage() {
       await deleteActivityComment(supabase, cid);
       await load();
     } catch (e: any) {
-      setError(e?.message ?? t('common.loadError'));
+      if (isSignInRequiredError(e)) setSignInPrompt(e.message);
+      else setError(e?.message ?? t('common.loadError'));
     }
   };
   const rate = async (stars: 1 | 2 | 3 | 4 | 5) => {
@@ -174,7 +178,8 @@ export function ActivityPage() {
       await upsertActivityRating(supabase, { activity_id: id, stars });
       await load();
     } catch (e: any) {
-      setError(e?.message ?? t('common.loadError'));
+      if (isSignInRequiredError(e)) setSignInPrompt(t('common.signInToRate'));
+      else setError(e?.message ?? t('common.loadError'));
     }
   };
 
@@ -374,6 +379,10 @@ export function ActivityPage() {
       </section>
 
       {error ? <p style={{ color: theme.danger, marginTop: 16 }}>{error}</p> : null}
+
+      {signInPrompt ? (
+        <SignInRequiredModal message={signInPrompt} onClose={() => setSignInPrompt(null)} />
+      ) : null}
     </div>
   );
 }

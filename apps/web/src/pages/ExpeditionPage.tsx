@@ -29,6 +29,7 @@ import type {
 } from '@minga/types';
 import { supabase } from '../supabase';
 import { CheckoutDrawer } from '../components/CheckoutDrawer';
+import { SignInRequiredModal, isSignInRequiredError } from '../components/SignInRequiredModal';
 
 const TIER_KEY: Record<TierLevel, any> = {
   bronze: 'tier.bronze',
@@ -50,6 +51,7 @@ export function ExpeditionPage() {
   const [myStars, setMyStars] = useState<number>(0);
   const [checkoutSalidaId, setCheckoutSalidaId] = useState<string | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [signInPrompt, setSignInPrompt] = useState<string | null>(null);
 
   const load = async () => {
     if (!id) return;
@@ -109,7 +111,8 @@ export function ExpeditionPage() {
       await toggleLike(supabase, expedition.id);
       await load();
     } catch (e: any) {
-      setError(e?.message ?? t('common.signInToLike'));
+      if (isSignInRequiredError(e)) setSignInPrompt(t('common.signInToLike'));
+      else setError(e?.message ?? t('common.signInToLike'));
     }
   };
 
@@ -119,7 +122,8 @@ export function ExpeditionPage() {
       await rateExpedition(supabase, { expedition_id: expedition.id, stars });
       await load();
     } catch (e: any) {
-      setError(e?.message ?? t('common.signInToRate'));
+      if (isSignInRequiredError(e)) setSignInPrompt(t('common.signInToRate'));
+      else setError(e?.message ?? t('common.signInToRate'));
     }
   };
 
@@ -130,7 +134,8 @@ export function ExpeditionPage() {
       setDraft('');
       await load();
     } catch (e: any) {
-      setError(e?.message ?? t('common.signInToComment'));
+      if (isSignInRequiredError(e)) setSignInPrompt(t('common.signInToComment'));
+      else setError(e?.message ?? t('common.signInToComment'));
     }
   };
 
@@ -375,6 +380,10 @@ export function ExpeditionPage() {
           </div>
         </aside>
       </div>
+
+      {signInPrompt ? (
+        <SignInRequiredModal message={signInPrompt} onClose={() => setSignInPrompt(null)} />
+      ) : null}
 
       {checkoutOpen ? (
         <CheckoutDrawer

@@ -15,3 +15,34 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 999px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.3); }
+
+/* Dual-range slider — re-enable pointer events on the thumb so the user can
+   drag it while leaving the rest of the input transparent to clicks. */
+input[type="range"].minga-dual-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  pointer-events: auto;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--minga-primary, #1F8A4C);
+  border: 2px solid var(--minga-bg, #fff);
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+}
+input[type="range"].minga-dual-range::-moz-range-thumb {
+  pointer-events: auto;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--minga-primary, #1F8A4C);
+  border: 2px solid var(--minga-bg, #fff);
+  cursor: pointer;
+}
+input[type="range"].minga-dual-range::-webkit-slider-runnable-track {
+  background: transparent;
+  height: 4px;
+}
+input[type="range"].minga-dual-range::-moz-range-track {
+  background: transparent;
+  height: 4px;
+}

@@ -31,6 +31,8 @@
     "node": ">=20"
   },
   "devDependencies": {
+    "pg": "^8.13.1",
+    "shapefile": "^0.6.6",
     "typescript": "^6.0.3",
     "vitest": "^4.1.6"
   },

@@ -19,7 +19,27 @@ export type StartLocationStream = (
   onError?: (err: Error) => void,
 ) => Promise<LocationStreamHandle> | LocationStreamHandle;
 
-export function useTracker(startLocationStream: StartLocationStream) {
+// Tri-state-plus-unsupported permission model used by every platform adapter.
+//   granted      — proceed to start streaming
+//   denied       — user previously refused; we must direct them to OS/browser
+//                  settings, we can no longer trigger a system prompt
+//   undetermined — never asked; calling requestPermission() will prompt
+//   unsupported  — geolocation API unavailable in this runtime
+export type LocationPermissionStatus = 'granted' | 'denied' | 'undetermined' | 'unsupported';
+
+export interface LocationAdapter {
+  // Cheap read: returns the current OS/browser permission state without
+  // showing any prompt. Used on mount to decide whether the Start button is
+  // already gated.
+  getPermissionStatus(): Promise<LocationPermissionStatus>;
+  // Triggers the system prompt if the status is `undetermined`. Returns the
+  // resulting status; for `denied`/`granted` it resolves immediately without
+  // prompting again.
+  requestPermission(): Promise<LocationPermissionStatus>;
+  startLocationStream: StartLocationStream;
+}
+
+export function useTracker(adapter: LocationAdapter) {
   const [status, setStatus] = useState<TrackerStatus>('idle');
   const [points, setPoints] = useState<TrackPoint[]>([]);
   const [elapsed, setElapsed] = useState(0); // seconds
@@ -48,7 +68,7 @@ export function useTracker(startLocationStream: StartLocationStream) {
   const start = useCallback(async () => {
     setError(null);
     try {
-      const handle = await startLocationStream(
+      const handle = await adapter.startLocationStream(
         (p) => setPoints((prev) => [...prev, p]),
         (err) => setError(err.message),
       );
@@ -61,7 +81,7 @@ export function useTracker(startLocationStream: StartLocationStream) {
     } catch (e: any) {
       setError(e?.message ?? 'Location unavailable');
     }
-  }, [startLocationStream]);
+  }, [adapter]);
 
   const pause = useCallback(() => {
     if (status !== 'recording') return;

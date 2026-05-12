@@ -5,9 +5,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTheme } from '@minga/theme';
 import { useT } from '@minga/i18n';
 import { fetchFeedExpeditions, fetchMyActivities, getSupabase } from '@minga/supabase';
-import type { ExpeditionWithAuthor, DbActivity } from '@minga/types';
+import type { ExpeditionWithAuthor, DbActivity, GeoLayerId } from '@minga/types';
+import { GEO_LAYERS, buildGeoTileUrl } from '@minga/types';
 import { supabase } from '../supabase';
 import { buildOsmStyle, COLOMBIA_BOUNDS } from '../map/style';
+
+const env = import.meta.env as unknown as Record<string, string>;
 
 // Colombia-centered MapLibre view with three layers:
 //   1. Expedition markers (color-coded by Minga-official vs community)
@@ -26,6 +29,10 @@ export function MapPage() {
   const [expeditions, setExpeditions] = useState<ExpeditionWithAuthor[]>([]);
   const [activities, setActivities] = useState<DbActivity[]>([]);
   const [ready, setReady] = useState(false);
+  const [visibleLayers, setVisibleLayers] = useState<Record<GeoLayerId, boolean>>(() =>
+    Object.fromEntries(GEO_LAYERS.map((l) => [l.id, l.defaultVisible])) as Record<GeoLayerId, boolean>,
+  );
+  const supabaseUrl = env.VITE_SUPABASE_URL ?? '';
 
   // Fetch expeditions + (optional) my activities alongside one another.
   useEffect(() => {
@@ -58,6 +65,54 @@ export function MapPage() {
       mapRef.current = null;
     };
   }, []);
+
+  // Geo reference overlays (PNN, páramos, glaciers, biomes, admin levels…).
+  // Add every layer once with its initial visibility; a second effect below
+  // mutates visibility without tearing down sources.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !ready || !supabaseUrl) return;
+    for (const def of GEO_LAYERS) {
+      const sourceId = `geo-${def.id}`;
+      if (map.getSource(sourceId)) continue;
+      map.addSource(sourceId, {
+        type: 'vector',
+        tiles: [buildGeoTileUrl(supabaseUrl, def.id)],
+        minzoom: def.minzoom,
+        maxzoom: def.maxzoom,
+      });
+      const visible = visibleLayers[def.id];
+      def.styles.forEach((s, i) => {
+        map.addLayer({
+          id: `geo-${def.id}-${i}`,
+          type: s.type,
+          source: sourceId,
+          'source-layer': def.id,
+          minzoom: def.minzoom,
+          paint: s.paint as any,
+          layout: {
+            visibility: visible ? 'visible' : 'none',
+            ...(s.layout as any ?? {}),
+          },
+        } as any);
+      });
+    }
+    // Sources/layers stay attached for the lifetime of the map; cleanup happens
+    // in the map.remove() teardown in the init effect above.
+  }, [ready, supabaseUrl]);
+
+  // Mirror visibleLayers state into MapLibre layer visibility.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !ready) return;
+    for (const def of GEO_LAYERS) {
+      const visible = visibleLayers[def.id];
+      def.styles.forEach((_, i) => {
+        const id = `geo-${def.id}-${i}`;
+        if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', visible ? 'visible' : 'none');
+      });
+    }
+  }, [visibleLayers, ready]);
 
   // Render expedition markers whenever the list updates.
   useEffect(() => {
@@ -203,6 +258,12 @@ export function MapPage() {
         <Legend theme={theme} t={t} />
       </div>
 
+      <GeoLayerChips
+        theme={theme}
+        visible={visibleLayers}
+        onToggle={(id) => setVisibleLayers((p) => ({ ...p, [id]: !p[id] }))}
+      />
+
       <div
         ref={containerRef}
         style={{
@@ -272,6 +333,77 @@ function Legend({ theme, t }: { theme: any; t: (k: any) => string }) {
         <span style={{ width: 24, height: 4, background: theme.primary, borderRadius: 2 }} />
         <span style={{ color: theme.text, fontSize: 13, fontWeight: 600 }}>{t('map.legendMyTrack')}</span>
       </div>
+    </div>
+  );
+}
+
+function GeoLayerChips({
+  theme,
+  visible,
+  onToggle,
+}: {
+  theme: any;
+  visible: Record<GeoLayerId, boolean>;
+  onToggle: (id: GeoLayerId) => void;
+}) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        gap: 8,
+        flexWrap: 'wrap',
+        margin: '12px 0 12px 0',
+        padding: '10px 14px',
+        background: theme.surface,
+        border: `1px solid ${theme.border}`,
+        borderRadius: 12,
+        alignItems: 'center',
+      }}
+    >
+      <span style={{ color: theme.textMuted, fontSize: 11, fontWeight: 700, letterSpacing: 1, marginRight: 4 }}>
+        CAPAS
+      </span>
+      {GEO_LAYERS.map((def) => {
+        const on = visible[def.id];
+        const fillStyle = def.styles.find((s) => s.type === 'fill');
+        const lineStyle = def.styles.find((s) => s.type === 'line');
+        const swatch =
+          (fillStyle?.paint as any)?.['fill-color'] ||
+          (lineStyle?.paint as any)?.['line-color'] ||
+          theme.primary;
+        return (
+          <button
+            key={def.id}
+            type="button"
+            onClick={() => onToggle(def.id)}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '6px 12px',
+              borderRadius: 999,
+              border: `1px solid ${on ? swatch : theme.border}`,
+              background: on ? swatch + '22' : 'transparent',
+              color: theme.text,
+              fontSize: 12,
+              fontWeight: 700,
+              cursor: 'pointer',
+              opacity: on ? 1 : 0.7,
+            }}
+          >
+            <span
+              style={{
+                width: 10,
+                height: 10,
+                borderRadius: 2,
+                background: swatch,
+                opacity: on ? 1 : 0.4,
+              }}
+            />
+            {def.label}
+          </button>
+        );
+      })}
     </div>
   );
 }

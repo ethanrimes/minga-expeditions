@@ -934,7 +934,8 @@ const SALIDA_EXPEDITION_SELECT = `
   *,
   expedition:expeditions!expedition_salidas_expedition_id_fkey (
     id, title, category, category_id, location_name, region, country,
-    cover_photo_url, difficulty, price_cents, currency, is_official, is_published
+    cover_photo_url, difficulty, price_cents, currency, is_official, is_published,
+    terrain_tags
   )
 `;
 
@@ -969,6 +970,7 @@ export async function fetchSalidaById(
 }
 
 export interface CalendarSalidaFilters {
+  // Legacy single-select fields — still supported.
   category?: string | null;       // matches expeditions.category enum
   category_id?: string | null;
   region?: string | null;
@@ -981,6 +983,14 @@ export interface CalendarSalidaFilters {
   // Only show free or only show paid expeditions. If both true or both false, no filter.
   onlyFree?: boolean;
   onlyPaid?: boolean;
+
+  // Multiselect versions used by the calendar filter modal. Empty array = no filter.
+  categoryIds?: string[];
+  regions?: string[];
+  terrainTags?: string[];
+  // Minimum average rating (1–5). Salidas whose expedition has fewer than one
+  // rating count as 0.
+  minRating?: number | null;
 }
 
 export async function fetchSalidasInRange(
@@ -1001,20 +1011,58 @@ export async function fetchSalidasInRange(
   if (error) throw error;
   const rows = (data ?? []) as unknown as SalidaWithExpedition[];
 
+  // Pre-compute avg ratings per expedition for the rating filter. Skip the
+  // round-trip when the caller didn't ask for it.
+  if (filters.minRating != null && filters.minRating > 0) {
+    const expeditionIds = Array.from(new Set(rows.map((s) => s.expedition?.id).filter(Boolean) as string[]));
+    if (expeditionIds.length > 0) {
+      const { data: ratings } = await client
+        .from('ratings')
+        .select('expedition_id, stars')
+        .in('expedition_id', expeditionIds);
+      const acc = new Map<string, { sum: number; n: number }>();
+      for (const r of (ratings ?? []) as { expedition_id: string; stars: number }[]) {
+        const cur = acc.get(r.expedition_id) ?? { sum: 0, n: 0 };
+        cur.sum += r.stars;
+        cur.n += 1;
+        acc.set(r.expedition_id, cur);
+      }
+      for (const s of rows) {
+        const a = acc.get(s.expedition?.id ?? '');
+        s.expedition.avg_rating = a ? a.sum / a.n : null;
+      }
+    }
+  }
+
   return rows.filter((s) => {
     const e = s.expedition;
     if (!e || !e.is_published) return false;
     if (filters.category && e.category !== filters.category) return false;
     if (filters.category_id && e.category_id !== filters.category_id) return false;
+    if (filters.categoryIds && filters.categoryIds.length > 0 && !filters.categoryIds.includes(e.category_id)) {
+      return false;
+    }
     if (filters.region && e.region !== filters.region) return false;
+    if (filters.regions && filters.regions.length > 0 && (!e.region || !filters.regions.includes(e.region))) {
+      return false;
+    }
     if (filters.country && e.country !== filters.country) return false;
     if (filters.difficulty != null && e.difficulty !== filters.difficulty) return false;
+    if (filters.terrainTags && filters.terrainTags.length > 0) {
+      const tags = e.terrain_tags ?? [];
+      if (!filters.terrainTags.some((t) => tags.includes(t as never))) return false;
+    }
 
     const effectivePrice = s.price_cents ?? e.price_cents;
     if (filters.minPriceCents != null && effectivePrice < filters.minPriceCents) return false;
     if (filters.maxPriceCents != null && effectivePrice > filters.maxPriceCents) return false;
     if (filters.onlyFree && !filters.onlyPaid && effectivePrice > 0) return false;
     if (filters.onlyPaid && !filters.onlyFree && effectivePrice <= 0) return false;
+
+    if (filters.minRating != null && filters.minRating > 0) {
+      const r = e.avg_rating ?? 0;
+      if (r < filters.minRating) return false;
+    }
     return true;
   });
 }

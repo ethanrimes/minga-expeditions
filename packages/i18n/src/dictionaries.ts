@@ -16,7 +16,6 @@ export type TranslationKey =
   | 'nav.signIn'
   | 'nav.signOut'
   | 'tab.feed'
-  | 'tab.explore'
   | 'tab.map'
   | 'tab.track'
   | 'tab.profile'
@@ -87,6 +86,13 @@ export type TranslationKey =
   | 'track.statusRecording'
   | 'track.statusPaused'
   | 'track.statusEnded'
+  | 'track.locationGateTitle'
+  | 'track.locationGateBody'
+  | 'track.locationGateCta'
+  | 'track.locationDeniedTitle'
+  | 'track.locationDeniedBody'
+  | 'track.locationDeniedRetry'
+  | 'track.locationUnsupported'
   | 'track.actType.hike'
   | 'track.actType.ride'
   | 'track.actType.run'
@@ -110,6 +116,10 @@ export type TranslationKey =
   | 'auth.createAccount'
   | 'auth.switchToSignup'
   | 'auth.switchToSignin'
+  | 'auth.continueGoogle'
+  | 'auth.continueFacebook'
+  | 'auth.orDivider'
+  | 'auth.oauthFailed'
   | 'settings.title'
   | 'settings.theme'
   | 'settings.language'
@@ -117,9 +127,6 @@ export type TranslationKey =
   | 'settings.aboutBody'
   | 'settings.languageEn'
   | 'settings.languageEs'
-  | 'explore.title'
-  | 'explore.subtitle'
-  | 'explore.categories'
   | 'map.title'
   | 'map.subtitle'
   | 'map.legendOfficial'
@@ -138,6 +145,10 @@ export type TranslationKey =
   | 'common.signInToLike'
   | 'common.signInToRate'
   | 'common.signInToComment'
+  | 'common.signInToTrack'
+  | 'auth.signInRequiredTitle'
+  | 'auth.signInRequiredCta'
+  | 'auth.signInRequiredDismiss'
   | 'common.loadError'
   | 'common.and'
   | 'common.expeditionCount'
@@ -245,6 +256,18 @@ export type TranslationKey =
   | 'cal.filters.free'
   | 'cal.filters.paid'
   | 'cal.filters.reset'
+  | 'cal.filters.open'
+  | 'cal.filters.apply'
+  | 'cal.filters.activity'
+  | 'cal.filters.biome'
+  | 'cal.filters.department'
+  | 'cal.filters.minRating'
+  | 'cal.filters.anyRating'
+  | 'cal.filters.priceRange'
+  | 'cal.filters.activeCount'
+  | 'cal.view.label'
+  | 'cal.view.grid'
+  | 'cal.view.agenda'
   | 'nav.calendar'
   | 'tab.calendar'
   | 'activity.shareStory'
@@ -266,7 +289,79 @@ export type TranslationKey =
   | 'completion.reviewPlaceholder'
   | 'completion.dismiss'
   | 'completion.submit'
-  | 'completion.thanks';
+  | 'completion.thanks'
+  | 'nav.partners'
+  | 'partners.eyebrow'
+  | 'partners.title'
+  | 'partners.intro'
+  | 'partners.thanksTitle'
+  | 'partners.thanksBody'
+  | 'partners.submitAnother'
+  | 'partners.fieldOfferType'
+  | 'partners.fieldBusinessName'
+  | 'partners.fieldEmail'
+  | 'partners.fieldPhone'
+  | 'partners.fieldPhonePlaceholder'
+  | 'partners.fieldContactNote'
+  | 'partners.fieldRegion'
+  | 'partners.fieldRegionPlaceholder'
+  | 'partners.fieldTitle'
+  | 'partners.fieldTitlePlaceholder'
+  | 'partners.fieldDescription'
+  | 'partners.fieldPricingNotes'
+  | 'partners.fieldPricingPlaceholder'
+  | 'partners.fieldAttachments'
+  | 'partners.submit'
+  | 'partners.submitting'
+  | 'partners.errorContactRequired'
+  | 'partners.vendorType.full_experience'
+  | 'partners.vendorType.transportation'
+  | 'partners.vendorType.lodging'
+  | 'partners.vendorType.guide'
+  | 'partners.vendorType.food'
+  | 'partners.vendorType.other'
+  | 'partners.vendorHint.full_experience'
+  | 'partners.vendorHint.transportation'
+  | 'partners.vendorHint.lodging'
+  | 'partners.vendorHint.guide'
+  | 'partners.vendorHint.food'
+  | 'partners.vendorHint.other'
+  | 'checkout.eyebrow'
+  | 'checkout.close'
+  | 'checkout.signedInAs'
+  | 'checkout.fieldName'
+  | 'checkout.fieldNamePlaceholder'
+  | 'checkout.fieldEmail'
+  | 'checkout.fieldEmailPlaceholder'
+  | 'checkout.fieldPhone'
+  | 'checkout.fieldPhonePlaceholder'
+  | 'checkout.confirmationEmail'
+  | 'checkout.confirmationEmailWhatsapp'
+  | 'checkout.payButton'
+  | 'checkout.opening'
+  | 'checkout.redirecting'
+  | 'checkout.errorEmailRequired'
+  | 'checkout.errorPhoneRequired'
+  | 'checkout.errorGeneric'
+  | 'order.expeditionLabel'
+  | 'order.saveBookingTitle'
+  | 'order.saveBookingBody'
+  | 'order.createAccount'
+  | 'order.backToExpedition'
+  | 'order.done'
+  | 'order.errorLoadFailed'
+  | 'order.status.approvedTitle'
+  | 'order.status.approvedSub'
+  | 'order.status.declinedTitle'
+  | 'order.status.declinedSub'
+  | 'order.status.voidedTitle'
+  | 'order.status.voidedSub'
+  | 'order.status.errorTitle'
+  | 'order.status.errorSub'
+  | 'order.status.refundedTitle'
+  | 'order.status.refundedSub'
+  | 'order.status.pendingTitle'
+  | 'order.status.pendingSub';
 
 export const en: Record<TranslationKey, string> = {
   'app.tagline': 'Every trail in Colombia, in one happy app.',
@@ -278,7 +373,6 @@ export const en: Record<TranslationKey, string> = {
   'nav.signIn': 'Sign in',
   'nav.signOut': 'Sign out',
   'tab.feed': 'Feed',
-  'tab.explore': 'Explore',
   'tab.map': 'Map',
   'tab.track': 'Track',
   'tab.profile': 'Profile',
@@ -352,6 +446,15 @@ export const en: Record<TranslationKey, string> = {
   'track.statusRecording': 'Recording',
   'track.statusPaused': 'Paused',
   'track.statusEnded': 'Finished',
+  'track.locationGateTitle': 'Location access is required',
+  'track.locationGateBody':
+    'Recording an activity needs your GPS — without location access we can’t measure distance, pace, or elevation.',
+  'track.locationGateCta': 'Allow location access',
+  'track.locationDeniedTitle': 'Location is blocked',
+  'track.locationDeniedBody':
+    'Open your device or browser settings, enable location for Minga, then come back and tap Retry.',
+  'track.locationDeniedRetry': 'Retry',
+  'track.locationUnsupported': 'This device can’t share its location, so activity tracking isn’t available here.',
   'track.actType.hike': 'Hike',
   'track.actType.ride': 'Ride',
   'track.actType.run': 'Run',
@@ -366,7 +469,7 @@ export const en: Record<TranslationKey, string> = {
   'profile.tierToGo': 'more to reach',
   'auth.welcomeBack': 'Welcome back',
   'auth.joinTitle': 'Join the expedition',
-  'auth.oauthNote': 'Google & Meta sign-in coming soon — email + password for now.',
+  'auth.oauthNote': 'Sign in with Google, Meta, or your email.',
   'auth.email': 'Email',
   'auth.password': 'Password',
   'auth.displayName': 'Display name',
@@ -375,6 +478,10 @@ export const en: Record<TranslationKey, string> = {
   'auth.createAccount': 'Create account',
   'auth.switchToSignup': 'No account? Create one',
   'auth.switchToSignin': 'Already a member? Sign in',
+  'auth.continueGoogle': 'Continue with Google',
+  'auth.continueFacebook': 'Continue with Facebook',
+  'auth.orDivider': 'OR',
+  'auth.oauthFailed': 'OAuth sign-in failed',
   'settings.title': 'Settings',
   'settings.theme': 'Theme',
   'settings.language': 'Language',
@@ -383,9 +490,6 @@ export const en: Record<TranslationKey, string> = {
     'Minga Expeditions · PoC build. Cross-platform mobile + web client for the Colombia traveler community.',
   'settings.languageEn': 'English',
   'settings.languageEs': 'Español',
-  'explore.title': 'Explore',
-  'explore.subtitle': 'Find expeditions by category',
-  'explore.categories': 'Categories',
   'map.title': 'Map',
   'map.subtitle': 'Expeditions and your tracked activities across Colombia.',
   'map.legendOfficial': 'Minga official',
@@ -404,6 +508,10 @@ export const en: Record<TranslationKey, string> = {
   'common.signInToLike': 'Sign in to like',
   'common.signInToRate': 'Sign in to rate',
   'common.signInToComment': 'Sign in to comment',
+  'common.signInToTrack': 'Sign in to save your activity',
+  'auth.signInRequiredTitle': 'Please sign in',
+  'auth.signInRequiredCta': 'Sign in',
+  'auth.signInRequiredDismiss': 'Not now',
   'common.loadError': 'Something went wrong',
   'common.and': 'and',
   'common.expeditionCount': 'expeditions',
@@ -512,6 +620,18 @@ export const en: Record<TranslationKey, string> = {
   'cal.filters.free': 'Free',
   'cal.filters.paid': 'Paid',
   'cal.filters.reset': 'Reset',
+  'cal.filters.open': 'Filters',
+  'cal.filters.apply': 'Apply filters',
+  'cal.filters.activity': 'Activity type',
+  'cal.filters.biome': 'Biome',
+  'cal.filters.department': 'Department',
+  'cal.filters.minRating': 'Minimum rating',
+  'cal.filters.anyRating': 'Any rating',
+  'cal.filters.priceRange': 'Price range',
+  'cal.filters.activeCount': '{n} active',
+  'cal.view.label': 'View',
+  'cal.view.grid': 'Calendar',
+  'cal.view.agenda': 'List',
   'nav.calendar': 'Calendar',
   'tab.calendar': 'Calendar',
   'activity.shareStory': 'Share to story',
@@ -535,6 +655,86 @@ export const en: Record<TranslationKey, string> = {
   'completion.dismiss': 'Maybe later',
   'completion.submit': 'Save and continue',
   'completion.thanks': 'Thanks for the review!',
+  'nav.partners': 'Partners',
+  'partners.eyebrow': 'Become a partner',
+  'partners.title': 'Offer your service to Minga travelers.',
+  'partners.intro':
+    "Tell us about an experience, route, transport, lodging, or any other service you offer. We'll review it and reach out to you. No account required.",
+  'partners.thanksTitle': 'Thanks — we got it.',
+  'partners.thanksBody':
+    'A Minga team member will review your proposal and get back to you on the contact you provided. Most reviews happen within five business days.',
+  'partners.submitAnother': 'Submit another',
+  'partners.fieldOfferType': 'What are you offering?',
+  'partners.fieldBusinessName': 'Your business or organization name',
+  'partners.fieldEmail': 'Email',
+  'partners.fieldPhone': 'Phone (WhatsApp)',
+  'partners.fieldPhonePlaceholder': '+57 …',
+  'partners.fieldContactNote':
+    'At least one is required. We send all confirmations on WhatsApp.',
+  'partners.fieldRegion': 'Region or city served',
+  'partners.fieldRegionPlaceholder': 'Antioquia · Sierra Nevada · …',
+  'partners.fieldTitle': 'Short title for your offer',
+  'partners.fieldTitlePlaceholder': '2-day Cocora Valley wax-palm trek',
+  'partners.fieldDescription': "Describe what's included, capacity, schedule, etc.",
+  'partners.fieldPricingNotes': 'Pricing notes (optional)',
+  'partners.fieldPricingPlaceholder':
+    "Per-person rate, group discounts, what's included…",
+  'partners.fieldAttachments': 'Brochure or photo gallery URL (optional)',
+  'partners.submit': 'Submit proposal',
+  'partners.submitting': 'Submitting…',
+  'partners.errorContactRequired':
+    'Add at least one way for us to reach you (email or phone).',
+  'partners.vendorType.full_experience': 'Full experience',
+  'partners.vendorType.transportation': 'Transportation',
+  'partners.vendorType.lodging': 'Lodging',
+  'partners.vendorType.guide': 'Guide',
+  'partners.vendorType.food': 'Food',
+  'partners.vendorType.other': 'Other',
+  'partners.vendorHint.full_experience':
+    'A complete tour or expedition you operate end-to-end.',
+  'partners.vendorHint.transportation': 'Shuttles, 4×4 transfers, boat rides, etc.',
+  'partners.vendorHint.lodging': 'Cabins, glamping, hostels, eco-lodges.',
+  'partners.vendorHint.guide': 'Certified individual or team guiding services.',
+  'partners.vendorHint.food': 'Catering, on-trail meals, restaurant partnerships.',
+  'partners.vendorHint.other': 'Equipment rentals, photography, anything else.',
+  'checkout.eyebrow': 'Checkout',
+  'checkout.close': 'Close',
+  'checkout.signedInAs': 'Signed in as',
+  'checkout.fieldName': 'Your name',
+  'checkout.fieldNamePlaceholder': 'Optional',
+  'checkout.fieldEmail': 'Email',
+  'checkout.fieldEmailPlaceholder': 'you@email.com',
+  'checkout.fieldPhone': 'WhatsApp phone',
+  'checkout.fieldPhonePlaceholder': '3001234567',
+  'checkout.confirmationEmail': 'We send the booking confirmation to your email.',
+  'checkout.confirmationEmailWhatsapp':
+    'We send the booking confirmation to your email and a WhatsApp message with trip details.',
+  'checkout.payButton': 'Pay with Wompi',
+  'checkout.opening': 'Opening checkout…',
+  'checkout.redirecting': 'Redirecting…',
+  'checkout.errorEmailRequired': 'Email is required.',
+  'checkout.errorPhoneRequired': 'WhatsApp number is required.',
+  'checkout.errorGeneric': 'Could not start checkout',
+  'order.expeditionLabel': 'Expedition',
+  'order.saveBookingTitle': 'Save your booking — create a Minga account',
+  'order.saveBookingBody':
+    "Sign up with the same email or WhatsApp number you just used and we'll attach this trip to your profile so you can chat with other travelers and track your activity.",
+  'order.createAccount': 'Create account',
+  'order.backToExpedition': '← Back to expedition',
+  'order.done': 'Done',
+  'order.errorLoadFailed': 'Failed to load order',
+  'order.status.approvedTitle': 'Payment confirmed.',
+  'order.status.approvedSub': "We're sending your confirmation now.",
+  'order.status.declinedTitle': 'Payment declined.',
+  'order.status.declinedSub': 'Try again or use a different payment method.',
+  'order.status.voidedTitle': 'Payment voided.',
+  'order.status.voidedSub': 'No charge was applied.',
+  'order.status.errorTitle': 'Something went wrong.',
+  'order.status.errorSub': 'No charge was applied. Please try again.',
+  'order.status.refundedTitle': 'Payment refunded.',
+  'order.status.refundedSub': 'We sent the funds back to your card.',
+  'order.status.pendingTitle': 'Confirming your payment…',
+  'order.status.pendingSub': 'This usually takes a few seconds.',
 };
 
 export const es: Record<TranslationKey, string> = {
@@ -547,7 +747,6 @@ export const es: Record<TranslationKey, string> = {
   'nav.signIn': 'Iniciar sesión',
   'nav.signOut': 'Cerrar sesión',
   'tab.feed': 'Inicio',
-  'tab.explore': 'Explorar',
   'tab.map': 'Mapa',
   'tab.track': 'Seguir',
   'tab.profile': 'Perfil',
@@ -622,6 +821,15 @@ export const es: Record<TranslationKey, string> = {
   'track.statusRecording': 'Grabando',
   'track.statusPaused': 'En pausa',
   'track.statusEnded': 'Terminado',
+  'track.locationGateTitle': 'Necesitamos acceso a tu ubicación',
+  'track.locationGateBody':
+    'Para registrar una actividad necesitamos tu GPS — sin acceso a la ubicación no podemos medir distancia, ritmo ni desnivel.',
+  'track.locationGateCta': 'Permitir ubicación',
+  'track.locationDeniedTitle': 'La ubicación está bloqueada',
+  'track.locationDeniedBody':
+    'Abre los ajustes del dispositivo o del navegador, activa la ubicación para Minga y vuelve aquí para intentar de nuevo.',
+  'track.locationDeniedRetry': 'Reintentar',
+  'track.locationUnsupported': 'Este dispositivo no comparte ubicación, así que el seguimiento de actividades no está disponible aquí.',
   'track.actType.hike': 'Caminata',
   'track.actType.ride': 'Rodada',
   'track.actType.run': 'Trote',
@@ -636,7 +844,7 @@ export const es: Record<TranslationKey, string> = {
   'profile.tierToGo': 'más para alcanzar',
   'auth.welcomeBack': 'Bienvenido de nuevo',
   'auth.joinTitle': 'Únete a la expedición',
-  'auth.oauthNote': 'Inicio con Google y Meta en camino — por ahora correo + contraseña.',
+  'auth.oauthNote': 'Inicia sesión con Google, Meta o tu correo.',
   'auth.email': 'Correo',
   'auth.password': 'Contraseña',
   'auth.displayName': 'Nombre visible',
@@ -645,6 +853,10 @@ export const es: Record<TranslationKey, string> = {
   'auth.createAccount': 'Crear cuenta',
   'auth.switchToSignup': '¿Sin cuenta? Crea una',
   'auth.switchToSignin': '¿Ya tienes cuenta? Inicia sesión',
+  'auth.continueGoogle': 'Continúa con Google',
+  'auth.continueFacebook': 'Continúa con Facebook',
+  'auth.orDivider': 'O',
+  'auth.oauthFailed': 'Falló el inicio con OAuth',
   'settings.title': 'Ajustes',
   'settings.theme': 'Tema',
   'settings.language': 'Idioma',
@@ -653,9 +865,6 @@ export const es: Record<TranslationKey, string> = {
     'Minga Expeditions · build PoC. Cliente multiplataforma móvil + web para la comunidad viajera en Colombia.',
   'settings.languageEn': 'English',
   'settings.languageEs': 'Español',
-  'explore.title': 'Explorar',
-  'explore.subtitle': 'Busca expediciones por categoría',
-  'explore.categories': 'Categorías',
   'map.title': 'Mapa',
   'map.subtitle': 'Expediciones y tus actividades registradas en toda Colombia.',
   'map.legendOfficial': 'Oficial de Minga',
@@ -674,6 +883,10 @@ export const es: Record<TranslationKey, string> = {
   'common.signInToLike': 'Inicia sesión para dar me gusta',
   'common.signInToRate': 'Inicia sesión para calificar',
   'common.signInToComment': 'Inicia sesión para comentar',
+  'common.signInToTrack': 'Inicia sesión para guardar tu actividad',
+  'auth.signInRequiredTitle': 'Inicia sesión',
+  'auth.signInRequiredCta': 'Iniciar sesión',
+  'auth.signInRequiredDismiss': 'Más tarde',
   'common.loadError': 'Algo salió mal',
   'common.and': 'y',
   'common.expeditionCount': 'expediciones',
@@ -782,6 +995,18 @@ export const es: Record<TranslationKey, string> = {
   'cal.filters.free': 'Gratis',
   'cal.filters.paid': 'De pago',
   'cal.filters.reset': 'Restablecer',
+  'cal.filters.open': 'Filtros',
+  'cal.filters.apply': 'Aplicar filtros',
+  'cal.filters.activity': 'Tipo de actividad',
+  'cal.filters.biome': 'Bioma',
+  'cal.filters.department': 'Departamento',
+  'cal.filters.minRating': 'Calificación mínima',
+  'cal.filters.anyRating': 'Cualquier calificación',
+  'cal.filters.priceRange': 'Rango de precio',
+  'cal.filters.activeCount': '{n} activos',
+  'cal.view.label': 'Vista',
+  'cal.view.grid': 'Calendario',
+  'cal.view.agenda': 'Lista',
   'nav.calendar': 'Calendario',
   'tab.calendar': 'Calendario',
   'activity.shareStory': 'Compartir en historia',
@@ -806,6 +1031,87 @@ export const es: Record<TranslationKey, string> = {
   'completion.dismiss': 'Más tarde',
   'completion.submit': 'Guardar y continuar',
   'completion.thanks': '¡Gracias por la reseña!',
+  'nav.partners': 'Aliados',
+  'partners.eyebrow': 'Sé nuestro aliado',
+  'partners.title': 'Ofrece tu servicio a los viajeros Minga.',
+  'partners.intro':
+    'Cuéntanos sobre una experiencia, ruta, transporte, alojamiento o cualquier otro servicio que ofrezcas. Lo revisaremos y te contactaremos. No necesitas cuenta.',
+  'partners.thanksTitle': '¡Gracias — lo recibimos!',
+  'partners.thanksBody':
+    'Un integrante del equipo Minga revisará tu propuesta y te responderá al contacto que indicaste. La mayoría de revisiones se completa en cinco días hábiles.',
+  'partners.submitAnother': 'Enviar otra',
+  'partners.fieldOfferType': '¿Qué ofreces?',
+  'partners.fieldBusinessName': 'Nombre de tu negocio u organización',
+  'partners.fieldEmail': 'Correo',
+  'partners.fieldPhone': 'Teléfono (WhatsApp)',
+  'partners.fieldPhonePlaceholder': '+57 …',
+  'partners.fieldContactNote':
+    'Al menos uno es obligatorio. Enviamos las confirmaciones por WhatsApp.',
+  'partners.fieldRegion': 'Región o ciudad que atiendes',
+  'partners.fieldRegionPlaceholder': 'Antioquia · Sierra Nevada · …',
+  'partners.fieldTitle': 'Título corto de tu oferta',
+  'partners.fieldTitlePlaceholder': 'Trek 2 días al Valle del Cocora · palmas de cera',
+  'partners.fieldDescription':
+    'Describe qué incluye, capacidad, horarios, etc.',
+  'partners.fieldPricingNotes': 'Notas de precio (opcional)',
+  'partners.fieldPricingPlaceholder':
+    'Tarifa por persona, descuentos de grupo, qué incluye…',
+  'partners.fieldAttachments': 'Enlace a brochure o galería de fotos (opcional)',
+  'partners.submit': 'Enviar propuesta',
+  'partners.submitting': 'Enviando…',
+  'partners.errorContactRequired':
+    'Agrega al menos una forma de contacto (correo o teléfono).',
+  'partners.vendorType.full_experience': 'Experiencia completa',
+  'partners.vendorType.transportation': 'Transporte',
+  'partners.vendorType.lodging': 'Alojamiento',
+  'partners.vendorType.guide': 'Guía',
+  'partners.vendorType.food': 'Comida',
+  'partners.vendorType.other': 'Otro',
+  'partners.vendorHint.full_experience':
+    'Un tour o expedición completo que operas de principio a fin.',
+  'partners.vendorHint.transportation': 'Shuttles, traslados 4×4, lanchas, etc.',
+  'partners.vendorHint.lodging': 'Cabañas, glamping, hostales, eco-lodges.',
+  'partners.vendorHint.guide': 'Guías individuales o equipos certificados.',
+  'partners.vendorHint.food': 'Catering, comidas en ruta, alianzas con restaurantes.',
+  'partners.vendorHint.other': 'Alquiler de equipo, fotografía, lo que se te ocurra.',
+  'checkout.eyebrow': 'Pago',
+  'checkout.close': 'Cerrar',
+  'checkout.signedInAs': 'Sesión iniciada como',
+  'checkout.fieldName': 'Tu nombre',
+  'checkout.fieldNamePlaceholder': 'Opcional',
+  'checkout.fieldEmail': 'Correo',
+  'checkout.fieldEmailPlaceholder': 'tu@correo.com',
+  'checkout.fieldPhone': 'Teléfono de WhatsApp',
+  'checkout.fieldPhonePlaceholder': '3001234567',
+  'checkout.confirmationEmail': 'Enviamos la confirmación de la reserva a tu correo.',
+  'checkout.confirmationEmailWhatsapp':
+    'Enviamos la confirmación al correo y un mensaje por WhatsApp con los detalles del viaje.',
+  'checkout.payButton': 'Pagar con Wompi',
+  'checkout.opening': 'Abriendo el pago…',
+  'checkout.redirecting': 'Redirigiendo…',
+  'checkout.errorEmailRequired': 'El correo es obligatorio.',
+  'checkout.errorPhoneRequired': 'El número de WhatsApp es obligatorio.',
+  'checkout.errorGeneric': 'No se pudo iniciar el pago',
+  'order.expeditionLabel': 'Expedición',
+  'order.saveBookingTitle': 'Guarda tu reserva — crea una cuenta Minga',
+  'order.saveBookingBody':
+    'Regístrate con el mismo correo o número de WhatsApp que acabas de usar y vincularemos este viaje a tu perfil para que puedas conversar con otros viajeros y registrar tu actividad.',
+  'order.createAccount': 'Crear cuenta',
+  'order.backToExpedition': '← Volver a la expedición',
+  'order.done': 'Listo',
+  'order.errorLoadFailed': 'No se pudo cargar el pedido',
+  'order.status.approvedTitle': 'Pago confirmado.',
+  'order.status.approvedSub': 'Estamos enviando tu confirmación ahora.',
+  'order.status.declinedTitle': 'Pago rechazado.',
+  'order.status.declinedSub': 'Inténtalo de nuevo o usa otro método de pago.',
+  'order.status.voidedTitle': 'Pago anulado.',
+  'order.status.voidedSub': 'No se realizó ningún cobro.',
+  'order.status.errorTitle': 'Algo salió mal.',
+  'order.status.errorSub': 'No se realizó ningún cobro. Inténtalo de nuevo.',
+  'order.status.refundedTitle': 'Pago reembolsado.',
+  'order.status.refundedSub': 'Devolvimos los fondos a tu tarjeta.',
+  'order.status.pendingTitle': 'Confirmando tu pago…',
+  'order.status.pendingSub': 'Suele tardar unos segundos.',
 };
 
 export const dictionaries: Record<LanguageCode, Record<TranslationKey, string>> = { en, es };

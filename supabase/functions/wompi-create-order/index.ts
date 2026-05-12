@@ -43,6 +43,12 @@ interface RequestBody {
   salida_id?: string | null;
   guest?: GuestInput;
   return_path?: string; // e.g. "/orders/<id>/success"
+  // Optional override of the redirect origin. Mobile + mobile-web pass their
+  // own deployed origin so Wompi lands the user back on the same app they
+  // started in (instead of the server-side PUBLIC_SITE_URL default which
+  // assumes apps/web). Validated against an allowlist below to avoid open
+  // redirects on the Wompi return.
+  return_origin?: string;
 }
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
@@ -50,8 +56,37 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const WOMPI_PUBLIC_KEY = Deno.env.get('WOMPI_PUBLIC_KEY')!;
 const WOMPI_INTEGRITY_KEY = Deno.env.get('WOMPI_INTEGRITY_KEY')!;
 // Where Wompi sends the user back after the widget closes. Configure per
-// environment; this is the public origin of the consumer-facing site.
+// environment; this is the public origin of the consumer-facing site. The
+// client may override via `return_origin` (apps/mobile and apps/mobile-web do
+// this so they land back in the same app); we validate against an allowlist
+// driven by env so it can't be used as an open redirect.
 const PUBLIC_SITE_URL = Deno.env.get('PUBLIC_SITE_URL') ?? 'http://localhost:5173';
+// Comma-separated extra origins the client is allowed to request as the
+// post-payment redirect target. PUBLIC_SITE_URL is always allowed.
+const ALLOWED_RETURN_ORIGINS = (Deno.env.get('ALLOWED_RETURN_ORIGINS') ?? '')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+function resolveReturnOrigin(requested?: string): string {
+  if (!requested) return PUBLIC_SITE_URL;
+  let normalized: string;
+  try {
+    normalized = new URL(requested).origin;
+  } catch {
+    return PUBLIC_SITE_URL;
+  }
+  const defaultOrigin = (() => {
+    try {
+      return new URL(PUBLIC_SITE_URL).origin;
+    } catch {
+      return null;
+    }
+  })();
+  if (normalized === defaultOrigin) return PUBLIC_SITE_URL;
+  if (ALLOWED_RETURN_ORIGINS.includes(normalized)) return normalized;
+  return PUBLIC_SITE_URL;
+}
 
 async function sha256Hex(input: string): Promise<string> {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(input));
@@ -189,7 +224,7 @@ serve(async (req) => {
     `${reference}${amountCents}${currency}${WOMPI_INTEGRITY_KEY}`,
   );
   const returnPath = body.return_path ?? `/orders/${order.id}/success`;
-  const redirectUrl = new URL(returnPath, PUBLIC_SITE_URL).toString();
+  const redirectUrl = new URL(returnPath, resolveReturnOrigin(body.return_origin)).toString();
 
   return new Response(
     JSON.stringify({

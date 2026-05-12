@@ -1,10 +1,13 @@
-import type { ExpeditionWithAuthor, DbActivity } from '@minga/types';
+import type { ExpeditionWithAuthor, DbActivity, GeoLayerDef } from '@minga/types';
 
 // Builds a self-contained HTML document that:
 //  - loads MapLibre GL JS from a CDN
 //  - fits Colombia on boot
 //  - renders expedition markers + activity-track polylines from data baked into
 //    the HTML at render time
+//  - attaches the geo_* reference layers (PNN, páramos, glaciers, biomes,
+//    admin levels…) as MVT vector sources via the Supabase geo-tile Edge fn
+//  - renders a horizontally-scrollable chip row for toggling layers
 //  - posts { type: 'openExpedition', id } back to React Native when a marker
 //    is tapped, via `window.ReactNativeWebView.postMessage`
 //
@@ -23,6 +26,10 @@ export interface MapPayload {
   surface: string;
   surfaceAlt: string;
   background: string;
+  /** Base URL like https://abc123.supabase.co — no trailing slash needed. */
+  supabaseUrl: string;
+  /** Same GEO_LAYERS list shipped from @minga/types. */
+  geoLayers: GeoLayerDef[];
   labels: {
     legendOfficial: string;
     legendUser: string;
@@ -43,8 +50,9 @@ export function buildMapHtml(p: MapPayload): string {
   <title>Minga Map</title>
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
   <style>
-    html, body, #map { margin: 0; padding: 0; height: 100%; width: 100%; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: ${p.background}; }
+    html, body { margin: 0; padding: 0; height: 100%; width: 100%; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: ${p.background}; display: flex; flex-direction: column; }
+    #map { flex: 1; }
     .minga-marker {
       width: 22px; height: 22px; border-radius: 999px; border: 2px solid #fff;
       box-shadow: 0 3px 10px rgba(0,0,0,0.25); cursor: pointer; display: block;
@@ -60,6 +68,22 @@ export function buildMapHtml(p: MapPayload): string {
     }
     .legend .dot { display: inline-block; width: 12px; height: 12px; border-radius: 999px; vertical-align: middle; margin-right: 6px; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
     .legend .bar { display: inline-block; width: 18px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+    .layer-chips {
+      position: absolute; top: 12px; left: 12px; right: 12px;
+      display: flex; gap: 6px; overflow-x: auto; padding: 4px 0;
+      z-index: 2; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    }
+    .layer-chips::-webkit-scrollbar { display: none; }
+    .layer-chip {
+      flex: 0 0 auto; display: inline-flex; align-items: center; gap: 5px;
+      padding: 5px 10px; border-radius: 999px;
+      border: 1px solid ${p.border}; background: ${p.surface};
+      color: ${p.text}; font-size: 11px; font-weight: 700;
+      white-space: nowrap; cursor: pointer;
+    }
+    .layer-chip.on { opacity: 1; }
+    .layer-chip.off { opacity: 0.55; }
+    .layer-chip .swatch { width: 8px; height: 8px; border-radius: 2px; }
     .loading {
       position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
       background: ${p.surfaceAlt}; color: ${p.muted};
@@ -72,6 +96,7 @@ export function buildMapHtml(p: MapPayload): string {
 <body>
   <div id="map"></div>
   <div class="loading" id="loading">${escapeHtml(p.labels.loading)}</div>
+  <div class="layer-chips" id="layer-chips"></div>
   <div class="legend">
     <span><span class="dot" style="background:${p.accent}"></span>${escapeHtml(p.labels.legendOfficial)}</span>
     <span><span class="dot" style="background:${p.primary}"></span>${escapeHtml(p.labels.legendUser)}</span>
@@ -111,6 +136,76 @@ export function buildMapHtml(p: MapPayload): string {
       });
       map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
 
+      function buildTileUrl(layerId) {
+        var base = (initial.supabaseUrl || '').replace(/\\/+$/, '');
+        return base + '/functions/v1/geo-tile/' + layerId + '/{z}/{x}/{y}.mvt';
+      }
+
+      function setLayerVisible(def, visible) {
+        for (var i = 0; i < def.styles.length; i++) {
+          var id = 'geo-' + def.id + '-' + i;
+          if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', visible ? 'visible' : 'none');
+        }
+      }
+
+      function attachGeoLayers() {
+        if (!initial.supabaseUrl) return;
+        (initial.geoLayers || []).forEach(function (def) {
+          var sourceId = 'geo-' + def.id;
+          if (map.getSource(sourceId)) return;
+          map.addSource(sourceId, {
+            type: 'vector',
+            tiles: [buildTileUrl(def.id)],
+            minzoom: def.minzoom,
+            maxzoom: def.maxzoom
+          });
+          (def.styles || []).forEach(function (s, i) {
+            map.addLayer({
+              id: 'geo-' + def.id + '-' + i,
+              type: s.type,
+              source: sourceId,
+              'source-layer': def.id,
+              minzoom: def.minzoom,
+              paint: s.paint,
+              layout: Object.assign({ visibility: def.defaultVisible ? 'visible' : 'none' }, s.layout || {})
+            });
+          });
+        });
+      }
+
+      function renderChips() {
+        var host = document.getElementById('layer-chips');
+        if (!host) return;
+        host.innerHTML = '';
+        (initial.geoLayers || []).forEach(function (def) {
+          var fill = (def.styles || []).find(function (s) { return s.type === 'fill'; });
+          var line = (def.styles || []).find(function (s) { return s.type === 'line'; });
+          var swatch =
+            (fill && fill.paint && fill.paint['fill-color']) ||
+            (line && line.paint && line.paint['line-color']) ||
+            initial.primary;
+          var on = !!def.defaultVisible;
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'layer-chip ' + (on ? 'on' : 'off');
+          btn.style.borderColor = on ? swatch : initial.border;
+          btn.innerHTML = '<span class="swatch" style="background:' + swatch + '"></span>' + escapeText(def.label);
+          btn.addEventListener('click', function () {
+            on = !on;
+            btn.className = 'layer-chip ' + (on ? 'on' : 'off');
+            btn.style.borderColor = on ? swatch : initial.border;
+            setLayerVisible(def, on);
+          });
+          host.appendChild(btn);
+        });
+      }
+
+      function escapeText(s) {
+        var div = document.createElement('div');
+        div.textContent = s == null ? '' : String(s);
+        return div.innerHTML;
+      }
+
       function renderMarkers(list) {
         (list || []).forEach(function (exp) {
           if (exp.start_lat == null || exp.start_lng == null) return;
@@ -139,8 +234,6 @@ export function buildMapHtml(p: MapPayload): string {
           map.getSource('my-tracks').setData(data);
         } else {
           map.addSource('my-tracks', { type: 'geojson', data: data });
-          // Halo line so tracks stand out against the raster base map,
-          // then the primary colored line on top.
           map.addLayer({
             id: 'my-tracks-halo',
             type: 'line',
@@ -156,7 +249,6 @@ export function buildMapHtml(p: MapPayload): string {
             layout: { 'line-cap': 'round', 'line-join': 'round' }
           });
         }
-        // Return combined LngLatBounds so the caller can fit the camera.
         var b = new maplibregl.LngLatBounds();
         features.forEach(function (f) {
           f.geometry.coordinates.forEach(function (c) { b.extend(c); });
@@ -165,10 +257,10 @@ export function buildMapHtml(p: MapPayload): string {
       }
 
       map.on('load', function () {
+        attachGeoLayers();
+        renderChips();
         renderMarkers(initial.expeditions);
         var trackBounds = renderTracks(initial.tracks, initial.primary);
-        // Auto-zoom: if the signed-in user has any tracks, fit to them so
-        // routes are actually visible (not lost at country-level zoom).
         if (trackBounds && !trackBounds.isEmpty()) {
           map.fitBounds(trackBounds, { padding: 60, maxZoom: 13, duration: 800 });
         }

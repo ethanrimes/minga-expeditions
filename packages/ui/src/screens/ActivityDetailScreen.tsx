@@ -29,6 +29,7 @@ import { StarRating } from '../primitives/StarRating';
 import { StatBlock } from '../primitives/StatBlock';
 import { Icon, type IconName } from '../primitives/Icon';
 import { EmptyState } from '../components/EmptyState';
+import { SignInRequiredModal, isSignInRequiredError } from '../components/SignInRequiredModal';
 
 const ACT_LABEL_KEY: Record<ActivityType, any> = {
   hike: 'track.actType.hike',
@@ -85,6 +86,7 @@ export function ActivityDetailScreen({
   id,
   onBack,
   onOpenExpedition,
+  onSignIn,
   MapComponent,
   photoPicker,
   shareAdapter,
@@ -94,6 +96,7 @@ export function ActivityDetailScreen({
   id: string;
   onBack?: () => void;
   onOpenExpedition?: (expeditionId: string) => void;
+  onSignIn?: () => void;
   MapComponent: React.ComponentType<ActivityMapProps>;
   photoPicker?: ActivityPhotoPicker;
   shareAdapter?: ActivityShareAdapter;
@@ -117,6 +120,7 @@ export function ActivityDetailScreen({
   const [draft, setDraft] = useState('');
   const [posting, setPosting] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [signInPrompt, setSignInPrompt] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -189,7 +193,8 @@ export function ActivityDetailScreen({
       setDraft('');
       await load();
     } catch (e: any) {
-      setError(e?.message ?? t('common.loadError'));
+      if (isSignInRequiredError(e)) setSignInPrompt(t('common.signInToComment'));
+      else setError(e?.message ?? t('common.loadError'));
     } finally {
       setPosting(false);
     }
@@ -200,7 +205,8 @@ export function ActivityDetailScreen({
       await deleteActivityComment(getSupabase(), cid);
       await load();
     } catch (e: any) {
-      setError(e?.message ?? t('common.loadError'));
+      if (isSignInRequiredError(e)) setSignInPrompt(e.message);
+      else setError(e?.message ?? t('common.loadError'));
     }
   };
 
@@ -209,7 +215,8 @@ export function ActivityDetailScreen({
       await upsertActivityRating(getSupabase(), { activity_id: id, stars });
       await load();
     } catch (e: any) {
-      setError(e?.message ?? t('common.loadError'));
+      if (isSignInRequiredError(e)) setSignInPrompt(t('common.signInToRate'));
+      else setError(e?.message ?? t('common.loadError'));
     }
   };
 
@@ -318,7 +325,7 @@ export function ActivityDetailScreen({
                 activityId: id,
                 title: activity.title,
                 cardUrl: `${shareCardBaseUrl}?activity_id=${id}`,
-                deepLink: `${publicSiteUrl ?? 'https://minga.co'}/activities/${id}`,
+                deepLink: publicSiteUrl ? `${publicSiteUrl}/activities/${id}` : `/activities/${id}`,
                 caption: t('activity.shareCaption').replace('{title}', activity.title),
               })
             }
@@ -331,7 +338,7 @@ export function ActivityDetailScreen({
                   activityId: id,
                   title: activity.title,
                   cardUrl: `${shareCardBaseUrl}?activity_id=${id}`,
-                  deepLink: `${publicSiteUrl ?? 'https://minga.co'}/activities/${id}`,
+                  deepLink: publicSiteUrl ? `${publicSiteUrl}/activities/${id}` : `/activities/${id}`,
                   caption: t('activity.shareCaption').replace('{title}', activity.title),
                 })
               }
@@ -407,6 +414,13 @@ export function ActivityDetailScreen({
       </View>
 
       {error ? <Text style={{ color: theme.danger, fontSize: fontSizes.sm }}>{error}</Text> : null}
+
+      <SignInRequiredModal
+        visible={signInPrompt != null}
+        message={signInPrompt ?? ''}
+        onClose={() => setSignInPrompt(null)}
+        onSignIn={onSignIn}
+      />
     </Screen>
   );
 }

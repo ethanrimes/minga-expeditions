@@ -45,7 +45,12 @@ export interface SalidaWithExpedition extends DbExpeditionSalida {
     | 'currency'
     | 'is_official'
     | 'is_published'
-  >;
+    | 'terrain_tags'
+  > & {
+    // Computed at fetch time so the calendar rating filter doesn't need a
+    // second round-trip per row — see fetchSalidasInRange.
+    avg_rating?: number | null;
+  };
 }
 
 export interface CommentWithAuthor extends DbComment {

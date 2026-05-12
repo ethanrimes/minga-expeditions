@@ -11,6 +11,7 @@ import {
 import { saveActivity } from '@minga/supabase';
 import type { ActivityType, TrackPoint } from '@minga/types';
 import { supabase } from '../supabase';
+import { SignInRequiredModal, isSignInRequiredError } from '../components/SignInRequiredModal';
 
 const ACTIVITY_TYPES: ActivityType[] = ['hike', 'ride', 'run', 'walk'];
 const ACT_KEY: Record<ActivityType, any> = {
@@ -21,6 +22,39 @@ const ACT_KEY: Record<ActivityType, any> = {
 };
 
 type Status = 'idle' | 'recording' | 'paused' | 'ended';
+type PermissionGate = 'granted' | 'denied' | 'undetermined' | 'unsupported';
+
+// Read the browser geolocation permission without triggering a prompt.
+// Mirrors apps/mobile-web's locationAdapter so all three apps share the
+// same permission semantics. Returns 'undetermined' when the Permissions
+// API isn't available so the gate shows an Allow CTA.
+async function readGeolocationPermission(): Promise<PermissionGate> {
+  if (typeof navigator === 'undefined' || !('geolocation' in navigator)) return 'unsupported';
+  const perms = (navigator as Navigator & { permissions?: Permissions }).permissions;
+  if (!perms?.query) return 'undetermined';
+  try {
+    const result = await perms.query({ name: 'geolocation' as PermissionName });
+    if (result.state === 'granted') return 'granted';
+    if (result.state === 'denied') return 'denied';
+    return 'undetermined';
+  } catch {
+    return 'undetermined';
+  }
+}
+
+function probeGeolocationPermission(): Promise<PermissionGate> {
+  return new Promise((resolve) => {
+    if (typeof navigator === 'undefined' || !('geolocation' in navigator)) {
+      resolve('unsupported');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      () => resolve('granted'),
+      () => resolve('denied'),
+      { enableHighAccuracy: false, maximumAge: 60000, timeout: 10000 },
+    );
+  });
+}
 
 export function TrackPage() {
   const { theme } = useTheme();
@@ -34,6 +68,41 @@ export function TrackPage() {
   const [title, setTitle] = useState('');
   const [notes, setNotes] = useState('');
   const [savedMsg, setSavedMsg] = useState<string | null>(null);
+  const [signInPrompt, setSignInPrompt] = useState<string | null>(null);
+  const [permission, setPermission] = useState<PermissionGate>('undetermined');
+  const [requestingPermission, setRequestingPermission] = useState(false);
+
+  useEffect(() => {
+    void readGeolocationPermission().then(setPermission);
+  }, []);
+
+  const requestPermission = async () => {
+    setRequestingPermission(true);
+    try {
+      const current = await readGeolocationPermission();
+      if (current === 'granted' || current === 'denied' || current === 'unsupported') {
+        setPermission(current);
+        return;
+      }
+      const probed = await probeGeolocationPermission();
+      setPermission(probed);
+    } finally {
+      setRequestingPermission(false);
+    }
+  };
+
+  const retryPermissionCheck = async () => {
+    // For the denied-state CTA: the user may have just toggled the OS setting.
+    // Re-read silently — if they really fixed it we'll see 'granted'; if not
+    // we stay on the same gate.
+    setRequestingPermission(true);
+    try {
+      const current = await readGeolocationPermission();
+      setPermission(current);
+    } finally {
+      setRequestingPermission(false);
+    }
+  };
 
   const watchIdRef = useRef<number | null>(null);
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -59,14 +128,19 @@ export function TrackPage() {
     }
   };
 
-  const start = () => {
+  const start = async () => {
     setError(null);
-    if (!('geolocation' in navigator)) {
-      setError(
-        language === 'es'
-          ? 'La geolocalización no está disponible en este navegador.'
-          : 'Geolocation is not available in this browser.',
-      );
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) {
+      setSignInPrompt(t('common.signInToTrack'));
+      return;
+    }
+    // Re-check at start time in case the user toggled the OS setting while
+    // the page was open. The Start button is only rendered when granted, so
+    // this is defensive — but cheap, and prevents starting a 0-km activity.
+    const current = await readGeolocationPermission();
+    if (current !== 'granted') {
+      setPermission(current);
       return;
     }
     accumulatedRef.current = 0;
@@ -149,7 +223,8 @@ export function TrackPage() {
       setSavedMsg(t('track.savedSuccess'));
       reset();
     } catch (e: any) {
-      setSavedMsg(e?.message ?? t('common.loadError'));
+      if (isSignInRequiredError(e)) setSignInPrompt(t('common.signInToTrack'));
+      else setSavedMsg(e?.message ?? t('common.loadError'));
     }
   };
 
@@ -221,8 +296,19 @@ export function TrackPage() {
 
       {error ? <div style={{ color: theme.danger, marginBottom: 16 }}>{error}</div> : null}
 
+      {(status === 'idle' || status === 'ended') && permission !== 'granted' ? (
+        <LocationGate
+          status={permission}
+          loading={requestingPermission}
+          onRequest={requestPermission}
+          onRetry={retryPermissionCheck}
+          theme={theme}
+          t={t}
+        />
+      ) : null}
+
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}>
-        {(status === 'idle' || status === 'ended') && (
+        {(status === 'idle' || status === 'ended') && permission === 'granted' && (
           <Btn theme={theme} label={t('track.start')} primary onClick={start} />
         )}
         {status === 'recording' && <Btn theme={theme} label={t('track.pause')} onClick={pause} />}
@@ -260,6 +346,10 @@ export function TrackPage() {
       ) : null}
 
       {savedMsg ? <div style={{ color: theme.success, marginTop: 24, fontWeight: 700 }}>{savedMsg}</div> : null}
+
+      {signInPrompt ? (
+        <SignInRequiredModal message={signInPrompt} onClose={() => setSignInPrompt(null)} />
+      ) : null}
     </div>
   );
 }
@@ -318,4 +408,82 @@ function inputStyle(theme: any): React.CSSProperties {
     fontSize: 15,
     resize: 'vertical',
   };
+}
+
+// Hard gate shown in place of Start when geolocation isn't granted. Mirrors
+// the LocationGate in packages/ui/src/screens/TrackScreen.tsx so the three
+// apps present the same UX when permission is missing.
+function LocationGate({
+  status,
+  loading,
+  onRequest,
+  onRetry,
+  theme,
+  t,
+}: {
+  status: PermissionGate;
+  loading: boolean;
+  onRequest: () => void | Promise<void>;
+  onRetry: () => void | Promise<void>;
+  theme: any;
+  t: (k: any) => string;
+}) {
+  if (status === 'unsupported') {
+    return (
+      <div
+        style={{
+          background: theme.surfaceAlt,
+          border: `1px solid ${theme.border}`,
+          borderRadius: 16,
+          padding: 20,
+          marginBottom: 24,
+          color: theme.text,
+        }}
+      >
+        {t('track.locationUnsupported')}
+      </div>
+    );
+  }
+
+  const isDenied = status === 'denied';
+  const title = isDenied ? t('track.locationDeniedTitle') : t('track.locationGateTitle');
+  const body = isDenied ? t('track.locationDeniedBody') : t('track.locationGateBody');
+  const ctaLabel = isDenied ? t('track.locationDeniedRetry') : t('track.locationGateCta');
+  const onClick = isDenied ? onRetry : onRequest;
+
+  return (
+    <div
+      style={{
+        background: theme.primaryMuted,
+        border: `1px solid ${theme.primary}`,
+        borderRadius: 16,
+        padding: 20,
+        marginBottom: 24,
+      }}
+    >
+      <div style={{ color: theme.text, fontSize: 18, fontWeight: 700, marginBottom: 8 }}>
+        {title}
+      </div>
+      <div style={{ color: theme.text, fontSize: 14, lineHeight: 1.5, marginBottom: 14 }}>
+        {body}
+      </div>
+      <button
+        onClick={() => void onClick()}
+        disabled={loading}
+        style={{
+          background: theme.primary,
+          color: theme.onPrimary,
+          border: 0,
+          padding: '12px 22px',
+          borderRadius: 999,
+          fontWeight: 800,
+          fontSize: 15,
+          opacity: loading ? 0.6 : 1,
+          cursor: loading ? 'wait' : 'pointer',
+        }}
+      >
+        {loading ? '…' : ctaLabel}
+      </button>
+    </div>
+  );
 }

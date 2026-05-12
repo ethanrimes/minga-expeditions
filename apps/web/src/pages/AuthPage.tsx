@@ -56,13 +56,13 @@ export function AuthPage() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 18 }}>
         <OAuthButton
           provider="google"
-          label="Continue with Google"
+          label={t('auth.continueGoogle')}
           theme={theme}
           onError={setError}
         />
         <OAuthButton
           provider="facebook"
-          label="Continue with Facebook"
+          label={t('auth.continueFacebook')}
           theme={theme}
           onError={setError}
         />
@@ -78,7 +78,7 @@ export function AuthPage() {
         }}
       >
         <div style={{ flex: 1, height: 1, background: theme.border }} />
-        OR
+        {t('auth.orDivider')}
         <div style={{ flex: 1, height: 1, background: theme.border }} />
       </div>
 

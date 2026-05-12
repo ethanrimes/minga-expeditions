@@ -29,7 +29,7 @@ const baseInput = {
   activityId: 'a1',
   title: 'Cocora loop',
   cardUrl: 'https://api.example/share?activity_id=a1',
-  deepLink: 'https://minga.co/activities/a1',
+  deepLink: 'https://minga-expeditions-web.vercel.app/activities/a1',
   caption: 'Just finished',
 };
 

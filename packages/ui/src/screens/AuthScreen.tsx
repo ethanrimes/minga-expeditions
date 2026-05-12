@@ -7,7 +7,17 @@ import { Button } from '../primitives/Button';
 import { Input } from '../primitives/Input';
 import { useAuth } from '../hooks/useAuth';
 
-export function AuthScreen({ onAuthenticated }: { onAuthenticated?: () => void }) {
+export type OAuthProvider = 'google' | 'facebook';
+
+export interface AuthScreenProps {
+  onAuthenticated?: () => void;
+  // Platform-specific OAuth handler. Resolves true on successful sign-in,
+  // false if the user cancelled (no error shown). Throw to surface an error.
+  // Omit to hide OAuth buttons entirely.
+  onOAuthSignIn?: (provider: OAuthProvider) => Promise<boolean>;
+}
+
+export function AuthScreen({ onAuthenticated, onOAuthSignIn }: AuthScreenProps) {
   const { theme } = useTheme();
   const { t } = useT();
   const { signIn, signUp } = useAuth();
@@ -18,6 +28,7 @@ export function AuthScreen({ onAuthenticated }: { onAuthenticated?: () => void }
   const [username, setUsername] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [oauthBusy, setOauthBusy] = useState<OAuthProvider | null>(null);
 
   const submit = async () => {
     setError(null);
@@ -36,6 +47,22 @@ export function AuthScreen({ onAuthenticated }: { onAuthenticated?: () => void }
     }
   };
 
+  const oauth = async (provider: OAuthProvider) => {
+    if (!onOAuthSignIn) return;
+    setError(null);
+    setOauthBusy(provider);
+    try {
+      const ok = await onOAuthSignIn(provider);
+      if (ok) onAuthenticated?.();
+    } catch (e: any) {
+      setError(e?.message ?? t('auth.oauthFailed'));
+    } finally {
+      setOauthBusy(null);
+    }
+  };
+
+  const anyBusy = busy || oauthBusy !== null;
+
   return (
     <Screen>
       <View style={{ paddingTop: spacing['2xl'], gap: spacing.sm }}>
@@ -47,6 +74,34 @@ export function AuthScreen({ onAuthenticated }: { onAuthenticated?: () => void }
         </Text>
         <Text style={{ color: theme.textMuted }}>{t('auth.oauthNote')}</Text>
       </View>
+
+      {onOAuthSignIn ? (
+        <View style={{ gap: spacing.sm, marginTop: spacing.lg }}>
+          <Button
+            label={t('auth.continueGoogle')}
+            variant="secondary"
+            loading={oauthBusy === 'google'}
+            disabled={anyBusy && oauthBusy !== 'google'}
+            onPress={() => oauth('google')}
+            fullWidth
+          />
+          <Button
+            label={t('auth.continueFacebook')}
+            variant="secondary"
+            loading={oauthBusy === 'facebook'}
+            disabled={anyBusy && oauthBusy !== 'facebook'}
+            onPress={() => oauth('facebook')}
+            fullWidth
+          />
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginVertical: spacing.xs }}>
+            <View style={{ flex: 1, height: 1, backgroundColor: theme.border }} />
+            <Text style={{ color: theme.textMuted, fontSize: fontSizes.sm, fontWeight: fontWeights.semibold }}>
+              {t('auth.orDivider')}
+            </Text>
+            <View style={{ flex: 1, height: 1, backgroundColor: theme.border }} />
+          </View>
+        </View>
+      ) : null}
 
       <View style={{ gap: spacing.md }}>
         {mode === 'signup' ? (
@@ -80,6 +135,7 @@ export function AuthScreen({ onAuthenticated }: { onAuthenticated?: () => void }
         <Button
           label={mode === 'signin' ? t('auth.signIn') : t('auth.createAccount')}
           loading={busy}
+          disabled={oauthBusy !== null}
           onPress={submit}
           fullWidth
         />

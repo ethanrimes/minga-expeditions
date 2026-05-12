@@ -9,3 +9,4 @@ export * from './Input';
 export * from './Screen';
 export * from './StarRating';
 export * from './Icon';
+export * from './DualRangeSlider';

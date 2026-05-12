@@ -4,10 +4,22 @@ import { useTheme, type FontScaleLevel } from '@minga/theme';
 import { useT } from '@minga/i18n';
 import type { ThemeName } from '@minga/types';
 
-const META: Record<ThemeName, { title: string; subtitle: string; swatch: string }> = {
-  livehappy: { title: 'Live Happy', subtitle: 'Bright orange · inspired by livehappy.com', swatch: '#ED8B00' },
-  'minga-green': { title: 'Minga Green', subtitle: 'Outdoorsy forest palette', swatch: '#2D7D32' },
-  midnight: { title: 'Midnight', subtitle: 'Dark mode for late rides', swatch: '#161B22' },
+const META: Record<ThemeName, { titleKey: any; subtitleKey: any; swatch: string }> = {
+  livehappy: {
+    titleKey: 'settings.theme.livehappy.title',
+    subtitleKey: 'settings.theme.livehappy.subtitle',
+    swatch: '#ED8B00',
+  },
+  'minga-green': {
+    titleKey: 'settings.theme.mingaGreen.title',
+    subtitleKey: 'settings.theme.mingaGreen.subtitle',
+    swatch: '#2D7D32',
+  },
+  midnight: {
+    titleKey: 'settings.theme.midnight.title',
+    subtitleKey: 'settings.theme.midnight.subtitle',
+    swatch: '#161B22',
+  },
 };
 
 const FONT_LABEL_KEY: Record<FontScaleLevel, any> = {
@@ -65,8 +77,8 @@ export function SettingsPage() {
             >
               <div style={{ width: 40, height: 40, borderRadius: 999, background: META[name].swatch }} />
               <div style={{ flex: 1 }}>
-                <div style={{ color: theme.text, fontWeight: 800 }}>{META[name].title}</div>
-                <div style={{ color: theme.textMuted, fontSize: 13 }}>{META[name].subtitle}</div>
+                <div style={{ color: theme.text, fontWeight: 800 }}>{t(META[name].titleKey)}</div>
+                <div style={{ color: theme.textMuted, fontSize: 13 }}>{t(META[name].subtitleKey)}</div>
               </div>
               {active ? <Check size={18} color={theme.primary} strokeWidth={3} /> : null}
             </button>

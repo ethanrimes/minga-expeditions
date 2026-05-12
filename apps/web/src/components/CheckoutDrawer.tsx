@@ -174,12 +174,12 @@ export function CheckoutDrawer({
     e.preventDefault();
     setError(null);
     if (!email.trim()) {
-      setError('Email is required.');
+      setError(t('checkout.errorEmailRequired'));
       return;
     }
     const trimmedNumber = phoneNumber.replace(/\D/g, '');
     if (WHATSAPP_ENABLED && !trimmedNumber) {
-      setError('WhatsApp number is required.');
+      setError(t('checkout.errorPhoneRequired'));
       return;
     }
     const phoneE164 = trimmedNumber ? `${phoneCode}${trimmedNumber}` : '';
@@ -214,7 +214,7 @@ export function CheckoutDrawer({
         }),
       });
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? 'Could not start checkout');
+      if (!res.ok) throw new Error(json.error ?? t('checkout.errorGeneric'));
 
       await loadWompiScript();
       if (!window.WidgetCheckout) throw new Error('Wompi widget unavailable');
@@ -281,7 +281,7 @@ export function CheckoutDrawer({
         <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <div style={{ color: theme.textMuted, fontSize: 12, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase' }}>
-              Checkout
+              {t('checkout.eyebrow')}
             </div>
             <div style={{ color: theme.text, fontSize: 18, fontWeight: 700, marginTop: 4 }}>{expeditionTitle}</div>
             {salidaStartsAt ? (
@@ -295,7 +295,7 @@ export function CheckoutDrawer({
           </div>
           <button
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t('checkout.close')}
             style={{
               background: 'transparent',
               border: 0,
@@ -335,22 +335,22 @@ export function CheckoutDrawer({
               }}
             >
               <div style={{ color: theme.textMuted, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.3 }}>
-                Signed in as
+                {t('checkout.signedInAs')}
               </div>
               <div style={{ marginTop: 2, fontWeight: 600 }}>{signedInEmail}</div>
             </div>
           ) : (
             <>
-              <Field label="Your name" theme={theme}>
-                <Input value={name} onChange={setName} theme={theme} placeholder="Optional" />
+              <Field label={t('checkout.fieldName')} theme={theme}>
+                <Input value={name} onChange={setName} theme={theme} placeholder={t('checkout.fieldNamePlaceholder')} />
               </Field>
-              <Field label="Email" theme={theme}>
-                <Input value={email} onChange={setEmail} type="email" theme={theme} placeholder="you@email.com" />
+              <Field label={t('checkout.fieldEmail')} theme={theme}>
+                <Input value={email} onChange={setEmail} type="email" theme={theme} placeholder={t('checkout.fieldEmailPlaceholder')} />
               </Field>
             </>
           )}
           {WHATSAPP_ENABLED ? (
-            <Field label="WhatsApp phone" theme={theme}>
+            <Field label={t('checkout.fieldPhone')} theme={theme}>
               <div style={{ display: 'flex', gap: 8 }}>
                 <select
                   value={phoneCode}
@@ -375,7 +375,7 @@ export function CheckoutDrawer({
                     onChange={(v) => setPhoneNumber(v.replace(/[^\d]/g, ''))}
                     type="tel"
                     theme={theme}
-                    placeholder="3001234567"
+                    placeholder={t('checkout.fieldPhonePlaceholder')}
                   />
                 </div>
               </div>
@@ -384,8 +384,8 @@ export function CheckoutDrawer({
 
           <p style={{ color: theme.textMuted, fontSize: 12 }}>
             {WHATSAPP_ENABLED
-              ? 'We send the booking confirmation to your email and a WhatsApp message with trip details.'
-              : 'We send the booking confirmation to your email.'}
+              ? t('checkout.confirmationEmailWhatsapp')
+              : t('checkout.confirmationEmail')}
           </p>
 
           {error ? <div style={{ color: theme.danger, fontSize: 14 }}>{error}</div> : null}
@@ -405,7 +405,7 @@ export function CheckoutDrawer({
               opacity: mode === 'collect-info' ? 1 : 0.7,
             }}
           >
-            {mode === 'collect-info' ? 'Pay with Wompi' : mode === 'opening-widget' ? 'Opening checkout…' : 'Redirecting…'}
+            {mode === 'collect-info' ? t('checkout.payButton') : mode === 'opening-widget' ? t('checkout.opening') : t('checkout.redirecting')}
           </button>
         </form>
       </div>

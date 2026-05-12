@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { useTheme, spacing, fontSizes, fontWeights, radii } from '@minga/theme';
 import { useT } from '@minga/i18n';
 import {
@@ -20,26 +20,23 @@ import type { DbCategory, SalidaWithExpedition } from '@minga/types';
 import { Screen } from '../primitives/Screen';
 import { Icon } from '../primitives/Icon';
 import { EmptyState } from '../components/EmptyState';
+import {
+  CalendarFilterModal,
+  type CalendarFilterState,
+  type CalendarViewMode,
+  countActiveFilters,
+  emptyCalendarFilter,
+} from '../components/CalendarFilterModal';
 
 interface Props {
-  // Variant decides whether to render a month grid (web/mobile-web) or a
-  // chronological agenda list (native mobile, where a 7-column grid is too
-  // cramped). Both consume the same data and filters.
-  variant?: 'grid' | 'agenda';
+  // Initial view mode. The user can toggle at runtime from inside the filter
+  // modal — that toggle lives in this component's state.
+  variant?: CalendarViewMode;
   onOpenExpedition?: (id: string) => void;
   monthsAhead?: number;
 }
 
-type PriceBand = 'all' | 'free' | 'paid';
-
-interface UiFilters {
-  categoryId: string;
-  region: string;
-  difficulty: string;
-  price: PriceBand;
-}
-
-const EMPTY: UiFilters = { categoryId: '', region: '', difficulty: '', price: 'all' };
+const PRICE_CEILING_FALLBACK = 2_000_000_00; // 2,000,000 COP
 
 function startOfMonth(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), 1);
@@ -70,7 +67,15 @@ export function CalendarScreen({ variant = 'grid', onOpenExpedition, monthsAhead
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cursor, setCursor] = useState<Date>(startOfMonth(new Date()));
-  const [ui, setUi] = useState<UiFilters>(EMPTY);
+  const [view, setView] = useState<CalendarViewMode>(variant);
+  const [filterOpen, setFilterOpen] = useState(false);
+  // Price ceiling is recomputed from the data on each load. Held in state so
+  // the modal slider knows where "+" begins. Falls back to a sensible default
+  // before the first fetch resolves.
+  const [priceCeiling, setPriceCeiling] = useState(PRICE_CEILING_FALLBACK);
+  const [filters, setFilters] = useState<CalendarFilterState>(() =>
+    emptyCalendarFilter(PRICE_CEILING_FALLBACK),
+  );
 
   const dateLocale = language?.startsWith('es') ? 'es-CO' : 'en-US';
 
@@ -82,15 +87,20 @@ export function CalendarScreen({ variant = 'grid', onOpenExpedition, monthsAhead
     from.setMonth(from.getMonth() - 1, 1);
     const to = new Date();
     to.setMonth(to.getMonth() + monthsAhead, 0);
-    const filters: CalendarSalidaFilters = {
-      category_id: ui.categoryId || null,
-      region: ui.region || null,
-      difficulty: ui.difficulty ? Number(ui.difficulty) : null,
-      onlyFree: ui.price === 'free',
-      onlyPaid: ui.price === 'paid',
+    // Translate UI filter state into the query DSL. priceMin/Max ride the
+    // raw min/max fields; "max == ceiling" means "no upper bound" so we drop
+    // the constraint to avoid filtering out expeditions priced above ceiling.
+    const apiFilters: CalendarSalidaFilters = {
+      categoryIds: filters.categoryIds,
+      regions: filters.regions,
+      terrainTags: filters.terrainTags,
+      difficulty: filters.difficulty,
+      minPriceCents: filters.priceMinCents > 0 ? filters.priceMinCents : null,
+      maxPriceCents: filters.priceMaxCents < priceCeiling ? filters.priceMaxCents : null,
+      minRating: filters.minRating > 0 ? filters.minRating : null,
     };
     Promise.all([
-      fetchSalidasInRange(getSupabase(), from.toISOString(), to.toISOString(), filters),
+      fetchSalidasInRange(getSupabase(), from.toISOString(), to.toISOString(), apiFilters),
       fetchCategories(getSupabase(), { activeOnly: true }),
     ])
       .then(([sals, cats]) => {
@@ -103,7 +113,24 @@ export function CalendarScreen({ variant = 'grid', onOpenExpedition, monthsAhead
     return () => {
       cancelled = true;
     };
-  }, [ui, monthsAhead]);
+  }, [filters, monthsAhead, priceCeiling]);
+
+  // Bump the price ceiling once we see data — the slider snaps cleanly to a
+  // power-of-two-ish number above the most expensive expedition.
+  useEffect(() => {
+    if (salidas.length === 0) return;
+    const maxSeen = salidas.reduce((m, s) => {
+      const p = s.price_cents ?? s.expedition.price_cents;
+      return p > m ? p : m;
+    }, 0);
+    if (maxSeen <= 0) return;
+    // Round up to nearest 100,000 COP.
+    const next = Math.ceil(maxSeen / 100_000_00) * 100_000_00;
+    if (next > priceCeiling) {
+      setPriceCeiling(next);
+      setFilters((f) => (f.priceMaxCents === priceCeiling ? { ...f, priceMaxCents: next } : f));
+    }
+  }, [salidas, priceCeiling]);
 
   const regions = useMemo(() => {
     const set = new Set<string>();
@@ -122,6 +149,9 @@ export function CalendarScreen({ variant = 'grid', onOpenExpedition, monthsAhead
     return map;
   }, [salidas]);
 
+  const activeCount = countActiveFilters(filters, priceCeiling);
+  const currency = salidas[0]?.expedition.currency ?? salidas[0]?.currency ?? 'COP';
+
   return (
     <Screen>
       <View style={{ paddingTop: spacing.xl, gap: spacing.xs }}>
@@ -134,29 +164,45 @@ export function CalendarScreen({ variant = 'grid', onOpenExpedition, monthsAhead
         <Text style={{ color: theme.textMuted, fontSize: fontSizes.sm }}>{t('cal.subtitle')}</Text>
       </View>
 
-      <FiltersBar
-        ui={ui}
-        setUi={setUi}
-        categories={categories}
-        regions={regions}
-        labels={{
-          all: t('cal.filters.all'),
-          free: t('cal.filters.free'),
-          paid: t('cal.filters.paid'),
-          reset: t('cal.filters.reset'),
-          category: t('cal.filters.category'),
-          region: t('cal.filters.region'),
-          difficulty: t('cal.filters.difficulty'),
-          price: t('cal.filters.price'),
-        }}
-        language={language}
-      />
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Pressable
+          accessibilityLabel={t('cal.filters.open')}
+          testID="calendar-filter-open"
+          onPress={() => setFilterOpen(true)}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: spacing.xs,
+            paddingHorizontal: spacing.md,
+            paddingVertical: spacing.sm,
+            borderRadius: radii.pill,
+            backgroundColor: theme.surface,
+            borderWidth: 1,
+            borderColor: activeCount > 0 ? theme.primary : theme.border,
+          }}
+        >
+          <Icon name="sliders" size={16} color={activeCount > 0 ? theme.primary : theme.text} strokeWidth={2.2} />
+          <Text
+            style={{
+              color: activeCount > 0 ? theme.primary : theme.text,
+              fontWeight: fontWeights.bold,
+              fontSize: fontSizes.sm,
+            }}
+          >
+            {t('cal.filters.open')}
+            {activeCount > 0 ? `  ·  ${t('cal.filters.activeCount').replace('{n}', String(activeCount))}` : ''}
+          </Text>
+        </Pressable>
+        <Text style={{ color: theme.textMuted, fontSize: fontSizes.xs }}>
+          {view === 'grid' ? t('cal.view.grid') : t('cal.view.agenda')}
+        </Text>
+      </View>
 
       {loading ? (
         <ActivityIndicator />
       ) : error ? (
         <EmptyState iconName="flag" title={t('empty.couldNotLoad')} body={error} />
-      ) : variant === 'grid' ? (
+      ) : view === 'grid' ? (
         <GridView
           cursor={cursor}
           setCursor={setCursor}
@@ -181,126 +227,20 @@ export function CalendarScreen({ variant = 'grid', onOpenExpedition, monthsAhead
           emptyLabel={t('cal.empty')}
         />
       )}
+
+      <CalendarFilterModal
+        visible={filterOpen}
+        onClose={() => setFilterOpen(false)}
+        value={filters}
+        onChange={setFilters}
+        view={view}
+        onChangeView={setView}
+        categories={categories}
+        regions={regions}
+        priceCeilingCents={priceCeiling}
+        currency={currency}
+      />
     </Screen>
-  );
-}
-
-function FiltersBar({
-  ui,
-  setUi,
-  categories,
-  regions,
-  labels,
-  language,
-}: {
-  ui: UiFilters;
-  setUi: (next: UiFilters) => void;
-  categories: DbCategory[];
-  regions: string[];
-  labels: {
-    all: string;
-    free: string;
-    paid: string;
-    reset: string;
-    category: string;
-    region: string;
-    difficulty: string;
-    price: string;
-  };
-  language: string;
-}) {
-  const { theme } = useTheme();
-  return (
-    <View style={{ gap: spacing.sm }}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        <View style={{ flexDirection: 'row', gap: spacing.xs, paddingVertical: spacing.xs }}>
-          <Pill
-            label={labels.all}
-            active={ui.categoryId === '' && ui.region === '' && ui.difficulty === '' && ui.price === 'all'}
-            onPress={() => setUi(EMPTY)}
-          />
-          {categories.map((c) => (
-            <Pill
-              key={c.id}
-              label={language?.startsWith('es') ? c.name_es : c.name_en}
-              active={ui.categoryId === c.id}
-              onPress={() => setUi({ ...ui, categoryId: ui.categoryId === c.id ? '' : c.id })}
-            />
-          ))}
-        </View>
-      </ScrollView>
-
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        <View style={{ flexDirection: 'row', gap: spacing.xs, paddingVertical: spacing.xs }}>
-          {(['all', 'free', 'paid'] as const).map((p) => (
-            <Pill
-              key={p}
-              label={p === 'all' ? labels.price : p === 'free' ? labels.free : labels.paid}
-              active={ui.price === p}
-              onPress={() => setUi({ ...ui, price: p })}
-            />
-          ))}
-          {[1, 2, 3, 4, 5].map((d) => (
-            <Pill
-              key={`diff-${d}`}
-              label={`${labels.difficulty} ${d}`}
-              active={ui.difficulty === String(d)}
-              onPress={() => setUi({ ...ui, difficulty: ui.difficulty === String(d) ? '' : String(d) })}
-            />
-          ))}
-        </View>
-      </ScrollView>
-
-      {regions.length > 0 ? (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View style={{ flexDirection: 'row', gap: spacing.xs, paddingVertical: spacing.xs }}>
-            {regions.map((r) => (
-              <Pill
-                key={r}
-                label={r}
-                active={ui.region === r}
-                onPress={() => setUi({ ...ui, region: ui.region === r ? '' : r })}
-              />
-            ))}
-          </View>
-        </ScrollView>
-      ) : null}
-
-      {(ui.categoryId || ui.region || ui.difficulty || ui.price !== 'all') ? (
-        <Pressable onPress={() => setUi(EMPTY)}>
-          <Text style={{ color: theme.primary, fontWeight: fontWeights.semibold, fontSize: fontSizes.xs }}>
-            {labels.reset}
-          </Text>
-        </Pressable>
-      ) : null}
-    </View>
-  );
-}
-
-function Pill({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
-  const { theme } = useTheme();
-  return (
-    <Pressable
-      onPress={onPress}
-      style={{
-        paddingHorizontal: spacing.md,
-        paddingVertical: spacing.xs,
-        backgroundColor: active ? theme.primary : theme.surfaceAlt,
-        borderRadius: radii.pill,
-        borderWidth: 1,
-        borderColor: active ? theme.primary : theme.border,
-      }}
-    >
-      <Text
-        style={{
-          color: active ? theme.onPrimary : theme.text,
-          fontSize: fontSizes.xs,
-          fontWeight: fontWeights.semibold,
-        }}
-      >
-        {label}
-      </Text>
-    </Pressable>
   );
 }
 
@@ -354,7 +294,7 @@ function GridView({
 
       <View style={{ flexDirection: 'row' }}>
         {weekdays.map((w) => (
-          <View key={w} style={{ flex: 1, paddingVertical: 4 }}>
+          <View key={w} style={{ width: `${100 / 7}%`, paddingVertical: 4, paddingHorizontal: 2 }}>
             <Text style={{ color: theme.textMuted, fontSize: 10, fontWeight: fontWeights.bold }}>{w}</Text>
           </View>
         ))}
@@ -369,7 +309,7 @@ function GridView({
             <View
               key={`${key}-${i}`}
               style={{
-                width: '14.285%',
+                width: `${100 / 7}%`,
                 minHeight: 86,
                 padding: 2,
               }}
@@ -384,6 +324,7 @@ function GridView({
                   padding: 4,
                   opacity: inMonth ? 1 : 0.5,
                   gap: 2,
+                  overflow: 'hidden',
                 }}
               >
                 <Text style={{ color: theme.textMuted, fontSize: 10 }}>{d.getDate()}</Text>

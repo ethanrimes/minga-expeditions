@@ -78,3 +78,8 @@ apps/mobile/tools/
 # Claude drives the browser to debug the web build. Pure ephemera.
 .playwright-mcp/
 .vercel
+
+# Raw geodata downloads (DANE admin shapefiles, IAvH biomes, etc).
+# Each dev fetches via scripts/geo/download.* — see data/geo/README.md.
+# Loaded into Postgres/PostGIS; the polygons never ship with the app.
+/data/geo/
