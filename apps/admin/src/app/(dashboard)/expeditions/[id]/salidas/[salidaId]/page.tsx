@@ -3,7 +3,7 @@ import { adminGetExpedition, fetchSalidaById } from '@minga/supabase';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getT } from '@/lib/i18n/server';
 import { SalidaForm } from '../SalidaForm';
-import { updateSalidaAction } from '../actions';
+import { deleteSalidaSeriesAction, updateSalidaAction } from '../actions';
 
 export default async function EditSalidaPage({
   params,
@@ -26,6 +26,29 @@ export default async function EditSalidaPage({
     <div>
       <h1 className="text-2xl font-bold">{t('salidas.editPage.title')}</h1>
       <p className="text-ink-500 mt-1 text-sm">{expedition.title}</p>
+
+      {salida.series_id ? (
+        <div className="mt-4 card bg-amber-50 border-amber-200">
+          <p className="text-sm text-ink-700 mb-2">
+            <strong>This date is part of a series.</strong> Editing below changes <em>just this one</em>.
+            To remove the whole series and all its dates, use the button on the right.
+          </p>
+          <form
+            action={deleteSalidaSeriesAction}
+            onSubmit={(e) => {
+              if (!confirm('Delete the entire series and all its occurrences?')) e.preventDefault();
+            }}
+            className="inline-flex"
+          >
+            <input type="hidden" name="series_id" value={salida.series_id} />
+            <input type="hidden" name="expedition_id" value={id} />
+            <button type="submit" className="btn-secondary text-xs text-danger">
+              Delete whole series
+            </button>
+          </form>
+        </div>
+      ) : null}
+
       <div className="mt-8">
         <SalidaForm
           action={action}

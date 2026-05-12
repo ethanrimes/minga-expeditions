@@ -20,6 +20,7 @@ import type {
   DbOrder,
   DbParticipation,
   DbProfile,
+  DbProvider,
   DbVendorProposal,
   ExpeditionWithAuthor,
   CommentWithAuthor,
@@ -535,6 +536,37 @@ export async function adminListExpeditions(
   const { data, error } = await q;
   if (error) throw error;
   return (data ?? []) as DbExpedition[];
+}
+
+export interface AdminItineraryRow extends DbExpedition {
+  provider: { id: string; display_name: string } | null;
+}
+
+export async function adminListItineraries(
+  client: SupabaseClient,
+  opts: {
+    search?: string;
+    categoryId?: string;
+    region?: string;
+    status?: 'published' | 'draft';
+    providerId?: string;
+    limit?: number;
+  } = {},
+): Promise<AdminItineraryRow[]> {
+  let q = client
+    .from('expeditions')
+    .select('*, provider:providers!expeditions_default_provider_id_fkey(id, display_name)')
+    .order('created_at', { ascending: false })
+    .limit(opts.limit ?? 200);
+  if (opts.categoryId) q = q.eq('category_id', opts.categoryId);
+  if (opts.region) q = q.eq('region', opts.region);
+  if (opts.providerId) q = q.eq('default_provider_id', opts.providerId);
+  if (opts.status === 'published') q = q.eq('is_published', true);
+  if (opts.status === 'draft') q = q.eq('is_published', false);
+  if (opts.search?.trim()) q = q.ilike('title', `%${opts.search.trim()}%`);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as AdminItineraryRow[];
 }
 
 export async function adminGetExpedition(
@@ -1288,7 +1320,9 @@ export async function fetchCommTemplates(
 }
 
 export type CommTemplateInput = {
+  id?: string;
   event_key: string;
+  name: string;
   locale: CommLocale;
   channel: CommChannel;
   subject?: string | null;
@@ -1302,7 +1336,7 @@ export async function upsertCommTemplate(
 ): Promise<DbCommTemplate> {
   const { data, error } = await client
     .from('comm_templates')
-    .upsert(input, { onConflict: 'event_key,locale,channel' })
+    .upsert(input)
     .select('*')
     .single();
   if (error) throw error;
@@ -1311,6 +1345,192 @@ export async function upsertCommTemplate(
 
 export async function deleteCommTemplate(client: SupabaseClient, id: string): Promise<void> {
   const { error } = await client.from('comm_templates').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// Atomic active-flip — calls the SECURITY DEFINER RPC so we never have two
+// active rows mid-transaction. See migration 20260512000300.
+export async function setActiveCommTemplate(
+  client: SupabaseClient,
+  templateId: string,
+): Promise<void> {
+  const { error } = await client.rpc('comm_templates_set_active', { p_template_id: templateId });
+  if (error) throw error;
+}
+
+// =============================================================================
+// Admin: profile list, drill-down details (orders + reviews + subscriptions).
+// =============================================================================
+
+export interface AdminProfileRow extends DbProfile {
+  phone_country_code: string | null;
+  phone_number: string | null;
+  email: string | null;
+}
+
+export async function fetchAdminProfiles(
+  client: SupabaseClient,
+  opts: { search?: string; tier?: string } = {},
+): Promise<AdminProfileRow[]> {
+  let q = client
+    .from('profiles')
+    .select('id, username, display_name, avatar_url, bio, home_country, instagram_handle, total_distance_km, total_elevation_m, tier, role, created_at, updated_at, phone_country_code, phone_number')
+    .order('created_at', { ascending: false })
+    .limit(500);
+  if (opts.tier) q = q.eq('tier', opts.tier);
+  if (opts.search) {
+    const s = opts.search;
+    q = q.or(`display_name.ilike.%${s}%,username.ilike.%${s}%`);
+  }
+  const { data, error } = await q;
+  if (error) throw error;
+  // We can't read auth.users.email from the anon/admin RLS context, so we
+  // leave email null and let the UI mark it as "auth-managed".
+  return (data ?? []).map((row) => ({ ...(row as DbProfile), phone_country_code: (row as { phone_country_code: string | null }).phone_country_code ?? null, phone_number: (row as { phone_number: string | null }).phone_number ?? null, email: null })) as AdminProfileRow[];
+}
+
+export async function fetchProfileTripsForAdmin(
+  client: SupabaseClient,
+  userId: string,
+): Promise<Array<{ order_id: string; status: string; amount_cents: number; currency: string; created_at: string; expedition: { id: string; title: string } | null; salida: { id: string; starts_at: string | null } | null }>> {
+  const { data, error } = await client
+    .from('orders')
+    .select('id, status, amount_cents, currency, created_at, expedition:expeditions(id,title), salida:expedition_salidas(id,starts_at)')
+    .eq('buyer_profile_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(50);
+  if (error) throw error;
+  return (data ?? []).map((rawRow) => {
+    // PostgREST returns to-one relations as objects at runtime, but the
+    // generated types are conservative arrays — squash via unknown.
+    const row = rawRow as unknown as {
+      id: string;
+      status: string;
+      amount_cents: number;
+      currency: string;
+      created_at: string;
+      expedition: { id: string; title: string } | { id: string; title: string }[] | null;
+      salida: { id: string; starts_at: string | null } | { id: string; starts_at: string | null }[] | null;
+    };
+    const expedition = Array.isArray(row.expedition) ? (row.expedition[0] ?? null) : row.expedition;
+    const salida = Array.isArray(row.salida) ? (row.salida[0] ?? null) : row.salida;
+    return {
+      order_id: row.id,
+      status: row.status,
+      amount_cents: row.amount_cents,
+      currency: row.currency,
+      created_at: row.created_at,
+      expedition,
+      salida,
+    };
+  });
+}
+
+export async function fetchOrganizerReviewsForUser(
+  client: SupabaseClient,
+  userId: string,
+): Promise<Array<{ id: string; stars: number; body: string | null; reviewed_at: string | null; expedition_title: string | null }>> {
+  const { data, error } = await client
+    .from('participations')
+    .select('id, organizer_review_stars, organizer_review_body, organizer_reviewed_at, expedition:expeditions(title)')
+    .eq('user_id', userId)
+    .not('organizer_review_stars', 'is', null)
+    .order('organizer_reviewed_at', { ascending: false });
+  if (error) throw error;
+  return (data ?? [])
+    .map((rawRow) => {
+      const row = rawRow as unknown as {
+        id: string;
+        organizer_review_stars: number | null;
+        organizer_review_body: string | null;
+        organizer_reviewed_at: string | null;
+        expedition: { title: string } | { title: string }[] | null;
+      };
+      const exp = Array.isArray(row.expedition) ? (row.expedition[0] ?? null) : row.expedition;
+      return {
+        id: row.id,
+        stars: row.organizer_review_stars,
+        body: row.organizer_review_body,
+        reviewed_at: row.organizer_reviewed_at,
+        expedition_title: exp?.title ?? null,
+      };
+    })
+    .filter((r): r is { id: string; stars: number; body: string | null; reviewed_at: string | null; expedition_title: string | null } => r.stars != null);
+}
+
+export async function fetchUserCommSubscriptions(
+  client: SupabaseClient,
+  userId: string,
+): Promise<Array<{ event_key: string; channel: string; is_subscribed: boolean }>> {
+  const { data, error } = await client
+    .from('user_comm_subscriptions')
+    .select('event_key, channel, is_subscribed')
+    .eq('user_id', userId);
+  if (error) throw error;
+  return (data ?? []) as Array<{ event_key: string; channel: string; is_subscribed: boolean }>;
+}
+
+// =============================================================================
+// Providers directory — see migration ..._providers.
+// =============================================================================
+
+export async function fetchProviders(
+  client: SupabaseClient,
+  opts: { search?: string; vendorType?: VendorType; includeInactive?: boolean } = {},
+): Promise<DbProvider[]> {
+  let q = client
+    .from('providers')
+    .select('*')
+    .order('display_name', { ascending: true });
+  if (!opts.includeInactive) q = q.eq('is_active', true);
+  if (opts.vendorType) q = q.eq('vendor_type', opts.vendorType);
+  if (opts.search) q = q.ilike('display_name', `%${opts.search}%`);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as DbProvider[];
+}
+
+export async function fetchProvider(
+  client: SupabaseClient,
+  id: string,
+): Promise<DbProvider | null> {
+  const { data, error } = await client
+    .from('providers')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle();
+  if (error) throw error;
+  return (data ?? null) as DbProvider | null;
+}
+
+export type ProviderInput = {
+  id?: string;
+  display_name: string;
+  vendor_type?: VendorType | null;
+  region?: string | null;
+  contact_email?: string | null;
+  contact_phone?: string | null;
+  whatsapp?: string | null;
+  website?: string | null;
+  notes?: string | null;
+  is_active?: boolean;
+};
+
+export async function upsertProvider(
+  client: SupabaseClient,
+  input: ProviderInput,
+): Promise<DbProvider> {
+  const { data, error } = await client
+    .from('providers')
+    .upsert(input)
+    .select('*')
+    .single();
+  if (error) throw error;
+  return data as DbProvider;
+}
+
+export async function deleteProvider(client: SupabaseClient, id: string): Promise<void> {
+  const { error } = await client.from('providers').delete().eq('id', id);
   if (error) throw error;
 }
 

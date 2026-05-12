@@ -240,6 +240,10 @@ export interface DbExpeditionSalida {
   currency: string | null;
   notes: string | null;
   is_published: boolean;
+  // Recurrence linkage — see migration 20260512000200_salida_series.
+  series_id: string | null;
+  overrides_series: boolean;
+  provider_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -266,15 +270,25 @@ export interface DbParticipation {
 export type CommChannel = 'email' | 'whatsapp';
 export type CommLocale = 'en' | 'es';
 
+export interface CommPlaceholder {
+  key: string;
+  label: string;
+  source?: string;
+  example?: string;
+  format?: string;
+}
+
 export interface DbCommEventType {
   key: string;
   description: string;
+  placeholders: CommPlaceholder[];
   created_at: string;
 }
 
 export interface DbCommTemplate {
   id: string;
   event_key: string;
+  name: string;
   locale: CommLocale;
   channel: CommChannel;
   subject: string | null;
@@ -306,6 +320,24 @@ export interface DbCommBroadcastTemplate {
   created_at: string;
   updated_at: string;
 }
+
+export interface DbProvider {
+  id: string;
+  profile_id: string | null;
+  proposal_id: string | null;
+  display_name: string;
+  vendor_type: VendorType | null;
+  region: string | null;
+  contact_email: string | null;
+  contact_phone: string | null;
+  whatsapp: string | null;
+  website: string | null;
+  notes: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 
 export interface DbVendorProposal {
   id: string;

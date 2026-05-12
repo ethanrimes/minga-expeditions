@@ -7,6 +7,7 @@ import { formatSalidaDate, isSoldOut, seatsRemaining } from '@minga/logic';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getT } from '@/lib/i18n/server';
 import { SalidaForm } from './SalidaForm';
+import { SeriesForm } from './SeriesForm';
 import { createSalidaAction, deleteSalidaAction } from './actions';
 
 function formatPriceCents(price: number, currency: string) {
@@ -123,6 +124,20 @@ export default async function ExpeditionSalidasPage({ params }: { params: Promis
             ) : null}
           </tbody>
         </table>
+      </section>
+
+      <section className="mt-10">
+        <h2 className="text-lg font-semibold flex items-center gap-2">
+          <Plus size={16} /> New series (recurring)
+        </h2>
+        <p className="text-ink-500 mt-1 text-sm max-w-xl">
+          Generate many salidas in one shot — pick a frequency + interval + end date. Each
+          occurrence is a real salida row linked back to a series, so you can edit one or delete
+          them all together.
+        </p>
+        <div className="mt-4">
+          <SeriesForm expeditionId={id} />
+        </div>
       </section>
 
       <section className="mt-10">

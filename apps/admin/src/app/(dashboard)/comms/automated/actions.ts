@@ -1,7 +1,12 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { upsertCommTemplate, type CommTemplateInput } from '@minga/supabase';
+import {
+  deleteCommTemplate,
+  setActiveCommTemplate,
+  upsertCommTemplate,
+  type CommTemplateInput,
+} from '@minga/supabase';
 import { requireAdmin } from '@/lib/auth';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
@@ -12,8 +17,11 @@ export async function saveCommTemplateAction(
   formData: FormData,
 ): Promise<CommTemplateFormState> {
   await requireAdmin();
+  const id = String(formData.get('id') ?? '').trim();
   const input: CommTemplateInput = {
+    ...(id ? { id } : {}),
     event_key: String(formData.get('event_key') ?? ''),
+    name: String(formData.get('name') ?? '').trim() || 'Default',
     locale: String(formData.get('locale') ?? 'es') as 'en' | 'es',
     channel: String(formData.get('channel') ?? 'email') as 'email' | 'whatsapp',
     subject: String(formData.get('subject') ?? '').trim() || null,
@@ -31,4 +39,22 @@ export async function saveCommTemplateAction(
   }
   revalidatePath('/comms/automated');
   return { saved: true };
+}
+
+export async function deleteCommTemplateAction(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const id = String(formData.get('id') ?? '').trim();
+  if (!id) return;
+  const supabase = await createSupabaseServerClient();
+  await deleteCommTemplate(supabase, id);
+  revalidatePath('/comms/automated');
+}
+
+export async function setActiveCommTemplateAction(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const id = String(formData.get('id') ?? '').trim();
+  if (!id) return;
+  const supabase = await createSupabaseServerClient();
+  await setActiveCommTemplate(supabase, id);
+  revalidatePath('/comms/automated');
 }

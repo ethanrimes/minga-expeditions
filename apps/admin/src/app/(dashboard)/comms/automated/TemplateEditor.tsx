@@ -1,49 +1,86 @@
 'use client';
 
-import { useActionState } from 'react';
-import type { CommChannel, CommLocale, DbCommTemplate } from '@minga/types';
+import { useActionState, useState } from 'react';
+import type { CommChannel, CommLocale, CommPlaceholder, DbCommTemplate } from '@minga/types';
 import { saveCommTemplateAction, type CommTemplateFormState } from './actions';
 
 interface Labels {
+  name: string;
   subject: string;
   body: string;
   active: string;
   save: string;
   saved: string;
-  empty: string;
   placeholdersHelp: string;
-  channelLabel: string;
 }
 
 interface Props {
   eventKey: string;
-  locale: CommLocale;
-  channel: CommChannel;
   initial: DbCommTemplate | null;
+  defaultLocale?: CommLocale;
+  defaultChannel?: CommChannel;
+  placeholders: CommPlaceholder[];
   labels: Labels;
 }
 
 const initialState: CommTemplateFormState = {};
 
-export function TemplateEditor({ eventKey, locale, channel, initial, labels }: Props) {
+export function TemplateEditor({
+  eventKey,
+  initial,
+  defaultLocale = 'es',
+  defaultChannel = 'email',
+  placeholders,
+  labels,
+}: Props) {
   const [state, formAction, pending] = useActionState(saveCommTemplateAction, initialState);
+  const [locale, setLocale] = useState<CommLocale>(initial?.locale ?? defaultLocale);
+  const [channel, setChannel] = useState<CommChannel>(initial?.channel ?? defaultChannel);
 
   return (
     <form
       action={formAction}
-      data-testid={`tmpl-${eventKey}-${locale}-${channel}`}
-      className="flex flex-col gap-2 p-4 rounded-lg border border-surface-border bg-surface-alt"
+      data-testid={`tmpl-form-${initial?.id ?? 'new'}`}
+      className="flex flex-col gap-3"
     >
-      <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-ink-500">
-        <span className="font-bold">{locale.toUpperCase()}</span>
-        <span>·</span>
-        <span>{labels.channelLabel}</span>
-        {!initial ? <span className="ml-auto text-ink-300">{labels.empty}</span> : null}
-      </div>
-
       <input type="hidden" name="event_key" value={eventKey} />
-      <input type="hidden" name="locale" value={locale} />
-      <input type="hidden" name="channel" value={channel} />
+      {initial ? <input type="hidden" name="id" value={initial.id} /> : null}
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <label className="field">
+          <span className="field-label">{labels.name}</span>
+          <input
+            name="name"
+            defaultValue={initial?.name ?? 'Default'}
+            required
+            className="field-input"
+          />
+        </label>
+        <label className="field">
+          <span className="field-label">Language</span>
+          <select
+            name="locale"
+            value={locale}
+            onChange={(e) => setLocale(e.target.value as CommLocale)}
+            className="field-input"
+          >
+            <option value="es">ES</option>
+            <option value="en">EN</option>
+          </select>
+        </label>
+        <label className="field">
+          <span className="field-label">Channel</span>
+          <select
+            name="channel"
+            value={channel}
+            onChange={(e) => setChannel(e.target.value as CommChannel)}
+            className="field-input"
+          >
+            <option value="email">Email</option>
+            <option value="whatsapp">WhatsApp</option>
+          </select>
+        </label>
+      </div>
 
       {channel === 'email' ? (
         <label className="field">
@@ -66,13 +103,26 @@ export function TemplateEditor({ eventKey, locale, channel, initial, labels }: P
           className="field-input resize-y"
         />
         <span className="text-xs text-ink-500 mt-1">{labels.placeholdersHelp}</span>
+        {placeholders.length > 0 ? (
+          <span className="text-[11px] text-ink-500 mt-1 flex flex-wrap gap-1">
+            {placeholders.map((p) => (
+              <code
+                key={p.key}
+                title={p.label}
+                className="px-1.5 py-0.5 rounded bg-surface-alt border border-surface-border"
+              >
+                {'{' + p.key + '}'}
+              </code>
+            ))}
+          </span>
+        ) : null}
       </label>
 
       <label className="flex items-center gap-2 text-sm">
         <input
           type="checkbox"
           name="is_active"
-          defaultChecked={initial?.is_active ?? true}
+          defaultChecked={initial?.is_active ?? false}
           className="h-4 w-4"
         />
         <span>{labels.active}</span>
