@@ -3,3 +3,4 @@ export * from './format';
 export * from './geo';
 export * from './salida';
 export * from './countryCodes';
+export * from './activity';

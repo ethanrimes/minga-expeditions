@@ -13,7 +13,6 @@ import { CalendarPage } from './pages/CalendarPage';
 import { ExpeditionPage } from './pages/ExpeditionPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { AuthPage } from './pages/AuthPage';
-import { TrackPage } from './pages/TrackPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { MapPage } from './pages/MapPage';
 import { ActivityPage } from './pages/ActivityPage';
@@ -76,7 +75,6 @@ export function App() {
           <Route path="/map" element={<MapPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/activities/:id" element={<ActivityPage />} />
-          <Route path="/track" element={<TrackPage />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/partners" element={<PartnersPage />} />
           <Route path="/orders/:id/success" element={<OrderSuccessPage />} />

@@ -92,7 +92,7 @@ Sentry.init({
   // spotlight: __DEV__,
 });
 
-type Tab = 'feed' | 'calendar' | 'map' | 'track' | 'profile' | 'settings';
+type Tab = 'feed' | 'calendar' | 'map' | 'track' | 'profile';
 
 interface CheckoutContext {
   expedition: ExpeditionWithAuthor;
@@ -103,6 +103,7 @@ type Route =
   | { kind: 'tab'; tab: Tab }
   | { kind: 'expedition'; id: string }
   | { kind: 'activity'; id: string }
+  | { kind: 'settings' }
   | { kind: 'checkout'; ctx: CheckoutContext }
   | { kind: 'order-success'; orderId: string; expeditionId: string };
 
@@ -136,7 +137,6 @@ function Root() {
     { key: 'map', label: t('tab.map'), icon: 'map' },
     { key: 'track', label: t('tab.track'), icon: 'activity' },
     { key: 'profile', label: t('tab.profile'), icon: 'user' },
-    { key: 'settings', label: t('tab.settings'), icon: 'settings' },
   ];
 
   const screen = () => {
@@ -211,6 +211,15 @@ function Root() {
         />
       );
     }
+    if (route.kind === 'settings') {
+      return (
+        <SettingsScreen
+          onBack={() => setRoute({ kind: 'tab', tab: 'profile' })}
+          onSignIn={() => setAuth(true)}
+          photoPicker={photoPicker}
+        />
+      );
+    }
     switch (route.tab) {
       case 'feed':
         return (
@@ -241,11 +250,9 @@ function Root() {
           <ProfileScreen
             onSignIn={() => setAuth(true)}
             onOpenActivity={(id) => setRoute({ kind: 'activity', id })}
-            photoPicker={photoPicker}
+            onOpenSettings={() => setRoute({ kind: 'settings' })}
           />
         );
-      case 'settings':
-        return <SettingsScreen />;
     }
   };
 

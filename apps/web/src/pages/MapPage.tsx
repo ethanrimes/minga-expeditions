@@ -294,18 +294,6 @@ export function MapPage() {
         >
           {t('nav.expeditions')}
         </Link>
-        <Link
-          to="/track"
-          style={{
-            background: theme.primary,
-            color: theme.onPrimary,
-            padding: '10px 18px',
-            borderRadius: 999,
-            fontWeight: 700,
-          }}
-        >
-          {t('nav.track')}
-        </Link>
       </div>
     </div>
   );

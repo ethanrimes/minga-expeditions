@@ -75,5 +75,15 @@ export const tierColors = {
   diamond: '#5BCEFA',
 } as const;
 
+// Fixed accent colors that classify an activity by how it was undertaken.
+// Kept constant across every theme + platform so the Minga vs. independent
+// distinction reads the same on web, mobile, and mobile-web.
+//   minga       → booked / linked through a Minga expedition (Minga orange)
+//   independent → self-logged on your own (calm blue)
+export const activityColors = {
+  minga: '#ED8B00',
+  independent: '#3B82F6',
+} as const;
+
 export type Spacing = keyof typeof spacing;
 export type Radius = keyof typeof radii;

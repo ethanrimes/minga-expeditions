@@ -9,3 +9,6 @@ export * from './SignInRequiredModal';
 export * from './PaymentCelebrationModal';
 export * from './CalendarFilterModal';
 export * from './SocialRow';
+export * from './ConnectedAccounts';
+export * from './MetricsBreakdown';
+export * from './ActivityCalendar';

@@ -5,7 +5,11 @@ import { useT } from '@minga/i18n';
 import type { ThemeName } from '@minga/types';
 import { Screen } from '../primitives/Screen';
 import { Icon } from '../primitives/Icon';
+import { Button } from '../primitives/Button';
 import { SectionHeader } from '../components/SectionHeader';
+import { ConnectedAccounts } from '../components/ConnectedAccounts';
+import { useAuth } from '../hooks/useAuth';
+import type { ActivityPhotoPicker } from './ActivityDetailScreen';
 
 const THEME_META: Record<ThemeName, { titleKey: any; subtitleKey: any; swatch: string }> = {
   livehappy: {
@@ -32,7 +36,15 @@ const FONT_LABEL_KEY: Record<FontScaleLevel, any> = {
   xl: 'settings.fontSizeXl',
 };
 
-export function SettingsScreen() {
+export function SettingsScreen({
+  onBack,
+  onSignIn,
+  photoPicker,
+}: {
+  onBack?: () => void;
+  onSignIn?: () => void;
+  photoPicker?: ActivityPhotoPicker;
+} = {}) {
   const {
     theme,
     themeName,
@@ -43,14 +55,44 @@ export function SettingsScreen() {
     availableFontScales,
   } = useTheme();
   const { t, language, setLanguage, available: langs } = useT();
+  const { user, signOut } = useAuth();
 
   return (
     <Screen>
-      <View style={{ paddingTop: spacing.xl }}>
+      <View style={{ paddingTop: spacing.xl, flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+        {onBack ? (
+          <Pressable
+            onPress={onBack}
+            accessibilityLabel={t('common.back')}
+            hitSlop={8}
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: radii.pill,
+              backgroundColor: theme.surfaceAlt,
+              borderColor: theme.border,
+              borderWidth: 1,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Icon name="chevron-left" size={22} color={theme.text} strokeWidth={2.2} />
+          </Pressable>
+        ) : null}
         <Text style={{ color: theme.text, fontSize: fontSizes['2xl'], fontWeight: fontWeights.heavy }}>
           {t('settings.title')}
         </Text>
       </View>
+
+      <SectionHeader title={t('settings.accountHeading')} />
+      <ConnectedAccounts photoPicker={photoPicker} />
+      {user ? (
+        <Button label={t('profile.signOut')} variant="ghost" onPress={signOut} />
+      ) : onSignIn ? (
+        <Button label={t('auth.signIn')} onPress={onSignIn} />
+      ) : null}
+
+      <SectionHeader title={t('settings.appearanceHeading')} />
 
       <SectionHeader title={t('settings.language')} />
       <PillToggle

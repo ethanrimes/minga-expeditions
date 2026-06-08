@@ -32,10 +32,8 @@ export function NavBar() {
     { to: '/expeditions', label: t('nav.expeditions') },
     { to: '/calendar', label: t('nav.calendar') },
     { to: '/map', label: t('nav.map') },
-    { to: '/track', label: t('nav.track') },
     { to: '/profile', label: t('nav.profile') },
     { to: '/partners', label: t('nav.partners') },
-    { to: '/settings', label: t('nav.settings') },
   ];
 
   return (

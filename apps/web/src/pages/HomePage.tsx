@@ -86,7 +86,7 @@ export function HomePage() {
               aspectRatio: '4/3',
               borderRadius: 24,
               background:
-                'url(https://images.unsplash.com/photo-1568438350562-2cae6d394ad0?w=1200) center/cover, #000',
+                'url(https://mingapersonalst01.blob.core.windows.net/media/static/home-hero.jpg) center/cover, #000',
               boxShadow: '0 30px 60px rgba(0,0,0,0.2)',
             }}
           />

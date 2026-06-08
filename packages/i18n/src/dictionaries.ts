@@ -105,6 +105,17 @@ export type TranslationKey =
   | 'profile.signOut'
   | 'profile.tierProgress'
   | 'profile.tierToGo'
+  | 'profile.openSettings'
+  | 'profile.metricsHeading'
+  | 'profile.metricsAll'
+  | 'profile.metricsMinga'
+  | 'profile.metricsIndependent'
+  | 'profile.calendarHeading'
+  | 'profile.calendarActiveDays'
+  | 'profile.legendMinga'
+  | 'profile.legendIndependent'
+  | 'profile.badgeMinga'
+  | 'profile.badgeIndependent'
   | 'auth.welcomeBack'
   | 'auth.joinTitle'
   | 'auth.oauthNote'
@@ -127,6 +138,8 @@ export type TranslationKey =
   | 'settings.aboutBody'
   | 'settings.languageEn'
   | 'settings.languageEs'
+  | 'settings.accountHeading'
+  | 'settings.appearanceHeading'
   | 'map.title'
   | 'map.subtitle'
   | 'map.legendOfficial'
@@ -488,11 +501,22 @@ export const en: Record<TranslationKey, string> = {
   'profile.signInTitle': 'Sign in to see your profile',
   'profile.signInBody': 'Track expeditions, earn tiers, and follow friends.',
   'profile.recentActivities': 'Recent activities',
-  'profile.emptyActivities': 'No activities yet. Start tracking →',
-  'profile.emptyActivitiesCta': 'Start tracking',
+  'profile.emptyActivities': 'No activities yet.',
+  'profile.emptyActivitiesCta': 'Browse expeditions',
   'profile.signOut': 'Sign out',
   'profile.tierProgress': 'Tier progress',
   'profile.tierToGo': 'more to reach',
+  'profile.openSettings': 'Settings',
+  'profile.metricsHeading': 'Your totals',
+  'profile.metricsAll': 'Everything',
+  'profile.metricsMinga': 'With Minga',
+  'profile.metricsIndependent': 'On your own',
+  'profile.calendarHeading': 'Activity calendar',
+  'profile.calendarActiveDays': '{count} active days',
+  'profile.legendMinga': 'With Minga',
+  'profile.legendIndependent': 'On your own',
+  'profile.badgeMinga': 'Minga',
+  'profile.badgeIndependent': 'On your own',
   'auth.welcomeBack': 'Welcome back',
   'auth.joinTitle': 'Join the expedition',
   'auth.oauthNote': 'Sign in with Google, Meta, or your email.',
@@ -516,6 +540,8 @@ export const en: Record<TranslationKey, string> = {
     'Minga Expeditions · PoC build. Cross-platform mobile + web client for the Colombia traveler community.',
   'settings.languageEn': 'English',
   'settings.languageEs': 'Español',
+  'settings.accountHeading': 'Account & connections',
+  'settings.appearanceHeading': 'Appearance',
   'map.title': 'Map',
   'map.subtitle': 'Expeditions and your tracked activities across Colombia.',
   'map.legendOfficial': 'Minga official',
@@ -892,11 +918,22 @@ export const es: Record<TranslationKey, string> = {
   'profile.signInTitle': 'Inicia sesión para ver tu perfil',
   'profile.signInBody': 'Registra expediciones, gana categorías y sigue a amigos.',
   'profile.recentActivities': 'Actividades recientes',
-  'profile.emptyActivities': 'Aún no hay actividades. Empieza a registrar →',
-  'profile.emptyActivitiesCta': 'Empezar a registrar',
+  'profile.emptyActivities': 'Aún no hay actividades.',
+  'profile.emptyActivitiesCta': 'Explorar expediciones',
   'profile.signOut': 'Cerrar sesión',
   'profile.tierProgress': 'Progreso de categoría',
   'profile.tierToGo': 'más para alcanzar',
+  'profile.openSettings': 'Ajustes',
+  'profile.metricsHeading': 'Tus totales',
+  'profile.metricsAll': 'Todo',
+  'profile.metricsMinga': 'Con Minga',
+  'profile.metricsIndependent': 'Por tu cuenta',
+  'profile.calendarHeading': 'Calendario de actividad',
+  'profile.calendarActiveDays': '{count} días activos',
+  'profile.legendMinga': 'Con Minga',
+  'profile.legendIndependent': 'Por tu cuenta',
+  'profile.badgeMinga': 'Minga',
+  'profile.badgeIndependent': 'Por tu cuenta',
   'auth.welcomeBack': 'Bienvenido de nuevo',
   'auth.joinTitle': 'Únete a la expedición',
   'auth.oauthNote': 'Inicia sesión con Google, Meta o tu correo.',
@@ -920,6 +957,8 @@ export const es: Record<TranslationKey, string> = {
     'Minga Expeditions · build PoC. Cliente multiplataforma móvil + web para la comunidad viajera en Colombia.',
   'settings.languageEn': 'English',
   'settings.languageEs': 'Español',
+  'settings.accountHeading': 'Cuenta y conexiones',
+  'settings.appearanceHeading': 'Apariencia',
   'map.title': 'Mapa',
   'map.subtitle': 'Expediciones y tus actividades registradas en toda Colombia.',
   'map.legendOfficial': 'Oficial de Minga',

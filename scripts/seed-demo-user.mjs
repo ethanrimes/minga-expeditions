@@ -102,72 +102,68 @@ function makeTrack(centerLng, centerLat, startElev, points, stepMeters, startMs)
   return out;
 }
 
-const DEMO_ACTIVITIES = [
-  {
-    // Attended official expedition: Chingaza Páramo Run
-    id: 'aaaa0001-0000-0000-0000-000000000001',
-    expedition_id: '22222222-0000-0000-0000-000000000009',
-    activity_type: 'run',
-    title: 'Chingaza sunrise — 18 km',
-    notes: 'Frost on the frailejones. Cold start at 4:40 AM.',
-    start_offset_days: 2,
-    duration_min: 2 * 60 + 5,
-    center: [-73.7536, 4.6872],
-    start_elev: 3200,
-    points: 60,
-    step: 300,
-    distance_km: 18.1,
-    elevation_gain_m: 720,
-  },
-  {
-    // Attended official expedition: Valle de Cocora Loop
-    id: 'aaaa0001-0000-0000-0000-000000000002',
-    expedition_id: '22222222-0000-0000-0000-000000000002',
-    activity_type: 'hike',
-    title: 'Valle de Cocora — mirador loop',
-    notes: 'Caught the wax palms at golden hour.',
-    start_offset_days: 10,
-    duration_min: 4 * 60 + 12,
-    center: [-75.486, 4.6373],
-    start_elev: 2400,
-    points: 55,
-    step: 240,
-    distance_km: 12.7,
-    elevation_gain_m: 660,
-  },
-  {
-    // Attended community expedition: Guatapé Rock Climb
-    id: 'aaaa0001-0000-0000-0000-000000000003',
-    expedition_id: '22222222-0000-0000-0000-000000000007',
-    activity_type: 'hike',
-    title: 'El Peñón de Guatapé + lake',
-    notes: 'Climbed the 740 steps then a lakeside loop. ~11 km.',
-    start_offset_days: 22,
-    duration_min: 3 * 60 + 20,
-    center: [-75.1597, 6.2328],
-    start_elev: 1920,
-    points: 50,
-    step: 230,
-    distance_km: 11.2,
-    elevation_gain_m: 390,
-  },
-  {
-    // Untied: solo Monserrate training run
-    id: 'aaaa0001-0000-0000-0000-000000000004',
-    expedition_id: null,
-    activity_type: 'hike',
-    title: 'Monserrate stair push',
-    notes: 'Training hike — steep, short, sweaty.',
-    start_offset_days: 35,
-    duration_min: 85,
-    center: [-74.0558, 4.6061],
-    start_elev: 2640,
-    points: 30,
-    step: 130,
-    distance_km: 3.6,
-    elevation_gain_m: 540,
-  },
+// Pool of seeded expedition ids (see supabase/seed). Minga activities link to one
+// of these; independent activities have expedition_id = null.
+const EXPEDITION_POOL = Array.from(
+  { length: 9 },
+  (_, i) => `22222222-0000-0000-0000-00000000000${i + 1}`,
+);
+
+// Real-ish Colombian outdoor spots reused across the generated history.
+const SPOTS = [
+  { title: 'Chingaza páramo sunrise', type: 'run', center: [-73.7536, 4.6872], elev: 3200, dKm: 17.8, gain: 700 },
+  { title: 'Valle de Cocora mirador loop', type: 'hike', center: [-75.486, 4.6373], elev: 2400, dKm: 12.7, gain: 660 },
+  { title: 'El Peñón de Guatapé + lake', type: 'hike', center: [-75.1597, 6.2328], elev: 1920, dKm: 11.2, gain: 390 },
+  { title: 'Monserrate stair push', type: 'hike', center: [-74.0558, 4.6061], elev: 2640, dKm: 3.6, gain: 540 },
+  { title: 'Suesca rock approach', type: 'hike', center: [-73.7972, 5.1031], elev: 2580, dKm: 6.1, gain: 220 },
+  { title: 'Laguna de Guatavita rim', type: 'hike', center: [-73.7783, 4.9783], elev: 3000, dKm: 7.4, gain: 180 },
+  { title: 'Cerros Orientales dawn run', type: 'run', center: [-74.0411, 4.6486], elev: 2680, dKm: 9.2, gain: 300 },
+  { title: 'Ciclovía Bogotá long ride', type: 'ride', center: [-74.0721, 4.7110], elev: 2640, dKm: 38.5, gain: 210 },
+  { title: 'La Chorrera waterfall', type: 'hike', center: [-73.9869, 4.4214], elev: 2900, dKm: 8.8, gain: 430 },
+  { title: 'Nevado del Ruiz acclimatization', type: 'hike', center: [-75.3236, 4.8922], elev: 4050, dKm: 9.5, gain: 520 },
+  { title: 'Parque Tayrona — Cabo San Juan', type: 'hike', center: [-74.0306, 11.3097], elev: 30, dKm: 14.3, gain: 260 },
+  { title: 'Usaquén tempo run', type: 'run', center: [-74.0309, 4.6951], elev: 2580, dKm: 6.8, gain: 90 },
+  { title: 'Parque Simón Bolívar loops', type: 'walk', center: [-74.0925, 4.6585], elev: 2600, dKm: 5.2, gain: 40 },
+  { title: 'Sierra Nevada del Cocuy ridge', type: 'hike', center: [-72.3333, 6.4167], elev: 4200, dKm: 13.9, gain: 880 },
 ];
+
+// Build ~36 activities spread across roughly a year, mixing Minga-linked
+// (expedition_id set) and independent (expedition_id null) outings.
+function buildDemoActivities() {
+  const out = [];
+  const count = 36;
+  for (let i = 0; i < count; i++) {
+    const spot = SPOTS[i % SPOTS.length];
+    // ~45% Minga, deterministic so re-runs are stable.
+    const isMinga = i % 9 < 4;
+    // Vary the distance/elevation a little per outing.
+    const jitter = 0.85 + ((i * 37) % 30) / 100; // 0.85..1.14
+    const distance_km = Math.round(spot.dKm * jitter * 10) / 10;
+    const elevation_gain_m = Math.round(spot.gain * jitter);
+    // Rough pace per type to derive a believable duration.
+    const kmh = spot.type === 'ride' ? 18 : spot.type === 'run' ? 9 : 4.2;
+    const duration_min = Math.max(25, Math.round((distance_km / kmh) * 60));
+    out.push({
+      id: `aaaa0001-0000-0000-0000-${String(i + 1).padStart(12, '0')}`,
+      expedition_id: isMinga ? EXPEDITION_POOL[i % EXPEDITION_POOL.length] : null,
+      activity_type: spot.type,
+      title: spot.title,
+      notes: isMinga ? 'Minga expedition outing.' : 'Solo training session.',
+      // Spread from ~12 days ago back to ~358 days ago.
+      start_offset_days: 12 + i * 10,
+      duration_min,
+      center: spot.center,
+      start_elev: spot.elev,
+      points: Math.min(70, 24 + Math.round(distance_km * 2)),
+      step: spot.type === 'ride' ? 600 : 240,
+      distance_km,
+      elevation_gain_m,
+    });
+  }
+  return out;
+}
+
+const DEMO_ACTIVITIES = buildDemoActivities();
 
 async function main() {
   const userId = await ensureDemoUser();
@@ -266,14 +262,18 @@ async function main() {
       [userId],
     );
 
-    // Override totals so the UI shows a richer demo picture than just the 4 seeded activities.
+    // Override totals so the UI matches the seeded activity history.
+    const totalDistanceKm = DEMO_ACTIVITIES.reduce((s, a) => s + a.distance_km, 0);
+    const totalElevationM = DEMO_ACTIVITIES.reduce((s, a) => s + a.elevation_gain_m, 0);
+    const tier =
+      totalDistanceKm >= 500 ? 'gold' : totalDistanceKm >= 200 ? 'silver' : 'bronze';
     await client.query(
       `update public.profiles
-          set total_distance_km = 680.4,
-              total_elevation_m = 31800,
-              tier              = 'gold'
+          set total_distance_km = $2,
+              total_elevation_m = $3,
+              tier              = $4
         where id = $1`,
-      [userId],
+      [userId, Math.round(totalDistanceKm * 10) / 10, Math.round(totalElevationM), tier],
     );
 
     console.log('✔ demo user seeded');

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { useTheme, radii, spacing, fontSizes, fontWeights } from '@minga/theme';
-import { formatDistanceKm, formatDuration, formatElevation } from '@minga/logic';
+import { useTheme, radii, spacing, fontSizes, fontWeights, activityColors } from '@minga/theme';
+import { formatDistanceKm, formatDuration, formatElevation, isMingaActivity } from '@minga/logic';
 import { useT } from '@minga/i18n';
 import type { DbActivity } from '@minga/types';
 import { Icon, type IconName } from '../primitives/Icon';
@@ -23,6 +23,8 @@ export function ActivityCard({
   const { theme } = useTheme();
   const { t, language } = useT();
   const locale = language === 'es' ? 'es-CO' : 'en-US';
+  const minga = isMingaActivity(activity);
+  const accent = minga ? activityColors.minga : activityColors.independent;
 
   const body = (
     <>
@@ -39,9 +41,24 @@ export function ActivityCard({
         >
           <Icon name={ACTIVITY_ICON[activity.activity_type]} size={20} color={theme.primary} strokeWidth={2.2} />
         </View>
-        <Text style={{ color: theme.text, fontSize: fontSizes.md, fontWeight: fontWeights.semibold, flex: 1 }}>
-          {activity.title}
-        </Text>
+        <View style={{ flex: 1, gap: 2 }}>
+          <Text style={{ color: theme.text, fontSize: fontSizes.md, fontWeight: fontWeights.semibold }}>
+            {activity.title}
+          </Text>
+          <View
+            style={{
+              alignSelf: 'flex-start',
+              backgroundColor: accent,
+              borderRadius: radii.pill,
+              paddingHorizontal: 8,
+              paddingVertical: 2,
+            }}
+          >
+            <Text style={{ color: '#fff', fontSize: 10, fontWeight: fontWeights.bold, letterSpacing: 0.5 }}>
+              {minga ? t('profile.badgeMinga') : t('profile.badgeIndependent')}
+            </Text>
+          </View>
+        </View>
         <Text style={{ color: theme.textMuted, fontSize: fontSizes.xs }}>
           {new Date(activity.started_at).toLocaleDateString(locale)}
         </Text>
@@ -59,6 +76,8 @@ export function ActivityCard({
     borderRadius: radii.md,
     borderWidth: 1,
     borderColor: theme.border,
+    borderLeftWidth: 4,
+    borderLeftColor: accent,
     padding: spacing.lg,
     gap: spacing.sm,
   };

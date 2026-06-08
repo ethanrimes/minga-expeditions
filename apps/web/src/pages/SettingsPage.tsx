@@ -3,6 +3,7 @@ import { Check } from 'lucide-react';
 import { useTheme, type FontScaleLevel } from '@minga/theme';
 import { useT } from '@minga/i18n';
 import type { ThemeName } from '@minga/types';
+import { AccountConnections } from '../components/AccountConnections';
 
 const META: Record<ThemeName, { titleKey: any; subtitleKey: any; swatch: string }> = {
   livehappy: {
@@ -45,10 +46,15 @@ export function SettingsPage() {
     <div style={{ maxWidth: 800, margin: '0 auto', padding: '40px 24px' }}>
       <h1 style={{ color: theme.text }}>{t('settings.title')}</h1>
 
-      <h2 style={{ color: theme.text, marginTop: 32 }}>{t('settings.language')}</h2>
+      <h2 style={{ color: theme.text, marginTop: 32 }}>{t('settings.accountHeading')}</h2>
+      <AccountConnections />
+
+      <h2 style={{ color: theme.text, marginTop: 40 }}>{t('settings.appearanceHeading')}</h2>
+
+      <h3 style={{ color: theme.text, marginTop: 24 }}>{t('settings.language')}</h3>
       <Pill theme={theme} options={langs.map((l) => ({ key: l, label: l === 'en' ? t('settings.languageEn') : t('settings.languageEs') }))} value={language} onChange={(v) => setLanguage(v as any)} />
 
-      <h2 style={{ color: theme.text, marginTop: 40 }}>{t('settings.fontSize')}</h2>
+      <h3 style={{ color: theme.text, marginTop: 40 }}>{t('settings.fontSize')}</h3>
       <Pill
         theme={theme}
         options={availableFontScales.map((l) => ({ key: l, label: t(FONT_LABEL_KEY[l]) }))}
@@ -56,7 +62,7 @@ export function SettingsPage() {
         onChange={(v) => setFontScale(v as FontScaleLevel)}
       />
 
-      <h2 style={{ color: theme.text, marginTop: 40 }}>{t('settings.theme')}</h2>
+      <h3 style={{ color: theme.text, marginTop: 40 }}>{t('settings.theme')}</h3>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
         {available.map((name) => {
           const active = name === themeName;
@@ -86,7 +92,7 @@ export function SettingsPage() {
         })}
       </div>
 
-      <h2 style={{ color: theme.text, marginTop: 40 }}>{t('settings.about')}</h2>
+      <h3 style={{ color: theme.text, marginTop: 40 }}>{t('settings.about')}</h3>
       <p style={{ color: theme.textMuted, lineHeight: 1.6 }}>{t('settings.aboutBody')}</p>
     </div>
   );

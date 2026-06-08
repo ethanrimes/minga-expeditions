@@ -16,7 +16,7 @@ import {
 } from '@minga/ui';
 import { supabase } from './supabase';
 import { locationAdapter } from './locationAdapter';
-import { MobileShell, type TabKey } from './MobileShell';
+import { MobileShell, type TabKey, type VisibleTabKey } from './MobileShell';
 import { MapScreen } from './MapScreen';
 import { ActivityMap } from './ActivityMap';
 import { photoPicker } from './photoPicker';
@@ -188,17 +188,32 @@ export function App() {
           <ProfileScreen
             onSignIn={() => setAuthVisible(true)}
             onOpenActivity={(id) => setRoute({ kind: 'activity', id })}
-            photoPicker={photoPicker}
+            onOpenSettings={() => setRoute({ kind: 'tab', tab: 'settings' })}
           />
         );
       case 'settings':
-        return <SettingsScreen />;
+        return (
+          <SettingsScreen
+            onBack={goBackToProfile}
+            onSignIn={() => setAuthVisible(true)}
+            photoPicker={photoPicker}
+          />
+        );
     }
   };
 
+  const visibleTab: VisibleTabKey =
+    route.kind === 'tab'
+      ? route.tab === 'settings'
+        ? 'profile'
+        : route.tab
+      : route.kind === 'activity'
+        ? 'profile'
+        : 'feed';
+
   return (
     <MobileShell
-      activeTab={route.kind === 'tab' ? route.tab : route.kind === 'activity' ? 'profile' : 'feed'}
+      activeTab={visibleTab}
       onChangeTab={(t) => {
         setAuthVisible(false);
         if (t === 'feed' && (route.kind !== 'tab' || route.tab !== 'feed')) setFeedCategory('all');

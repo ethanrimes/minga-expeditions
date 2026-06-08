@@ -4,6 +4,7 @@ import { Icon, type IconName } from '@minga/ui';
 import { Battery, SignalHigh } from 'lucide-react-native';
 
 export type TabKey = 'feed' | 'calendar' | 'map' | 'track' | 'profile' | 'settings';
+export type VisibleTabKey = Exclude<TabKey, 'settings'>;
 
 // Renders the @minga/ui screens inside a 428px-wide phone frame on a desktop page.
 // Deliberately boring — this surface exists so we can iterate on the RN screens
@@ -89,13 +90,12 @@ function TabBar({
   onChangeTab: (t: TabKey) => void;
 }) {
   const { t } = useT();
-  const tabs: { key: TabKey; icon: IconName; label: string }[] = [
+  const tabs: { key: VisibleTabKey; icon: IconName; label: string }[] = [
     { key: 'feed', icon: 'mountain', label: t('tab.feed') },
     { key: 'calendar', icon: 'calendar', label: t('tab.calendar') },
     { key: 'map', icon: 'map', label: t('tab.map') },
     { key: 'track', icon: 'activity', label: t('tab.track') },
     { key: 'profile', icon: 'user', label: t('tab.profile') },
-    { key: 'settings', icon: 'settings', label: t('tab.settings') },
   ];
 
   return (
