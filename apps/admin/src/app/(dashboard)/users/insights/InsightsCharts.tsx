@@ -10,15 +10,21 @@ interface Props {
   bookingSeries: Bucket[];
   tierCounts: { bronze: number; silver: number; gold: number; diamond: number };
   orderStatusCounts: Record<string, number>;
+  labels: {
+    signups30d: string;
+    orders30d: string;
+    tierDistribution: string;
+    orderStatus30d: string;
+  };
 }
 
-export function InsightsCharts({ signupSeries, bookingSeries, tierCounts, orderStatusCounts }: Props) {
+export function InsightsCharts({ signupSeries, bookingSeries, tierCounts, orderStatusCounts, labels }: Props) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <BarChart title="Signups (30d)" series={signupSeries} color="#ED8B00" />
-      <BarChart title="Orders (30d)" series={bookingSeries} color="#1F8A4C" />
+      <BarChart title={labels.signups30d} series={signupSeries} color="#ED8B00" />
+      <BarChart title={labels.orders30d} series={bookingSeries} color="#1F8A4C" />
       <DonutChart
-        title="Tier distribution"
+        title={labels.tierDistribution}
         slices={[
           { label: 'Bronze', value: tierCounts.bronze, color: '#CD7F32' },
           { label: 'Silver', value: tierCounts.silver, color: '#9AA1AE' },
@@ -27,7 +33,7 @@ export function InsightsCharts({ signupSeries, bookingSeries, tierCounts, orderS
         ]}
       />
       <DonutChart
-        title="Order status (30d)"
+        title={labels.orderStatus30d}
         slices={Object.entries(orderStatusCounts).map(([label, value]) => ({
           label,
           value,

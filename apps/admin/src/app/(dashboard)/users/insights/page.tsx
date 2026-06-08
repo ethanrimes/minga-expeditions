@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { getT } from '@/lib/i18n/server';
 import { InsightsCharts } from './InsightsCharts';
 
 interface SignupBucket {
@@ -83,23 +84,24 @@ async function loadInsights(supabase: Awaited<ReturnType<typeof createSupabaseSe
 
 export default async function UsersInsightsPage() {
   const supabase = await createSupabaseServerClient();
+  const { t } = await getT();
   const data = await loadInsights(supabase);
 
   return (
     <div className="flex flex-col gap-6">
       <header>
-        <h1 className="text-2xl font-bold">Insights</h1>
+        <h1 className="text-2xl font-bold">{t('insights.title')}</h1>
         <p className="text-sm text-ink-500 mt-1 max-w-2xl">
-          Last 30 days of activity. Charts are sampled from the live tables; refresh to update.
+          {t('insights.subtitle')}
         </p>
       </header>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Stat label="Total users" value={String(data.totalProfiles)} />
-        <Stat label="Signups (30d)" value={String(data.totalProfiles30d)} />
-        <Stat label="Orders (30d)" value={String(data.totalOrders30d)} />
+        <Stat label={t('insights.totalUsers')} value={String(data.totalProfiles)} />
+        <Stat label={t('insights.signups30d')} value={String(data.totalProfiles30d)} />
+        <Stat label={t('insights.orders30d')} value={String(data.totalOrders30d)} />
         <Stat
-          label="Approved revenue"
+          label={t('insights.approvedRevenue')}
           value={
             Object.keys(data.revenueByCurrency).length === 0
               ? '—'
@@ -115,6 +117,12 @@ export default async function UsersInsightsPage() {
         bookingSeries={data.bookingSeries}
         tierCounts={data.tierCounts}
         orderStatusCounts={data.orderStatusCounts}
+        labels={{
+          signups30d: t('insights.signups30d'),
+          orders30d: t('insights.orders30d'),
+          tierDistribution: t('insights.tierDistribution'),
+          orderStatus30d: t('insights.orderStatus30d'),
+        }}
       />
     </div>
   );

@@ -30,20 +30,23 @@ export default async function EditSalidaPage({
       {salida.series_id ? (
         <div className="mt-4 card bg-amber-50 border-amber-200">
           <p className="text-sm text-ink-700 mb-2">
-            <strong>This date is part of a series.</strong> Editing below changes <em>just this one</em>.
-            To remove the whole series and all its dates, use the button on the right.
+            {t('series.warning')
+              .split('{emphasis}')
+              .flatMap((part, index) =>
+                index === 0 ? [part] : [<em key="emphasis">{t('series.warningEmphasis')}</em>, part],
+              )}
           </p>
           <form
             action={deleteSalidaSeriesAction}
             onSubmit={(e) => {
-              if (!confirm('Delete the entire series and all its occurrences?')) e.preventDefault();
+              if (!confirm(t('series.deleteConfirm'))) e.preventDefault();
             }}
             className="inline-flex"
           >
             <input type="hidden" name="series_id" value={salida.series_id} />
             <input type="hidden" name="expedition_id" value={id} />
             <button type="submit" className="btn-secondary text-xs text-danger">
-              Delete whole series
+              {t('series.delete')}
             </button>
           </form>
         </div>

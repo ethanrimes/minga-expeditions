@@ -24,6 +24,7 @@ export default async function EditCategoryPage({ params }: { params: Promise<{ i
           initial={category}
           labels={{
             slug: t('categoryForm.slug'),
+            slugPlaceholder: t('categoryForm.slugPlaceholder'),
             slugHelp: t('categoryForm.slugHelp'),
             nameEn: t('categoryForm.nameEn'),
             nameEs: t('categoryForm.nameEs'),

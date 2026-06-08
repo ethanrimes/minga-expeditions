@@ -20,13 +20,24 @@ export default async function CommsAutomatedPage() {
   }
 
   const labels = {
-    active: 'Active',
-    inactive: 'Draft',
-    setActive: 'Make active',
+    active: t('comms.automated.active'),
+    inactive: t('comms.automated.inactive'),
+    setActive: t('comms.automated.makeActive'),
     delete: t('comms.broadcasts.delete'),
-    addTemplate: 'Add template',
+    addTemplate: t('comms.automated.addTemplate'),
+    event: t('comms.automated.event'),
+    emptyEvent: t('comms.automated.emptyEvent'),
+    newTemplate: t('comms.automated.newTemplate'),
+    cancel: t('categoryForm.cancel'),
+    subject: t('comms.template.subject'),
+    editTemplate: t('comms.automated.editTemplate'),
+    deleteConfirm: t('comms.automated.deleteConfirm'),
     editor: {
       name: t('comms.broadcasts.field.name'),
+      language: t('comms.template.locale'),
+      channel: t('comms.template.channel'),
+      channelEmail: t('comms.template.channel.email'),
+      channelWhatsapp: t('comms.template.channel.whatsapp'),
       subject: t('comms.template.subject'),
       body: t('comms.template.body'),
       active: t('comms.template.active'),

@@ -450,6 +450,7 @@ export function ProfilePage() {
             primary={(identityProviders[0] ?? 'email') === 'email'}
             primaryAriaLabel={t('profile.primaryLogin')}
             notLinkedLabel={t('profile.notLinked')}
+            verifiedLabel={t('common.verified')}
           />
           <Divider theme={theme} />
           <SocialRow
@@ -460,6 +461,7 @@ export function ProfilePage() {
             primary={identityProviders[0] === 'google'}
             primaryAriaLabel={t('profile.primaryLogin')}
             notLinkedLabel={t('profile.notLinked')}
+            verifiedLabel={t('common.verified')}
           />
           <Divider theme={theme} />
           <SocialRow
@@ -469,6 +471,7 @@ export function ProfilePage() {
             linked={!!savedPhoneE164}
             verified={phoneIsVerified}
             notLinkedLabel={t('profile.notLinked')}
+            verifiedLabel={t('common.verified')}
           >
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <div style={{ color: theme.textMuted, fontSize: 13 }}>
@@ -526,11 +529,11 @@ export function ProfilePage() {
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    Send code
+                    {t('profile.phoneSendCode')}
                   </button>
                 ) : null}
                 {otpState === 'sending' ? (
-                  <span style={{ color: theme.textMuted, fontSize: 13 }}>Sending…</span>
+                  <span style={{ color: theme.textMuted, fontSize: 13 }}>{t('profile.phoneSendingCode')}</span>
                 ) : null}
               </div>
               {otpState === 'code' ? (
@@ -546,7 +549,7 @@ export function ProfilePage() {
                   }}
                 >
                   <div style={{ color: theme.text, fontSize: 13 }}>
-                    We sent a 6-digit code to <strong>{otpSentTo}</strong>. Enter it below to verify the number.
+                    {t('profile.phoneCodeSent', { phone: otpSentTo ?? '' })}
                   </div>
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                     <input
@@ -585,7 +588,7 @@ export function ProfilePage() {
                         opacity: otpCode.length >= 6 ? 1 : 0.5,
                       }}
                     >
-                      Verify
+                      {t('profile.phoneVerify')}
                     </button>
                     <button
                       type="button"
@@ -604,13 +607,13 @@ export function ProfilePage() {
                         textDecoration: 'underline',
                       }}
                     >
-                      Cancel
+                      {t('common.cancel')}
                     </button>
                   </div>
                 </div>
               ) : null}
               {otpState === 'verifying' ? (
-                <div style={{ color: theme.textMuted, fontSize: 13 }}>Verifying…</div>
+                <div style={{ color: theme.textMuted, fontSize: 13 }}>{t('profile.phoneVerifying')}</div>
               ) : null}
               {otpError ? <div style={{ color: theme.danger, fontSize: 13 }}>{otpError}</div> : null}
             </div>
@@ -624,6 +627,7 @@ export function ProfilePage() {
             primary={identityProviders[0] === 'facebook'}
             primaryAriaLabel={t('profile.primaryLogin')}
             notLinkedLabel={t('profile.notLinked')}
+            verifiedLabel={t('common.verified')}
           />
           <Divider theme={theme} />
           <SocialRow
@@ -632,6 +636,7 @@ export function ProfilePage() {
             value={profile?.instagram_handle ? `@${profile.instagram_handle}` : null}
             linked={!!profile?.instagram_handle}
             notLinkedLabel={t('profile.notLinked')}
+            verifiedLabel={t('common.verified')}
           >
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <div style={{ color: theme.textMuted, fontSize: 13 }}>{t('profile.instagramHelp')}</div>

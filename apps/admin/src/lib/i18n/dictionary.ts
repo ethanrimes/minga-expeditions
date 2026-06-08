@@ -22,6 +22,7 @@ export type Key =
   | 'login.error.notAdmin'
   // sidebar
   | 'sidebar.brandSub'
+  | 'sidebar.aria'
   | 'sidebar.dashboard'
   | 'sidebar.categories'
   | 'sidebar.expeditions'
@@ -81,6 +82,7 @@ export type Key =
   | 'categories.empty'
   // category form
   | 'categoryForm.slug'
+  | 'categoryForm.slugPlaceholder'
   | 'categoryForm.slugHelp'
   | 'categoryForm.nameEn'
   | 'categoryForm.nameEs'
@@ -122,6 +124,7 @@ export type Key =
   | 'expForm.selectCategory'
   | 'expForm.difficulty'
   | 'expForm.location'
+  | 'expForm.locationPlaceholder'
   | 'expForm.region'
   | 'expForm.country'
   | 'expForm.startLat'
@@ -285,6 +288,20 @@ export type Key =
   | 'salidaForm.cancel'
   | 'error.salida.required'
   | 'error.salida.invalidWindow'
+  | 'error.salida.series.startsRequired'
+  | 'error.salida.series.startsInvalid'
+  | 'error.salida.series.endsInvalid'
+  | 'error.salida.series.untilInvalid'
+  | 'error.salida.series.noOccurrences'
+  | 'error.salida.series.createFailed'
+  | 'error.salida.series.occurrencesFailed'
+  | 'error.provider.nameRequired'
+  | 'error.commTemplate.required'
+  | 'error.broadcast.nameRequired'
+  | 'error.broadcast.bodyRequired'
+  | 'error.broadcast.invalidCategory'
+  | 'error.broadcast.invalidChannel'
+  | 'error.broadcast.invalidLocale'
   // expedition calendar (admin)
   | 'calendar.title'
   | 'calendar.subtitle'
@@ -313,6 +330,8 @@ export type Key =
   | 'comms.template.body'
   | 'comms.template.locale'
   | 'comms.template.channel'
+  | 'comms.template.channel.email'
+  | 'comms.template.channel.whatsapp'
   | 'comms.template.active'
   | 'comms.template.save'
   | 'comms.template.saved'
@@ -342,6 +361,124 @@ export type Key =
   | 'comms.broadcasts.category.new_trip'
   | 'comms.broadcasts.category.reminder'
   | 'comms.broadcasts.category.other'
+  | 'comms.automated.event'
+  | 'comms.automated.emptyEvent'
+  | 'comms.automated.newTemplate'
+  | 'comms.automated.addTemplate'
+  | 'comms.automated.active'
+  | 'comms.automated.inactive'
+  | 'comms.automated.makeActive'
+  | 'comms.automated.editTemplate'
+  | 'comms.automated.deleteConfirm'
+  | 'comms.tabs.aria'
+  // shared admin controls
+  | 'common.search'
+  | 'common.apply'
+  | 'common.all'
+  | 'common.active'
+  | 'common.inactive'
+  | 'common.name'
+  | 'common.username'
+  | 'common.type'
+  | 'common.region'
+  | 'common.status'
+  | 'common.contact'
+  | 'common.provider'
+  | 'common.email'
+  | 'common.phone'
+  | 'common.whatsapp'
+  | 'common.website'
+  | 'common.notes'
+  | 'common.date'
+  | 'common.amount'
+  | 'common.joined'
+  | 'common.saved'
+  | 'common.create'
+  | 'common.saveChanges'
+  | 'common.delete'
+  | 'common.confirmDelete'
+  | 'common.bio'
+  | 'common.instagram'
+  | 'common.totalDistance'
+  | 'common.totalElevation'
+  // itineraries/providers/users
+  | 'itineraries.title'
+  | 'itineraries.subtitle'
+  | 'itineraries.placeholder.title'
+  | 'itineraries.groupBy'
+  | 'itineraries.noProvider'
+  | 'itineraries.empty'
+  | 'itineraries.col.photo'
+  | 'itineraries.col.dateAdded'
+  | 'providers.title'
+  | 'providers.subtitle'
+  | 'providers.new'
+  | 'providers.back'
+  | 'providers.delete'
+  | 'providers.empty'
+  | 'providers.placeholder.name'
+  | 'providers.placeholder.region'
+  | 'providers.vendorType'
+  | 'providers.none'
+  | 'providers.activeHelp'
+  | 'providers.create'
+  | 'providers.saved'
+  | 'users.profiles.title'
+  | 'users.profiles.subtitle'
+  | 'users.profiles.back'
+  | 'users.profiles.placeholder.search'
+  | 'users.profiles.tier'
+  | 'users.profiles.country'
+  | 'users.profiles.distance'
+  | 'users.profiles.empty'
+  | 'users.profile.contact'
+  | 'users.profile.commsSubscriptions'
+  | 'users.profile.defaultSubscriptions'
+  | 'users.profile.trips'
+  | 'users.profile.noBookings'
+  | 'users.profile.expedition'
+  | 'users.profile.reviews'
+  | 'users.profile.noReviews'
+  | 'insights.title'
+  | 'insights.subtitle'
+  | 'insights.totalUsers'
+  | 'insights.signups30d'
+  | 'insights.orders30d'
+  | 'insights.approvedRevenue'
+  | 'insights.tierDistribution'
+  | 'insights.orderStatus30d'
+  // salida series
+  | 'series.title'
+  | 'series.subtitle'
+  | 'series.frequency'
+  | 'series.frequency.daily'
+  | 'series.frequency.weekly'
+  | 'series.frequency.monthly'
+  | 'series.interval'
+  | 'series.until'
+  | 'series.daysOfWeek'
+  | 'series.weekdayHelp'
+  | 'series.firstStart'
+  | 'series.firstEnd'
+  | 'series.capacityPlaceholder'
+  | 'series.priceCents'
+  | 'series.pricePlaceholder'
+  | 'series.publishImmediately'
+  | 'series.created'
+  | 'series.occurrences'
+  | 'series.creating'
+  | 'series.create'
+  | 'series.warning'
+  | 'series.warningEmphasis'
+  | 'series.delete'
+  | 'series.deleteConfirm'
+  | 'weekday.sun'
+  | 'weekday.mon'
+  | 'weekday.tue'
+  | 'weekday.wed'
+  | 'weekday.thu'
+  | 'weekday.fri'
+  | 'weekday.sat'
   // photo gallery
   | 'photoGallery.heading'
   | 'photoGallery.subtitle'
@@ -367,6 +504,7 @@ export const dict: Record<Locale, Record<Key, string>> = {
     'login.error.notAdmin': 'This account is not authorized for the admin dashboard.',
 
     'sidebar.brandSub': 'Admin console',
+    'sidebar.aria': 'Admin navigation',
     'sidebar.dashboard': 'Dashboard',
     'sidebar.categories': 'Categories',
     'sidebar.expeditions': 'Expeditions',
@@ -428,6 +566,7 @@ export const dict: Record<Locale, Record<Key, string>> = {
     'categories.empty': 'No categories yet — create the first one.',
 
     'categoryForm.slug': 'Slug',
+    'categoryForm.slugPlaceholder': 'hiking',
     'categoryForm.slugHelp':
       'Lowercase, dashes only. Used in URLs and as the stable identifier.',
     'categoryForm.nameEn': 'Name (English)',
@@ -472,6 +611,7 @@ export const dict: Record<Locale, Record<Key, string>> = {
     'expForm.selectCategory': 'Select a category',
     'expForm.difficulty': 'Difficulty (1–5)',
     'expForm.location': 'Location',
+    'expForm.locationPlaceholder': 'Valle de Cocora',
     'expForm.region': 'Region',
     'expForm.country': 'Country',
     'expForm.startLat': 'Start latitude',
@@ -644,6 +784,20 @@ export const dict: Record<Locale, Record<Key, string>> = {
     'salidaForm.cancel': 'Cancel',
     'error.salida.required': 'Start date and time are required.',
     'error.salida.invalidWindow': 'End time must be after start time.',
+    'error.salida.series.startsRequired': 'Start date and time are required.',
+    'error.salida.series.startsInvalid': 'Start date and time are invalid.',
+    'error.salida.series.endsInvalid': 'End date and time are invalid.',
+    'error.salida.series.untilInvalid': 'Until date is invalid.',
+    'error.salida.series.noOccurrences': 'Recurrence produced no occurrences.',
+    'error.salida.series.createFailed': 'Could not create series.',
+    'error.salida.series.occurrencesFailed': 'Series created but occurrences failed: {msg}',
+    'error.provider.nameRequired': 'Name is required.',
+    'error.commTemplate.required': 'Event and body are required.',
+    'error.broadcast.nameRequired': 'Name is required.',
+    'error.broadcast.bodyRequired': 'Body is required.',
+    'error.broadcast.invalidCategory': 'Invalid category.',
+    'error.broadcast.invalidChannel': 'Invalid channel.',
+    'error.broadcast.invalidLocale': 'Invalid locale.',
 
     'calendar.title': 'Calendar',
     'calendar.subtitle': 'All scheduled salidas across every expedition template.',
@@ -673,6 +827,8 @@ export const dict: Record<Locale, Record<Key, string>> = {
     'comms.template.body': 'Body',
     'comms.template.locale': 'Language',
     'comms.template.channel': 'Channel',
+    'comms.template.channel.email': 'Email',
+    'comms.template.channel.whatsapp': 'WhatsApp',
     'comms.template.active': 'Active',
     'comms.template.save': 'Save template',
     'comms.template.saved': 'Saved ✓',
@@ -705,6 +861,134 @@ export const dict: Record<Locale, Record<Key, string>> = {
     'comms.broadcasts.category.reminder': 'Reminder',
     'comms.broadcasts.category.other': 'Other',
 
+    'comms.automated.event': 'Event',
+    'comms.automated.emptyEvent': 'No templates yet for this event.',
+    'comms.automated.newTemplate': 'New template',
+    'comms.automated.addTemplate': 'Add template',
+    'comms.automated.active': 'Active',
+    'comms.automated.inactive': 'Draft',
+    'comms.automated.makeActive': 'Make active',
+    'comms.automated.editTemplate': 'Edit template',
+    'comms.automated.deleteConfirm': 'Delete "{name}"?',
+    'comms.tabs.aria': 'Communications tabs',
+
+    'common.search': 'Search',
+    'common.apply': 'Apply',
+    'common.all': 'All',
+    'common.active': 'Active',
+    'common.inactive': 'Inactive',
+    'common.name': 'Name',
+    'common.username': 'Username',
+    'common.type': 'Type',
+    'common.region': 'Region',
+    'common.status': 'Status',
+    'common.contact': 'Contact',
+    'common.provider': 'Provider',
+    'common.email': 'Email',
+    'common.phone': 'Phone',
+    'common.whatsapp': 'WhatsApp',
+    'common.website': 'Website',
+    'common.notes': 'Notes',
+    'common.date': 'Date',
+    'common.amount': 'Amount',
+    'common.joined': 'Joined',
+    'common.saved': 'Saved ✓',
+    'common.create': 'Create',
+    'common.saveChanges': 'Save changes',
+    'common.delete': 'Delete',
+    'common.confirmDelete': 'Delete',
+    'common.bio': 'Bio',
+    'common.instagram': 'Instagram',
+    'common.totalDistance': 'Total distance',
+    'common.totalElevation': 'Total elevation',
+
+    'itineraries.title': 'Itineraries',
+    'itineraries.subtitle':
+      'Trip templates that show up in the consumer apps. Each itinerary can host multiple salidas (dated departures).',
+    'itineraries.placeholder.title': 'Title…',
+    'itineraries.groupBy': 'Group by',
+    'itineraries.noProvider': '— no provider —',
+    'itineraries.empty': 'No itineraries match.',
+    'itineraries.col.photo': 'Photo',
+    'itineraries.col.dateAdded': 'Date added',
+
+    'providers.title': 'Providers',
+    'providers.subtitle':
+      'Filterable rolodex of the operators behind salidas. Promotes from vendor proposals or stand alone.',
+    'providers.new': 'New provider',
+    'providers.back': '← Back to providers',
+    'providers.delete': 'Delete provider',
+    'providers.empty': 'No providers yet. Add one above.',
+    'providers.placeholder.name': 'Name…',
+    'providers.placeholder.region': 'Antioquia, Bolívar, …',
+    'providers.vendorType': 'Vendor type',
+    'providers.none': '— none —',
+    'providers.activeHelp': 'Active (visible to users)',
+    'providers.create': 'Create provider',
+    'providers.saved': 'Saved ✓',
+
+    'users.profiles.title': 'User profiles',
+    'users.profiles.subtitle':
+      'All signed-up users. Click a row for trip history, comms preferences, and reviews received from providers.',
+    'users.profiles.back': '← Back to profiles',
+    'users.profiles.placeholder.search': 'Name or username…',
+    'users.profiles.tier': 'Tier',
+    'users.profiles.country': 'Country',
+    'users.profiles.distance': 'Distance',
+    'users.profiles.empty': 'No profiles match.',
+    'users.profile.contact': 'Contact',
+    'users.profile.commsSubscriptions': 'Comms subscriptions',
+    'users.profile.defaultSubscriptions': 'Default (subscribed to everything).',
+    'users.profile.trips': 'Trips',
+    'users.profile.noBookings': 'No bookings yet.',
+    'users.profile.expedition': 'Expedition',
+    'users.profile.reviews': 'Reviews received from providers',
+    'users.profile.noReviews': 'No reviews yet.',
+
+    'insights.title': 'Insights',
+    'insights.subtitle':
+      'Last 30 days of activity. Charts are sampled from the live tables; refresh to update.',
+    'insights.totalUsers': 'Total users',
+    'insights.signups30d': 'Signups (30d)',
+    'insights.orders30d': 'Orders (30d)',
+    'insights.approvedRevenue': 'Approved revenue',
+    'insights.tierDistribution': 'Tier distribution',
+    'insights.orderStatus30d': 'Order status (30d)',
+
+    'series.title': 'New series (recurring)',
+    'series.subtitle':
+      'Generate many salidas in one shot — pick a frequency + interval + end date. Each occurrence is a real salida row linked back to a series, so you can edit one or delete them all together.',
+    'series.frequency': 'Frequency',
+    'series.frequency.daily': 'Daily',
+    'series.frequency.weekly': 'Weekly',
+    'series.frequency.monthly': 'Monthly',
+    'series.interval': 'Every (interval)',
+    'series.until': 'Until (date)',
+    'series.daysOfWeek': 'Days of week',
+    'series.weekdayHelp': 'Leave blank to use the weekday of the start date.',
+    'series.firstStart': 'First start (date + time) *',
+    'series.firstEnd': 'First end (date + time)',
+    'series.capacityPlaceholder': 'Unlimited',
+    'series.priceCents': 'Price (cents)',
+    'series.pricePlaceholder': 'Inherit from template',
+    'series.publishImmediately': 'Publish all occurrences immediately',
+    'series.created': 'Created',
+    'series.occurrences': 'occurrences ✓',
+    'series.creating': 'Creating…',
+    'series.create': 'Create series',
+    'series.warning':
+      'This date is part of a series. Editing below changes {emphasis}. To remove the whole series and all its dates, use the button on the right.',
+    'series.warningEmphasis': 'just this one',
+    'series.delete': 'Delete whole series',
+    'series.deleteConfirm': 'Delete the entire series and all its occurrences?',
+    'weekday.sun': 'Sun',
+    'weekday.mon': 'Mon',
+    'weekday.tue': 'Tue',
+    'weekday.wed': 'Wed',
+    'weekday.thu': 'Thu',
+    'weekday.fri': 'Fri',
+    'weekday.sat': 'Sat',
+
     'photoGallery.heading': 'Photo gallery',
     'photoGallery.subtitle':
       'Reorder, add, or remove gallery photos. The first photo is used as the card cover and the leading slide of the carousel.',
@@ -730,6 +1014,7 @@ export const dict: Record<Locale, Record<Key, string>> = {
       'Esta cuenta no está autorizada para el panel de administración.',
 
     'sidebar.brandSub': 'Consola de administración',
+    'sidebar.aria': 'Navegación de administración',
     'sidebar.dashboard': 'Panel',
     'sidebar.categories': 'Categorías',
     'sidebar.expeditions': 'Expediciones',
@@ -791,6 +1076,7 @@ export const dict: Record<Locale, Record<Key, string>> = {
     'categories.empty': 'Aún no hay categorías — crea la primera.',
 
     'categoryForm.slug': 'Slug',
+    'categoryForm.slugPlaceholder': 'senderismo',
     'categoryForm.slugHelp':
       'En minúsculas, sólo guiones. Se usa en URLs y como identificador estable.',
     'categoryForm.nameEn': 'Nombre (Inglés)',
@@ -837,6 +1123,7 @@ export const dict: Record<Locale, Record<Key, string>> = {
     'expForm.selectCategory': 'Selecciona una categoría',
     'expForm.difficulty': 'Dificultad (1–5)',
     'expForm.location': 'Ubicación',
+    'expForm.locationPlaceholder': 'Valle de Cocora',
     'expForm.region': 'Región',
     'expForm.country': 'País',
     'expForm.startLat': 'Latitud de inicio',
@@ -1012,6 +1299,20 @@ export const dict: Record<Locale, Record<Key, string>> = {
     'salidaForm.cancel': 'Cancelar',
     'error.salida.required': 'La fecha y hora de inicio son obligatorias.',
     'error.salida.invalidWindow': 'La hora de fin debe ser posterior a la de inicio.',
+    'error.salida.series.startsRequired': 'La fecha y hora de inicio son obligatorias.',
+    'error.salida.series.startsInvalid': 'La fecha y hora de inicio no son válidas.',
+    'error.salida.series.endsInvalid': 'La fecha y hora de fin no son válidas.',
+    'error.salida.series.untilInvalid': 'La fecha final no es válida.',
+    'error.salida.series.noOccurrences': 'La recurrencia no produjo ocurrencias.',
+    'error.salida.series.createFailed': 'No se pudo crear la serie.',
+    'error.salida.series.occurrencesFailed': 'La serie se creó, pero fallaron las ocurrencias: {msg}',
+    'error.provider.nameRequired': 'El nombre es obligatorio.',
+    'error.commTemplate.required': 'El evento y el cuerpo son obligatorios.',
+    'error.broadcast.nameRequired': 'El nombre es obligatorio.',
+    'error.broadcast.bodyRequired': 'El cuerpo es obligatorio.',
+    'error.broadcast.invalidCategory': 'Categoría no válida.',
+    'error.broadcast.invalidChannel': 'Canal no válido.',
+    'error.broadcast.invalidLocale': 'Idioma no válido.',
 
     'calendar.title': 'Calendario',
     'calendar.subtitle': 'Todas las salidas programadas en cada plantilla de expedición.',
@@ -1041,6 +1342,8 @@ export const dict: Record<Locale, Record<Key, string>> = {
     'comms.template.body': 'Cuerpo',
     'comms.template.locale': 'Idioma',
     'comms.template.channel': 'Canal',
+    'comms.template.channel.email': 'Correo',
+    'comms.template.channel.whatsapp': 'WhatsApp',
     'comms.template.active': 'Activa',
     'comms.template.save': 'Guardar plantilla',
     'comms.template.saved': 'Guardada ✓',
@@ -1072,6 +1375,134 @@ export const dict: Record<Locale, Record<Key, string>> = {
     'comms.broadcasts.category.new_trip': 'Nuevo viaje',
     'comms.broadcasts.category.reminder': 'Recordatorio',
     'comms.broadcasts.category.other': 'Otro',
+
+    'comms.automated.event': 'Evento',
+    'comms.automated.emptyEvent': 'Aún no hay plantillas para este evento.',
+    'comms.automated.newTemplate': 'Nueva plantilla',
+    'comms.automated.addTemplate': 'Agregar plantilla',
+    'comms.automated.active': 'Activa',
+    'comms.automated.inactive': 'Borrador',
+    'comms.automated.makeActive': 'Activar',
+    'comms.automated.editTemplate': 'Editar plantilla',
+    'comms.automated.deleteConfirm': '¿Eliminar "{name}"?',
+    'comms.tabs.aria': 'Pestañas de comunicaciones',
+
+    'common.search': 'Buscar',
+    'common.apply': 'Aplicar',
+    'common.all': 'Todas',
+    'common.active': 'Activo',
+    'common.inactive': 'Inactivo',
+    'common.name': 'Nombre',
+    'common.username': 'Usuario',
+    'common.type': 'Tipo',
+    'common.region': 'Región',
+    'common.status': 'Estado',
+    'common.contact': 'Contacto',
+    'common.provider': 'Proveedor',
+    'common.email': 'Correo',
+    'common.phone': 'Teléfono',
+    'common.whatsapp': 'WhatsApp',
+    'common.website': 'Sitio web',
+    'common.notes': 'Notas',
+    'common.date': 'Fecha',
+    'common.amount': 'Monto',
+    'common.joined': 'Fecha de registro',
+    'common.saved': 'Guardado ✓',
+    'common.create': 'Crear',
+    'common.saveChanges': 'Guardar cambios',
+    'common.delete': 'Eliminar',
+    'common.confirmDelete': 'Eliminar',
+    'common.bio': 'Biografía',
+    'common.instagram': 'Instagram',
+    'common.totalDistance': 'Distancia total',
+    'common.totalElevation': 'Desnivel total',
+
+    'itineraries.title': 'Itinerarios',
+    'itineraries.subtitle':
+      'Plantillas de viaje que aparecen en las apps para usuarios. Cada itinerario puede tener varias salidas con fecha.',
+    'itineraries.placeholder.title': 'Título…',
+    'itineraries.groupBy': 'Agrupar por',
+    'itineraries.noProvider': '— sin proveedor —',
+    'itineraries.empty': 'No hay itinerarios que coincidan.',
+    'itineraries.col.photo': 'Foto',
+    'itineraries.col.dateAdded': 'Fecha de creación',
+
+    'providers.title': 'Proveedores',
+    'providers.subtitle':
+      'Directorio filtrable de los operadores detrás de las salidas. Se promueven desde propuestas de proveedores o se crean por separado.',
+    'providers.new': 'Nuevo proveedor',
+    'providers.back': '← Volver a proveedores',
+    'providers.delete': 'Eliminar proveedor',
+    'providers.empty': 'Aún no hay proveedores. Agrega uno arriba.',
+    'providers.placeholder.name': 'Nombre…',
+    'providers.placeholder.region': 'Antioquia, Bolívar, …',
+    'providers.vendorType': 'Tipo de proveedor',
+    'providers.none': '— ninguno —',
+    'providers.activeHelp': 'Activo (visible para usuarios)',
+    'providers.create': 'Crear proveedor',
+    'providers.saved': 'Guardado ✓',
+
+    'users.profiles.title': 'Perfiles de usuario',
+    'users.profiles.subtitle':
+      'Todos los usuarios registrados. Haz clic en una fila para ver historial de viajes, preferencias de comunicación y reseñas recibidas de proveedores.',
+    'users.profiles.back': '← Volver a perfiles',
+    'users.profiles.placeholder.search': 'Nombre o usuario…',
+    'users.profiles.tier': 'Nivel',
+    'users.profiles.country': 'País',
+    'users.profiles.distance': 'Distancia',
+    'users.profiles.empty': 'No hay perfiles que coincidan.',
+    'users.profile.contact': 'Contacto',
+    'users.profile.commsSubscriptions': 'Suscripciones de comunicación',
+    'users.profile.defaultSubscriptions': 'Predeterminado (suscrito a todo).',
+    'users.profile.trips': 'Viajes',
+    'users.profile.noBookings': 'Aún no hay reservas.',
+    'users.profile.expedition': 'Expedición',
+    'users.profile.reviews': 'Reseñas recibidas de proveedores',
+    'users.profile.noReviews': 'Aún no hay reseñas.',
+
+    'insights.title': 'Métricas',
+    'insights.subtitle':
+      'Actividad de los últimos 30 días. Los gráficos se generan desde las tablas en vivo; actualiza para refrescar.',
+    'insights.totalUsers': 'Usuarios totales',
+    'insights.signups30d': 'Registros (30d)',
+    'insights.orders30d': 'Pedidos (30d)',
+    'insights.approvedRevenue': 'Ingresos aprobados',
+    'insights.tierDistribution': 'Distribución por nivel',
+    'insights.orderStatus30d': 'Estado de pedidos (30d)',
+
+    'series.title': 'Nueva serie (recurrente)',
+    'series.subtitle':
+      'Genera muchas salidas de una vez: elige frecuencia, intervalo y fecha final. Cada ocurrencia es una salida real vinculada a una serie, así puedes editar una o eliminarlas todas juntas.',
+    'series.frequency': 'Frecuencia',
+    'series.frequency.daily': 'Diaria',
+    'series.frequency.weekly': 'Semanal',
+    'series.frequency.monthly': 'Mensual',
+    'series.interval': 'Cada (intervalo)',
+    'series.until': 'Hasta (fecha)',
+    'series.daysOfWeek': 'Días de la semana',
+    'series.weekdayHelp': 'Déjalo vacío para usar el día de semana de la fecha inicial.',
+    'series.firstStart': 'Primer inicio (fecha + hora) *',
+    'series.firstEnd': 'Primer fin (fecha + hora)',
+    'series.capacityPlaceholder': 'Sin límite',
+    'series.priceCents': 'Precio (centavos)',
+    'series.pricePlaceholder': 'Heredar de la plantilla',
+    'series.publishImmediately': 'Publicar todas las ocurrencias inmediatamente',
+    'series.created': 'Creadas',
+    'series.occurrences': 'ocurrencias ✓',
+    'series.creating': 'Creando…',
+    'series.create': 'Crear serie',
+    'series.warning':
+      'Esta fecha es parte de una serie. Editar abajo cambia {emphasis}. Para eliminar toda la serie y todas sus fechas, usa el botón de la derecha.',
+    'series.warningEmphasis': 'solo esta fecha',
+    'series.delete': 'Eliminar toda la serie',
+    'series.deleteConfirm': '¿Eliminar toda la serie y todas sus ocurrencias?',
+    'weekday.sun': 'Dom',
+    'weekday.mon': 'Lun',
+    'weekday.tue': 'Mar',
+    'weekday.wed': 'Mié',
+    'weekday.thu': 'Jue',
+    'weekday.fri': 'Vie',
+    'weekday.sat': 'Sáb',
 
     'photoGallery.heading': 'Galería de fotos',
     'photoGallery.subtitle':

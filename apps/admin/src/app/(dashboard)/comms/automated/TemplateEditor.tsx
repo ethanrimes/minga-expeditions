@@ -6,6 +6,10 @@ import { saveCommTemplateAction, type CommTemplateFormState } from './actions';
 
 interface Labels {
   name: string;
+  language: string;
+  channel: string;
+  channelEmail: string;
+  channelWhatsapp: string;
   subject: string;
   body: string;
   active: string;
@@ -57,7 +61,7 @@ export function TemplateEditor({
           />
         </label>
         <label className="field">
-          <span className="field-label">Language</span>
+          <span className="field-label">{labels.language}</span>
           <select
             name="locale"
             value={locale}
@@ -69,15 +73,15 @@ export function TemplateEditor({
           </select>
         </label>
         <label className="field">
-          <span className="field-label">Channel</span>
+          <span className="field-label">{labels.channel}</span>
           <select
             name="channel"
             value={channel}
             onChange={(e) => setChannel(e.target.value as CommChannel)}
             className="field-input"
           >
-            <option value="email">Email</option>
-            <option value="whatsapp">WhatsApp</option>
+            <option value="email">{labels.channelEmail}</option>
+            <option value="whatsapp">{labels.channelWhatsapp}</option>
           </select>
         </label>
       </div>

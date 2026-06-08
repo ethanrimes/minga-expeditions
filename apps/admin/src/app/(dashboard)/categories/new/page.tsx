@@ -13,6 +13,7 @@ export default async function NewCategoryPage() {
           action={createCategoryAction}
           labels={{
             slug: t('categoryForm.slug'),
+            slugPlaceholder: t('categoryForm.slugPlaceholder'),
             slugHelp: t('categoryForm.slugHelp'),
             nameEn: t('categoryForm.nameEn'),
             nameEs: t('categoryForm.nameEs'),

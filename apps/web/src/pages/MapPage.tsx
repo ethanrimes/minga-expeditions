@@ -262,6 +262,7 @@ export function MapPage() {
 
       <GeoLayerChips
         theme={theme}
+        t={t}
         visible={visibleLayers}
         onToggle={(id) => setVisibleLayers((p) => ({ ...p, [id]: !p[id] }))}
       />
@@ -341,10 +342,12 @@ function Legend({ theme, t }: { theme: any; t: (k: any) => string }) {
 
 function GeoLayerChips({
   theme,
+  t,
   visible,
   onToggle,
 }: {
   theme: any;
+  t: (k: any) => string;
   visible: Record<GeoLayerId, boolean>;
   onToggle: (id: GeoLayerId) => void;
 }) {
@@ -363,7 +366,7 @@ function GeoLayerChips({
       }}
     >
       <span style={{ color: theme.textMuted, fontSize: 11, fontWeight: 700, letterSpacing: 1, marginRight: 4 }}>
-        CAPAS
+        {t('map.layers')}
       </span>
       {GEO_LAYERS.map((def) => {
         const on = visible[def.id];

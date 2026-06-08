@@ -14,6 +14,24 @@ interface Props {
   providers: DbProvider[];
   regions: string[];
   catName: Record<string, string>;
+  labels: {
+    search: string;
+    titlePlaceholder: string;
+    category: string;
+    region: string;
+    status: string;
+    all: string;
+    published: string;
+    draft: string;
+    provider: string;
+    groupBy: string;
+    empty: string;
+    photo: string;
+    title: string;
+    price: string;
+    dateAdded: string;
+    noProvider: string;
+  };
   initial: {
     q: string;
     category: string;
@@ -42,6 +60,7 @@ export function ItinerariesView({
   providers,
   regions,
   catName,
+  labels,
   initial,
 }: Props) {
   const router = useRouter();
@@ -82,10 +101,10 @@ export function ItinerariesView({
           key = row.region ?? '—';
           break;
         case 'status':
-          key = row.is_published ? 'Published' : 'Draft';
+          key = row.is_published ? labels.published : labels.draft;
           break;
         case 'provider':
-          key = row.provider?.display_name ?? '— no provider —';
+          key = row.provider?.display_name ?? labels.noProvider;
           break;
       }
       const list = map.get(key) ?? [];
@@ -93,13 +112,13 @@ export function ItinerariesView({
       map.set(key, list);
     }
     return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]));
-  }, [itineraries, group, catName]);
+  }, [itineraries, group, catName, labels.draft, labels.noProvider, labels.published]);
 
   return (
     <div className="flex flex-col gap-4">
       <div className="card flex flex-wrap items-end gap-3">
         <label className="field flex-1 min-w-[200px]">
-          <span className="field-label">Search</span>
+          <span className="field-label">{labels.search}</span>
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -107,12 +126,12 @@ export function ItinerariesView({
               if (e.key === 'Enter') applyFilters({ q });
             }}
             className="field-input"
-            placeholder="Title…"
+            placeholder={labels.titlePlaceholder}
             data-testid="itineraries-search"
           />
         </label>
         <label className="field">
-          <span className="field-label">Category</span>
+          <span className="field-label">{labels.category}</span>
           <select
             value={category}
             onChange={(e) => {
@@ -121,7 +140,7 @@ export function ItinerariesView({
             }}
             className="field-input"
           >
-            <option value="">All</option>
+            <option value="">{labels.all}</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.label}
@@ -130,7 +149,7 @@ export function ItinerariesView({
           </select>
         </label>
         <label className="field">
-          <span className="field-label">Region</span>
+          <span className="field-label">{labels.region}</span>
           <select
             value={region}
             onChange={(e) => {
@@ -139,7 +158,7 @@ export function ItinerariesView({
             }}
             className="field-input"
           >
-            <option value="">All</option>
+            <option value="">{labels.all}</option>
             {regions.map((r) => (
               <option key={r} value={r}>
                 {r}
@@ -148,7 +167,7 @@ export function ItinerariesView({
           </select>
         </label>
         <label className="field">
-          <span className="field-label">Status</span>
+          <span className="field-label">{labels.status}</span>
           <select
             value={status}
             onChange={(e) => {
@@ -157,13 +176,13 @@ export function ItinerariesView({
             }}
             className="field-input"
           >
-            <option value="">All</option>
-            <option value="published">Published</option>
-            <option value="draft">Draft</option>
+            <option value="">{labels.all}</option>
+            <option value="published">{labels.published}</option>
+            <option value="draft">{labels.draft}</option>
           </select>
         </label>
         <label className="field">
-          <span className="field-label">Provider</span>
+          <span className="field-label">{labels.provider}</span>
           <select
             value={provider}
             onChange={(e) => {
@@ -172,7 +191,7 @@ export function ItinerariesView({
             }}
             className="field-input"
           >
-            <option value="">All</option>
+            <option value="">{labels.all}</option>
             {providers.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.display_name}
@@ -181,7 +200,7 @@ export function ItinerariesView({
           </select>
         </label>
         <label className="field">
-          <span className="field-label">Group by</span>
+          <span className="field-label">{labels.groupBy}</span>
           <select
             value={group}
             onChange={(e) => {
@@ -192,16 +211,16 @@ export function ItinerariesView({
             className="field-input"
             data-testid="itineraries-groupby"
           >
-            <option value="category">Category</option>
-            <option value="region">Region</option>
-            <option value="status">Status</option>
-            <option value="provider">Provider</option>
+            <option value="category">{labels.category}</option>
+            <option value="region">{labels.region}</option>
+            <option value="status">{labels.status}</option>
+            <option value="provider">{labels.provider}</option>
           </select>
         </label>
       </div>
 
       {grouped.length === 0 ? (
-        <p className="text-sm text-ink-500">No itineraries match.</p>
+        <p className="text-sm text-ink-500">{labels.empty}</p>
       ) : null}
 
       {grouped.map(([groupLabel, rows]) => (
@@ -213,13 +232,13 @@ export function ItinerariesView({
             <table className="w-full text-sm">
               <thead className="bg-surface-alt text-xs uppercase tracking-wider text-ink-500">
                 <tr>
-                  <th className="text-left px-3 py-2">Photo</th>
-                  <th className="text-left px-3 py-2">Title</th>
-                  <th className="text-left px-3 py-2">Region</th>
-                  <th className="text-left px-3 py-2">Provider</th>
-                  <th className="text-left px-3 py-2">Price</th>
-                  <th className="text-left px-3 py-2">Date added</th>
-                  <th className="text-left px-3 py-2">Status</th>
+                  <th className="text-left px-3 py-2">{labels.photo}</th>
+                  <th className="text-left px-3 py-2">{labels.title}</th>
+                  <th className="text-left px-3 py-2">{labels.region}</th>
+                  <th className="text-left px-3 py-2">{labels.provider}</th>
+                  <th className="text-left px-3 py-2">{labels.price}</th>
+                  <th className="text-left px-3 py-2">{labels.dateAdded}</th>
+                  <th className="text-left px-3 py-2">{labels.status}</th>
                 </tr>
               </thead>
               <tbody>
@@ -265,11 +284,11 @@ export function ItinerariesView({
                     <td className="px-3 py-2">
                       {e.is_published ? (
                         <span className="text-xs uppercase tracking-wider font-bold text-success">
-                          Published
+                          {labels.published}
                         </span>
                       ) : (
                         <span className="text-xs uppercase tracking-wider font-bold text-ink-500">
-                          Draft
+                          {labels.draft}
                         </span>
                       )}
                     </td>

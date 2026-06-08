@@ -12,9 +12,20 @@ interface Labels {
   setActive: string;
   delete: string;
   addTemplate: string;
+  event: string;
+  emptyEvent: string;
+  newTemplate: string;
+  cancel: string;
+  subject: string;
+  editTemplate: string;
+  deleteConfirm: string;
   // forwarded to TemplateEditor
   editor: {
     name: string;
+    language: string;
+    channel: string;
+    channelEmail: string;
+    channelWhatsapp: string;
     subject: string;
     body: string;
     active: string;
@@ -47,14 +58,14 @@ export function EventCard({ eventKey, eventDescription, placeholders, templates,
     >
       <header className="flex items-baseline justify-between gap-4">
         <div>
-          <div className="text-xs uppercase tracking-wider text-ink-500">Event</div>
+          <div className="text-xs uppercase tracking-wider text-ink-500">{labels.event}</div>
           <h2 className="font-bold text-lg">{eventKey}</h2>
         </div>
         <p className="text-sm text-ink-500 max-w-md text-right">{eventDescription}</p>
       </header>
 
       {active.length === 0 && inactive.length === 0 ? (
-        <p className="text-sm text-ink-500 italic">No templates yet for this event.</p>
+        <p className="text-sm text-ink-500 italic">{labels.emptyEvent}</p>
       ) : null}
 
       {active.map((tmpl) => (
@@ -81,14 +92,14 @@ export function EventCard({ eventKey, eventDescription, placeholders, templates,
         <div className="border border-dashed border-primary/40 rounded-lg p-4 bg-primary/5">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs uppercase tracking-wider font-bold text-primary">
-              New template
+              {labels.newTemplate}
             </span>
             <button
               type="button"
               onClick={() => setAdding(false)}
               className="text-xs text-ink-500 hover:text-ink-900"
             >
-              Cancel
+              {labels.cancel}
             </button>
           </div>
           <TemplateEditor
@@ -168,7 +179,7 @@ function CollapsibleTemplate({
         <div className="border-t border-surface-border px-3 py-3 flex flex-col gap-3 bg-surface">
           {tmpl.subject ? (
             <div className="text-xs text-ink-500">
-              <span className="uppercase tracking-wider font-bold mr-2">Subject</span>
+              <span className="uppercase tracking-wider font-bold mr-2">{labels.subject}</span>
               <span className="text-ink-700">{tmpl.subject}</span>
             </div>
           ) : null}
@@ -188,7 +199,7 @@ function CollapsibleTemplate({
             <form
               action={deleteCommTemplateAction}
               onSubmit={(e) => {
-                if (!confirm(`Delete "${tmpl.name}"?`)) e.preventDefault();
+                if (!confirm(labels.deleteConfirm.replace('{name}', tmpl.name))) e.preventDefault();
               }}
             >
               <input type="hidden" name="id" value={tmpl.id} />
@@ -199,7 +210,7 @@ function CollapsibleTemplate({
           </div>
 
           <details className="text-xs">
-            <summary className="cursor-pointer text-ink-500">Edit template</summary>
+            <summary className="cursor-pointer text-ink-500">{labels.editTemplate}</summary>
             <div className="mt-3">
               <TemplateEditor
                 eventKey={tmpl.event_key}

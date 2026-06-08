@@ -25,6 +25,7 @@ export default async function NewExpeditionPage() {
             selectCategory: t('expForm.selectCategory'),
             difficulty: t('expForm.difficulty'),
             location: t('expForm.location'),
+            locationPlaceholder: t('expForm.locationPlaceholder'),
             region: t('expForm.region'),
             country: t('expForm.country'),
             startLat: t('expForm.startLat'),

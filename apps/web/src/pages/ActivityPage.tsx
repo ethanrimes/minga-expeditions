@@ -358,7 +358,7 @@ export function ActivityPage() {
                 <span style={{ color: theme.textMuted, fontSize: 12 }}>{relativeTime(c.created_at, language)}</span>
                 <button
                   onClick={() => remove(c.id)}
-                  aria-label="delete"
+                  aria-label={t('common.delete')}
                   style={{
                     background: 'transparent',
                     border: 0,

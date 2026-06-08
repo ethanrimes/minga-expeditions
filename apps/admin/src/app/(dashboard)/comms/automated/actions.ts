@@ -9,6 +9,8 @@ import {
 } from '@minga/supabase';
 import { requireAdmin } from '@/lib/auth';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { getLocale } from '@/lib/i18n/server';
+import { translate } from '@/lib/i18n/dictionary';
 
 export type CommTemplateFormState = { error?: string; saved?: boolean };
 
@@ -29,7 +31,7 @@ export async function saveCommTemplateAction(
     is_active: formData.get('is_active') === 'on',
   };
   if (!input.event_key || !input.body) {
-    return { error: 'event_key and body are required' };
+    return { error: translate(await getLocale(), 'error.commTemplate.required') };
   }
   const supabase = await createSupabaseServerClient();
   try {

@@ -81,6 +81,7 @@ export function NavBar() {
           language={language}
           onChange={setLanguage}
           theme={theme}
+          ariaLabel={t('settings.language')}
         />
 
         {session ? (
@@ -123,15 +124,17 @@ function LangToggle({
   language,
   onChange,
   theme,
+  ariaLabel,
 }: {
   language: 'en' | 'es';
   onChange: (lang: 'en' | 'es') => void;
   theme: ReturnType<typeof useTheme>['theme'];
+  ariaLabel: string;
 }) {
   return (
     <div
       role="group"
-      aria-label="Language"
+      aria-label={ariaLabel}
       style={{
         display: 'inline-flex',
         background: theme.surfaceAlt,

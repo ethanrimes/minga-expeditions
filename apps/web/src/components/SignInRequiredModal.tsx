@@ -50,7 +50,7 @@ export function SignInRequiredModal({ message, onClose }: Props) {
       >
         <button
           onClick={onClose}
-          aria-label="Close"
+          aria-label={t('common.close')}
           style={{
             position: 'absolute',
             top: 12,

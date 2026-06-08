@@ -6,6 +6,8 @@ import { deleteProvider, upsertProvider, type ProviderInput } from '@minga/supab
 import type { VendorType } from '@minga/types';
 import { requireAdmin } from '@/lib/auth';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { getLocale } from '@/lib/i18n/server';
+import { translate, type Key } from '@/lib/i18n/dictionary';
 
 export type ProviderFormState = { error?: string; saved?: boolean };
 
@@ -18,9 +20,9 @@ const VENDOR_TYPES: ReadonlySet<VendorType> = new Set([
   'other',
 ]);
 
-function parseInput(formData: FormData, idForUpdate?: string): ProviderInput | string {
+function parseInput(formData: FormData, idForUpdate?: string): ProviderInput | Key {
   const display_name = String(formData.get('display_name') ?? '').trim();
-  if (!display_name) return 'Name is required';
+  if (!display_name) return 'error.provider.nameRequired';
   const vt = String(formData.get('vendor_type') ?? '').trim() as VendorType;
   const vendor_type = vt && VENDOR_TYPES.has(vt) ? vt : null;
   return {
@@ -43,7 +45,9 @@ export async function createProviderAction(
 ): Promise<ProviderFormState> {
   await requireAdmin();
   const input = parseInput(formData);
-  if (typeof input === 'string') return { error: input };
+  if (typeof input === 'string') {
+    return { error: translate(await getLocale(), input) };
+  }
   const supabase = await createSupabaseServerClient();
   try {
     await upsertProvider(supabase, input);
@@ -61,7 +65,9 @@ export async function updateProviderAction(
 ): Promise<ProviderFormState> {
   await requireAdmin();
   const input = parseInput(formData, id);
-  if (typeof input === 'string') return { error: input };
+  if (typeof input === 'string') {
+    return { error: translate(await getLocale(), input) };
+  }
   const supabase = await createSupabaseServerClient();
   try {
     await upsertProvider(supabase, input);

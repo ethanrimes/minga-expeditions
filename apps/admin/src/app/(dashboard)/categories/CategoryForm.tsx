@@ -24,6 +24,7 @@ const ICON_OPTIONS = [
 
 interface Labels {
   slug: string;
+  slugPlaceholder: string;
   slugHelp: string;
   nameEn: string;
   nameEs: string;
@@ -58,7 +59,7 @@ export function CategoryForm({ action, initial, labels }: Props) {
           defaultValue={initial?.slug ?? ''}
           required
           className="field-input font-mono"
-          placeholder="hiking"
+          placeholder={labels.slugPlaceholder}
         />
         <span className="text-xs text-ink-500">{labels.slugHelp}</span>
       </label>

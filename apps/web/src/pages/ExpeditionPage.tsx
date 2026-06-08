@@ -267,7 +267,7 @@ export function ExpeditionPage() {
                   cursor: 'pointer',
                 }}
               >
-                Book this expedition ·{' '}
+                {t('checkout.bookExpedition')} ·{' '}
                 {formatPriceCents(expedition.price_cents, { currency: expedition.currency, freeLabel: t('common.free') })}
               </button>
             ) : null}

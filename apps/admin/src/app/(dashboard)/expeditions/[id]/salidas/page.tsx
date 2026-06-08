@@ -128,15 +128,47 @@ export default async function ExpeditionSalidasPage({ params }: { params: Promis
 
       <section className="mt-10">
         <h2 className="text-lg font-semibold flex items-center gap-2">
-          <Plus size={16} /> New series (recurring)
+          <Plus size={16} /> {t('series.title')}
         </h2>
         <p className="text-ink-500 mt-1 text-sm max-w-xl">
-          Generate many salidas in one shot — pick a frequency + interval + end date. Each
-          occurrence is a real salida row linked back to a series, so you can edit one or delete
-          them all together.
+          {t('series.subtitle')}
         </p>
         <div className="mt-4">
-          <SeriesForm expeditionId={id} />
+          <SeriesForm
+            expeditionId={id}
+            labels={{
+              frequency: t('series.frequency'),
+              daily: t('series.frequency.daily'),
+              weekly: t('series.frequency.weekly'),
+              monthly: t('series.frequency.monthly'),
+              interval: t('series.interval'),
+              until: t('series.until'),
+              daysOfWeek: t('series.daysOfWeek'),
+              weekdayHelp: t('series.weekdayHelp'),
+              firstStart: t('series.firstStart'),
+              firstEnd: t('series.firstEnd'),
+              capacity: t('salidaForm.capacity'),
+              capacityPlaceholder: t('series.capacityPlaceholder'),
+              priceCents: t('series.priceCents'),
+              pricePlaceholder: t('series.pricePlaceholder'),
+              currency: t('salidaForm.currency'),
+              notes: t('salidaForm.notes'),
+              publishImmediately: t('series.publishImmediately'),
+              created: t('series.created'),
+              occurrences: t('series.occurrences'),
+              creating: t('series.creating'),
+              create: t('series.create'),
+              weekdays: [
+                t('weekday.sun'),
+                t('weekday.mon'),
+                t('weekday.tue'),
+                t('weekday.wed'),
+                t('weekday.thu'),
+                t('weekday.fri'),
+                t('weekday.sat'),
+              ],
+            }}
+          />
         </div>
       </section>
 

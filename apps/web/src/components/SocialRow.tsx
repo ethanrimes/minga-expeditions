@@ -20,6 +20,7 @@ interface Props {
   linked: boolean;
   primary?: boolean;
   verified?: boolean;
+  verifiedLabel: string;
   notLinkedLabel: string;
   primaryAriaLabel?: string;
   children?: React.ReactNode;
@@ -32,6 +33,7 @@ export function SocialRow({
   linked,
   primary,
   verified,
+  verifiedLabel,
   notLinkedLabel,
   primaryAriaLabel,
   children,
@@ -79,7 +81,7 @@ export function SocialRow({
                   letterSpacing: 0.3,
                 }}
               >
-                ✓ VERIFIED
+                {verifiedLabel}
               </span>
             ) : null}
           </div>

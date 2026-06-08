@@ -148,7 +148,7 @@ export function CalendarFilterModal({
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800 }}>{t('cal.filters.open')}</h2>
           <button
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t('common.close')}
             style={{
               background: 'transparent',
               border: 0,

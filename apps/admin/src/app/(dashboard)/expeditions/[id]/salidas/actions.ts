@@ -5,6 +5,8 @@ import { redirect } from 'next/navigation';
 import { createSalida, updateSalida, deleteSalida } from '@minga/supabase';
 import { requireAdmin } from '@/lib/auth';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { getLocale } from '@/lib/i18n/server';
+import { translate } from '@/lib/i18n/dictionary';
 import { getT } from '@/lib/i18n/server';
 import { parseSalidaFormFields } from './parser';
 
@@ -139,6 +141,9 @@ export async function createSalidaSeriesAction(
   formData: FormData,
 ): Promise<SeriesFormState> {
   await requireAdmin();
+  const locale = await getLocale();
+  const t = (key: Parameters<typeof translate>[1], vars?: Record<string, string | number>) =>
+    translate(locale, key, vars);
   const frequency = String(formData.get('frequency') ?? 'weekly') as Frequency;
   const interval = Math.max(1, Number(formData.get('interval_count') ?? 1));
   const startsAtStr = String(formData.get('starts_at') ?? '').trim();
@@ -155,14 +160,14 @@ export async function createSalidaSeriesAction(
     .map((v) => Number(v))
     .filter((n) => Number.isFinite(n) && n >= 0 && n <= 6);
 
-  if (!startsAtStr) return { error: 'starts_at is required' };
+  if (!startsAtStr) return { error: t('error.salida.series.startsRequired') };
   const startsAt = new Date(startsAtStr);
-  if (Number.isNaN(startsAt.getTime())) return { error: 'starts_at is invalid' };
+  if (Number.isNaN(startsAt.getTime())) return { error: t('error.salida.series.startsInvalid') };
   const endsAt = endsAtStr ? new Date(endsAtStr) : null;
-  if (endsAt && Number.isNaN(endsAt.getTime())) return { error: 'ends_at is invalid' };
+  if (endsAt && Number.isNaN(endsAt.getTime())) return { error: t('error.salida.series.endsInvalid') };
   const seriesUntil = seriesUntilStr ? new Date(seriesUntilStr) : null;
   if (seriesUntil && Number.isNaN(seriesUntil.getTime()))
-    return { error: 'series_until is invalid' };
+    return { error: t('error.salida.series.untilInvalid') };
 
   const capacity = capacityRaw ? Math.max(1, Number(capacityRaw)) : null;
   const price = priceRaw ? Math.max(1, Number(priceRaw)) : null;
@@ -175,7 +180,7 @@ export async function createSalidaSeriesAction(
     byWeekday,
     seriesUntil,
   );
-  if (occurrences.length === 0) return { error: 'Recurrence produced no occurrences' };
+  if (occurrences.length === 0) return { error: t('error.salida.series.noOccurrences') };
 
   const supabase = await createSupabaseServerClient();
 
@@ -198,7 +203,7 @@ export async function createSalidaSeriesAction(
     })
     .select('id')
     .single();
-  if (serErr || !series) return { error: serErr?.message ?? 'Could not create series' };
+  if (serErr || !series) return { error: serErr?.message ?? t('error.salida.series.createFailed') };
 
   const rows = occurrences.map((occ) => ({
     expedition_id: expeditionId,
@@ -213,7 +218,7 @@ export async function createSalidaSeriesAction(
     is_published: isPublished,
   }));
   const { error: occErr } = await supabase.from('expedition_salidas').insert(rows);
-  if (occErr) return { error: `Series created but occurrences failed: ${occErr.message}` };
+  if (occErr) return { error: t('error.salida.series.occurrencesFailed', { msg: occErr.message }) };
 
   revalidatePath(`/expeditions/${expeditionId}/salidas`);
   revalidatePath('/expeditions/calendar');

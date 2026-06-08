@@ -10,6 +10,8 @@ import {
 import type { CommBroadcastCategory, CommChannel, CommLocale } from '@minga/types';
 import { requireAdmin } from '@/lib/auth';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { getLocale } from '@/lib/i18n/server';
+import { translate, type Key } from '@/lib/i18n/dictionary';
 
 export type BroadcastFormState = { error?: string; saved?: boolean };
 
@@ -21,7 +23,7 @@ const CATEGORIES: ReadonlySet<CommBroadcastCategory> = new Set([
   'other',
 ]);
 
-function parseInput(formData: FormData, idForUpdate?: string): CommBroadcastTemplateInput | string {
+function parseInput(formData: FormData, idForUpdate?: string): CommBroadcastTemplateInput | Key {
   const name = String(formData.get('name') ?? '').trim();
   const categoryRaw = String(formData.get('category') ?? 'announcement') as CommBroadcastCategory;
   const channel = String(formData.get('channel') ?? 'email') as CommChannel;
@@ -29,11 +31,11 @@ function parseInput(formData: FormData, idForUpdate?: string): CommBroadcastTemp
   const subjectRaw = String(formData.get('subject') ?? '').trim();
   const body = String(formData.get('body') ?? '').trim();
 
-  if (!name) return 'Name is required';
-  if (!body) return 'Body is required';
-  if (!CATEGORIES.has(categoryRaw)) return 'Invalid category';
-  if (channel !== 'email' && channel !== 'whatsapp') return 'Invalid channel';
-  if (locale !== 'en' && locale !== 'es') return 'Invalid locale';
+  if (!name) return 'error.broadcast.nameRequired';
+  if (!body) return 'error.broadcast.bodyRequired';
+  if (!CATEGORIES.has(categoryRaw)) return 'error.broadcast.invalidCategory';
+  if (channel !== 'email' && channel !== 'whatsapp') return 'error.broadcast.invalidChannel';
+  if (locale !== 'en' && locale !== 'es') return 'error.broadcast.invalidLocale';
 
   return {
     ...(idForUpdate ? { id: idForUpdate } : {}),
@@ -53,7 +55,7 @@ export async function createBroadcastTemplateAction(
 ): Promise<BroadcastFormState> {
   await requireAdmin();
   const input = parseInput(formData);
-  if (typeof input === 'string') return { error: input };
+  if (typeof input === 'string') return { error: translate(await getLocale(), input) };
   const supabase = await createSupabaseServerClient();
   try {
     await upsertCommBroadcastTemplate(supabase, input);
@@ -71,7 +73,7 @@ export async function updateBroadcastTemplateAction(
 ): Promise<BroadcastFormState> {
   await requireAdmin();
   const input = parseInput(formData, id);
-  if (typeof input === 'string') return { error: input };
+  if (typeof input === 'string') return { error: translate(await getLocale(), input) };
   const supabase = await createSupabaseServerClient();
   try {
     await upsertCommBroadcastTemplate(supabase, input);

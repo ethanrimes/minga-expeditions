@@ -12,10 +12,24 @@ export function ProfilesTable({
   profiles,
   initialSearch,
   initialTier,
+  labels,
 }: {
   profiles: AdminProfileRow[];
   initialSearch: string;
   initialTier: string;
+  labels: {
+    search: string;
+    searchPlaceholder: string;
+    tier: string;
+    all: string;
+    apply: string;
+    empty: string;
+    name: string;
+    username: string;
+    country: string;
+    distance: string;
+    joined: string;
+  };
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -33,7 +47,7 @@ export function ProfilesTable({
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-end gap-3">
         <label className="field flex-1 min-w-[200px]">
-          <span className="field-label">Search</span>
+          <span className="field-label">{labels.search}</span>
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -41,12 +55,12 @@ export function ProfilesTable({
               if (e.key === 'Enter') apply({ q });
             }}
             className="field-input"
-            placeholder="Name or username…"
+            placeholder={labels.searchPlaceholder}
             data-testid="profiles-search"
           />
         </label>
         <label className="field">
-          <span className="field-label">Tier</span>
+          <span className="field-label">{labels.tier}</span>
           <select
             value={tier}
             onChange={(e) => {
@@ -55,7 +69,7 @@ export function ProfilesTable({
             }}
             className="field-input"
           >
-            <option value="">All</option>
+            <option value="">{labels.all}</option>
             {TIERS.map((t) => (
               <option key={t} value={t}>
                 {t}
@@ -64,23 +78,23 @@ export function ProfilesTable({
           </select>
         </label>
         <button onClick={() => apply({ q })} className="btn-secondary text-sm">
-          Apply
+          {labels.apply}
         </button>
       </div>
 
       {profiles.length === 0 ? (
-        <p className="text-sm text-ink-500">No profiles match.</p>
+        <p className="text-sm text-ink-500">{labels.empty}</p>
       ) : (
         <div className="border border-surface-border rounded-lg overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-surface-alt text-xs uppercase tracking-wider text-ink-500">
               <tr>
-                <th className="text-left px-3 py-2">Name</th>
-                <th className="text-left px-3 py-2">Username</th>
-                <th className="text-left px-3 py-2">Tier</th>
-                <th className="text-left px-3 py-2">Country</th>
-                <th className="text-left px-3 py-2">Distance</th>
-                <th className="text-left px-3 py-2">Joined</th>
+                <th className="text-left px-3 py-2">{labels.name}</th>
+                <th className="text-left px-3 py-2">{labels.username}</th>
+                <th className="text-left px-3 py-2">{labels.tier}</th>
+                <th className="text-left px-3 py-2">{labels.country}</th>
+                <th className="text-left px-3 py-2">{labels.distance}</th>
+                <th className="text-left px-3 py-2">{labels.joined}</th>
               </tr>
             </thead>
             <tbody>

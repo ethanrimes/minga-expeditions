@@ -79,6 +79,41 @@ export function CalendarScreen({ variant = 'grid', onOpenExpedition, monthsAhead
 
   const dateLocale = language?.startsWith('es') ? 'es-CO' : 'en-US';
 
+  // Categories are independent of the filter/price state, so fetch them once on
+  // mount instead of re-fetching them alongside every salidas refresh.
+  useEffect(() => {
+    let cancelled = false;
+    fetchCategories(getSupabase(), { activeOnly: true })
+      .then((cats) => {
+        if (!cancelled) setCategories(cats);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Translate UI filter state into the query DSL. priceMin/Max ride the raw
+  // min/max fields; "max == ceiling" means "no upper bound" so we drop the
+  // constraint to avoid filtering out expeditions priced above ceiling.
+  // Memoized so the fetch effect below only re-runs when the *effective* query
+  // changes — when the price ceiling auto-bumps to an equivalent "no upper
+  // bound" value after the first load, the payload is identical and we skip a
+  // redundant full re-fetch.
+  const apiFilters = useMemo<CalendarSalidaFilters>(
+    () => ({
+      categoryIds: filters.categoryIds,
+      regions: filters.regions,
+      terrainTags: filters.terrainTags,
+      difficulty: filters.difficulty,
+      minPriceCents: filters.priceMinCents > 0 ? filters.priceMinCents : null,
+      maxPriceCents: filters.priceMaxCents < priceCeiling ? filters.priceMaxCents : null,
+      minRating: filters.minRating > 0 ? filters.minRating : null,
+    }),
+    [filters, priceCeiling],
+  );
+  const queryKey = useMemo(() => JSON.stringify(apiFilters), [apiFilters]);
+
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -87,33 +122,19 @@ export function CalendarScreen({ variant = 'grid', onOpenExpedition, monthsAhead
     from.setMonth(from.getMonth() - 1, 1);
     const to = new Date();
     to.setMonth(to.getMonth() + monthsAhead, 0);
-    // Translate UI filter state into the query DSL. priceMin/Max ride the
-    // raw min/max fields; "max == ceiling" means "no upper bound" so we drop
-    // the constraint to avoid filtering out expeditions priced above ceiling.
-    const apiFilters: CalendarSalidaFilters = {
-      categoryIds: filters.categoryIds,
-      regions: filters.regions,
-      terrainTags: filters.terrainTags,
-      difficulty: filters.difficulty,
-      minPriceCents: filters.priceMinCents > 0 ? filters.priceMinCents : null,
-      maxPriceCents: filters.priceMaxCents < priceCeiling ? filters.priceMaxCents : null,
-      minRating: filters.minRating > 0 ? filters.minRating : null,
-    };
-    Promise.all([
-      fetchSalidasInRange(getSupabase(), from.toISOString(), to.toISOString(), apiFilters),
-      fetchCategories(getSupabase(), { activeOnly: true }),
-    ])
-      .then(([sals, cats]) => {
-        if (cancelled) return;
-        setSalidas(sals);
-        setCategories(cats);
+    fetchSalidasInRange(getSupabase(), from.toISOString(), to.toISOString(), apiFilters)
+      .then((sals) => {
+        if (!cancelled) setSalidas(sals);
       })
       .catch((e) => !cancelled && setError(e?.message ?? 'Failed to load calendar'))
       .finally(() => !cancelled && setLoading(false));
     return () => {
       cancelled = true;
     };
-  }, [filters, monthsAhead, priceCeiling]);
+    // apiFilters is intentionally tracked via queryKey (its serialized form) so
+    // identity-only changes don't trigger redundant fetches.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queryKey, monthsAhead]);
 
   // Bump the price ceiling once we see data — the slider snaps cleanly to a
   // power-of-two-ish number above the most expensive expedition.

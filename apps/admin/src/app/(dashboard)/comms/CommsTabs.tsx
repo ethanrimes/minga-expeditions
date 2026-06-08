@@ -9,10 +9,10 @@ interface Tab {
   description: string;
 }
 
-export function CommsTabs({ tabs }: { tabs: Tab[] }) {
+export function CommsTabs({ tabs, ariaLabel }: { tabs: Tab[]; ariaLabel: string }) {
   const pathname = usePathname();
   return (
-    <nav className="border-b border-surface-border flex flex-wrap gap-1" aria-label="Communications tabs">
+    <nav className="border-b border-surface-border flex flex-wrap gap-1" aria-label={ariaLabel}>
       {tabs.map((tab) => {
         const active = pathname === tab.href || pathname?.startsWith(`${tab.href}/`);
         return (

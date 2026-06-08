@@ -42,10 +42,9 @@ export default async function ItinerariesPage({
     <div className="flex flex-col gap-6">
       <header className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Itineraries</h1>
+          <h1 className="text-2xl font-bold">{t('itineraries.title')}</h1>
           <p className="text-ink-500 mt-1 text-sm max-w-2xl">
-            Trip templates that show up in the consumer apps. Each itinerary can host multiple
-            salidas (dated departures).
+            {t('itineraries.subtitle')}
           </p>
         </div>
         <Link href="/expeditions/new" className="btn-primary">
@@ -59,6 +58,24 @@ export default async function ItinerariesPage({
         providers={providers}
         regions={regions}
         catName={Object.fromEntries(catName)}
+        labels={{
+          search: t('common.search'),
+          titlePlaceholder: t('itineraries.placeholder.title'),
+          category: t('expeditions.col.category'),
+          region: t('calendar.filters.region'),
+          status: t('expeditions.col.status'),
+          all: t('common.all'),
+          published: t('expeditions.status.published'),
+          draft: t('expeditions.status.draft'),
+          provider: t('common.provider'),
+          groupBy: t('itineraries.groupBy'),
+          empty: t('itineraries.empty'),
+          photo: t('itineraries.col.photo'),
+          title: t('expeditions.col.title'),
+          price: t('expeditions.col.price'),
+          dateAdded: t('itineraries.col.dateAdded'),
+          noProvider: t('itineraries.noProvider'),
+        }}
         initial={{
           q: sp.q ?? '',
           category: sp.category ?? '',

@@ -132,6 +132,7 @@ export type TranslationKey =
   | 'map.legendOfficial'
   | 'map.legendUser'
   | 'map.legendMyTrack'
+  | 'map.layers'
   | 'map.loading'
   | 'map.nativeNotice'
   | 'empty.notFound'
@@ -141,6 +142,10 @@ export type TranslationKey =
   | 'common.free'
   | 'common.more'
   | 'common.back'
+  | 'common.close'
+  | 'common.cancel'
+  | 'common.delete'
+  | 'common.verified'
   | 'common.allExpeditions'
   | 'common.signInToLike'
   | 'common.signInToRate'
@@ -213,6 +218,11 @@ export type TranslationKey =
   | 'profile.phoneSaved'
   | 'profile.phoneRetry'
   | 'profile.phoneSave'
+  | 'profile.phoneSendCode'
+  | 'profile.phoneSendingCode'
+  | 'profile.phoneCodeSent'
+  | 'profile.phoneVerify'
+  | 'profile.phoneVerifying'
   | 'profile.instagramLabel'
   | 'profile.instagramHelp'
   | 'profile.instagramPlaceholder'
@@ -348,6 +358,7 @@ export type TranslationKey =
   | 'checkout.confirmationEmail'
   | 'checkout.confirmationEmailWhatsapp'
   | 'checkout.payButton'
+  | 'checkout.bookExpedition'
   | 'checkout.opening'
   | 'checkout.redirecting'
   | 'checkout.errorEmailRequired'
@@ -510,6 +521,7 @@ export const en: Record<TranslationKey, string> = {
   'map.legendOfficial': 'Minga official',
   'map.legendUser': 'Community',
   'map.legendMyTrack': 'Your tracks',
+  'map.layers': 'LAYERS',
   'map.loading': 'Loading map…',
   'map.nativeNotice': 'Open Minga on the web to see the interactive map — native maps coming soon.',
   'empty.notFound': 'Expedition not found',
@@ -519,6 +531,10 @@ export const en: Record<TranslationKey, string> = {
   'common.free': 'Free',
   'common.more': 'See all →',
   'common.back': '← Back',
+  'common.close': 'Close',
+  'common.cancel': 'Cancel',
+  'common.delete': 'Delete',
+  'common.verified': '✓ VERIFIED',
   'common.allExpeditions': 'All expeditions',
   'common.signInToLike': 'Sign in to like',
   'common.signInToRate': 'Sign in to rate',
@@ -592,6 +608,11 @@ export const en: Record<TranslationKey, string> = {
   'profile.phoneSaved': 'Saved ✓',
   'profile.phoneRetry': 'Retry',
   'profile.phoneSave': 'Save',
+  'profile.phoneSendCode': 'Send code',
+  'profile.phoneSendingCode': 'Sending…',
+  'profile.phoneCodeSent': 'We sent a 6-digit code to {phone}. Enter it below to verify the number.',
+  'profile.phoneVerify': 'Verify',
+  'profile.phoneVerifying': 'Verifying…',
   'profile.instagramLabel': 'Instagram',
   'profile.instagramHelp': 'We tag you in trip recap posts and share-cards.',
   'profile.instagramPlaceholder': 'yourhandle',
@@ -736,6 +757,7 @@ export const en: Record<TranslationKey, string> = {
   'checkout.confirmationEmailWhatsapp':
     'We send the booking confirmation to your email and a WhatsApp message with trip details.',
   'checkout.payButton': 'Pay with Wompi',
+  'checkout.bookExpedition': 'Book this expedition',
   'checkout.opening': 'Opening checkout…',
   'checkout.redirecting': 'Redirecting…',
   'checkout.errorEmailRequired': 'Email is required.',
@@ -903,6 +925,7 @@ export const es: Record<TranslationKey, string> = {
   'map.legendOfficial': 'Oficial de Minga',
   'map.legendUser': 'Comunidad',
   'map.legendMyTrack': 'Tus rutas',
+  'map.layers': 'CAPAS',
   'map.loading': 'Cargando el mapa…',
   'map.nativeNotice': 'Abre Minga en la web para ver el mapa interactivo — mapa nativo próximamente.',
   'empty.notFound': 'Expedición no encontrada',
@@ -912,6 +935,10 @@ export const es: Record<TranslationKey, string> = {
   'common.free': 'Gratis',
   'common.more': 'Ver todo →',
   'common.back': '← Volver',
+  'common.close': 'Cerrar',
+  'common.cancel': 'Cancelar',
+  'common.delete': 'Eliminar',
+  'common.verified': '✓ VERIFICADO',
   'common.allExpeditions': 'Todas las expediciones',
   'common.signInToLike': 'Inicia sesión para dar me gusta',
   'common.signInToRate': 'Inicia sesión para calificar',
@@ -985,6 +1012,11 @@ export const es: Record<TranslationKey, string> = {
   'profile.phoneSaved': 'Guardado ✓',
   'profile.phoneRetry': 'Reintentar',
   'profile.phoneSave': 'Guardar',
+  'profile.phoneSendCode': 'Enviar código',
+  'profile.phoneSendingCode': 'Enviando…',
+  'profile.phoneCodeSent': 'Enviamos un código de 6 dígitos a {phone}. Escríbelo abajo para verificar el número.',
+  'profile.phoneVerify': 'Verificar',
+  'profile.phoneVerifying': 'Verificando…',
   'profile.instagramLabel': 'Instagram',
   'profile.instagramHelp': 'Te etiquetamos en los resúmenes de viaje y tarjetas para compartir.',
   'profile.instagramPlaceholder': 'tuusuario',
@@ -1131,6 +1163,7 @@ export const es: Record<TranslationKey, string> = {
   'checkout.confirmationEmailWhatsapp':
     'Enviamos la confirmación al correo y un mensaje por WhatsApp con los detalles del viaje.',
   'checkout.payButton': 'Pagar con Wompi',
+  'checkout.bookExpedition': 'Reservar esta expedición',
   'checkout.opening': 'Abriendo el pago…',
   'checkout.redirecting': 'Redirigiendo…',
   'checkout.errorEmailRequired': 'El correo es obligatorio.',

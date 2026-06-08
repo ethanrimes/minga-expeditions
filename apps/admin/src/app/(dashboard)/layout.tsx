@@ -22,6 +22,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
         <Sidebar
           labels={{
+            aria: t('sidebar.aria'),
             dashboard: t('sidebar.dashboard'),
             groups: {
               expeditions: t('sidebar.group.expeditions'),

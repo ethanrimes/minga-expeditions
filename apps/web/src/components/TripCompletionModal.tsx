@@ -158,7 +158,7 @@ export function TripCompletionModal({ participation, onClose }: Props) {
       >
         <button
           onClick={dismiss}
-          aria-label="Close"
+          aria-label={t('common.close')}
           style={{
             position: 'absolute',
             top: 14,

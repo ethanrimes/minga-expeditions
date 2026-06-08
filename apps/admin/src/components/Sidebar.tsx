@@ -29,6 +29,7 @@ interface Group {
 }
 
 interface Labels {
+  aria: string;
   dashboard: string;
   groups: {
     expeditions: string;
@@ -90,7 +91,7 @@ export function Sidebar({ labels }: { labels: Labels }) {
     href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(`${href}/`);
 
   return (
-    <nav className="flex-1 px-3 py-4 flex flex-col gap-4 text-sm overflow-y-auto" aria-label="Admin">
+    <nav className="flex-1 px-3 py-4 flex flex-col gap-4 text-sm overflow-y-auto" aria-label={labels.aria}>
       <SidebarLink
         href="/"
         Icon={LayoutGrid}

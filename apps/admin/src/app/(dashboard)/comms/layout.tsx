@@ -10,6 +10,7 @@ export default async function CommsLayout({ children }: { children: React.ReactN
         <p className="text-ink-500 mt-1 text-sm max-w-2xl">{t('comms.subtitle')}</p>
       </header>
       <CommsTabs
+        ariaLabel={t('comms.tabs.aria')}
         tabs={[
           {
             href: '/comms/automated',

@@ -7,6 +7,7 @@ import {
   fetchUserCommSubscriptions,
 } from '@minga/supabase';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { getT } from '@/lib/i18n/server';
 
 export default async function ProfileDetailPage({
   params,
@@ -15,6 +16,7 @@ export default async function ProfileDetailPage({
 }) {
   const { id } = await params;
   const supabase = await createSupabaseServerClient();
+  const { t } = await getT();
   const [profile, trips, reviews, subs] = await Promise.all([
     fetchProfile(supabase, id),
     fetchProfileTripsForAdmin(supabase, id),
@@ -34,7 +36,7 @@ export default async function ProfileDetailPage({
   return (
     <div className="flex flex-col gap-6">
       <Link href="/users/profiles" className="text-sm text-primary font-semibold">
-        ← Back to profiles
+        {t('users.profiles.back')}
       </Link>
 
       <header className="flex items-center gap-4">
@@ -59,21 +61,21 @@ export default async function ProfileDetailPage({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <section className="card flex flex-col gap-2">
-          <h2 className="font-bold">Contact</h2>
-          <Row label="Bio" value={profile.bio ?? '—'} />
-          <Row label="Instagram" value={profile.instagram_handle ?? '—'} />
+          <h2 className="font-bold">{t('users.profile.contact')}</h2>
+          <Row label={t('common.bio')} value={profile.bio ?? '—'} />
+          <Row label={t('common.instagram')} value={profile.instagram_handle ?? '—'} />
           <Row
-            label="Joined"
+            label={t('common.joined')}
             value={new Date(profile.created_at).toLocaleDateString()}
           />
-          <Row label="Total distance" value={`${profile.total_distance_km.toFixed(1)} km`} />
-          <Row label="Total elevation" value={`${profile.total_elevation_m.toFixed(0)} m`} />
+          <Row label={t('common.totalDistance')} value={`${profile.total_distance_km.toFixed(1)} km`} />
+          <Row label={t('common.totalElevation')} value={`${profile.total_elevation_m.toFixed(0)} m`} />
         </section>
 
         <section className="card flex flex-col gap-2">
-          <h2 className="font-bold">Comms subscriptions</h2>
+          <h2 className="font-bold">{t('users.profile.commsSubscriptions')}</h2>
           {subsByEvent.size === 0 ? (
-            <p className="text-sm text-ink-500 italic">Default (subscribed to everything).</p>
+            <p className="text-sm text-ink-500 italic">{t('users.profile.defaultSubscriptions')}</p>
           ) : (
             <ul className="text-sm flex flex-col gap-1">
               {[...subsByEvent.entries()].map(([eventKey, rows]) => (
@@ -102,17 +104,19 @@ export default async function ProfileDetailPage({
       </div>
 
       <section className="card flex flex-col gap-2">
-        <h2 className="font-bold">Trips ({trips.length})</h2>
+        <h2 className="font-bold">
+          {t('users.profile.trips')} ({trips.length})
+        </h2>
         {trips.length === 0 ? (
-          <p className="text-sm text-ink-500 italic">No bookings yet.</p>
+          <p className="text-sm text-ink-500 italic">{t('users.profile.noBookings')}</p>
         ) : (
           <table className="w-full text-sm">
             <thead className="bg-surface-alt text-xs uppercase tracking-wider text-ink-500">
               <tr>
-                <th className="text-left px-3 py-2">Expedition</th>
-                <th className="text-left px-3 py-2">Date</th>
-                <th className="text-left px-3 py-2">Status</th>
-                <th className="text-left px-3 py-2">Amount</th>
+                <th className="text-left px-3 py-2">{t('users.profile.expedition')}</th>
+                <th className="text-left px-3 py-2">{t('common.date')}</th>
+                <th className="text-left px-3 py-2">{t('common.status')}</th>
+                <th className="text-left px-3 py-2">{t('common.amount')}</th>
               </tr>
             </thead>
             <tbody>
@@ -136,9 +140,11 @@ export default async function ProfileDetailPage({
       </section>
 
       <section className="card flex flex-col gap-2">
-        <h2 className="font-bold">Reviews received from providers ({reviews.length})</h2>
+        <h2 className="font-bold">
+          {t('users.profile.reviews')} ({reviews.length})
+        </h2>
         {reviews.length === 0 ? (
-          <p className="text-sm text-ink-500 italic">No reviews yet.</p>
+          <p className="text-sm text-ink-500 italic">{t('users.profile.noReviews')}</p>
         ) : (
           <ul className="flex flex-col gap-2">
             {reviews.map((r) => (

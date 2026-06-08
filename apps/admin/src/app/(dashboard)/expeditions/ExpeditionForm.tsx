@@ -25,6 +25,7 @@ interface Labels {
   selectCategory: string;
   difficulty: string;
   location: string;
+  locationPlaceholder: string;
   region: string;
   country: string;
   startLat: string;
@@ -128,7 +129,7 @@ export function ExpeditionForm({ action, categories, initial, labels, locale }: 
             defaultValue={initial?.location_name ?? ''}
             required
             className="field-input"
-            placeholder="Valle de Cocora"
+            placeholder={labels.locationPlaceholder}
           />
         </label>
         <label className="field">
