@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Settings as SettingsIcon, User as UserIcon } from 'lucide-react';
+import { Settings as SettingsIcon, User as UserIcon, Award, Mountain, CheckCircle2 } from 'lucide-react';
 import { useTheme, tierColors, activityColors } from '@minga/theme';
 import { useT } from '@minga/i18n';
 import { fetchMyActivities, fetchProfile } from '@minga/supabase';
 import {
-  buildActivityCalendar,
   formatDistanceKm,
   formatDuration,
   formatElevation,
@@ -98,7 +97,7 @@ export function ProfilePage() {
 
   const progress = progressToNextTier(profile?.total_distance_km ?? 0);
   const summary = summarizeActivities(activities);
-  const calendar = buildActivityCalendar(activities, 182);
+  const mingaShare = summary.all.count > 0 ? Math.round((summary.minga.count / summary.all.count) * 100) : 0;
 
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto', padding: '40px 24px' }}>
@@ -191,6 +190,9 @@ export function ProfilePage() {
           label={t('profile.metricsMinga')}
           accent={activityColors.minga}
           totals={summary.minga}
+          featured
+          share={mingaShare}
+          shareLabel={t('profile.metricsShareLabel')}
         />
       </section>
 
@@ -239,7 +241,7 @@ export function ProfilePage() {
           marginBottom: 32,
         }}
       >
-        <ActivityCalendar data={calendar} />
+        <ActivityCalendar activities={activities} />
       </section>
 
       {/* Activity list — color-coded by Minga vs independent */}
@@ -262,47 +264,97 @@ export function ProfilePage() {
                 to={`/activities/${a.id}`}
                 style={{
                   textDecoration: 'none',
-                  background: theme.surface,
-                  border: `1px solid ${theme.border}`,
-                  borderLeft: `4px solid ${accent}`,
+                  position: 'relative',
+                  overflow: 'hidden',
+                  background: minga ? `${accent}0f` : theme.surface,
+                  border: minga ? `1.5px solid ${accent}66` : `1px solid ${theme.border}`,
+                  borderLeft: minga ? `6px solid ${accent}` : `4px dashed ${accent}`,
                   borderRadius: 14,
                   padding: 18,
                   display: 'grid',
                   gridTemplateColumns: '2fr 1fr 1fr 1fr',
                   gap: 12,
                   alignItems: 'center',
+                  boxShadow: minga ? `0 6px 16px ${accent}26` : 'none',
                   transition: 'transform 120ms ease, box-shadow 120ms ease',
                 }}
                 onMouseEnter={(e) => {
                   (e.currentTarget as HTMLAnchorElement).style.transform = 'translateY(-2px)';
-                  (e.currentTarget as HTMLAnchorElement).style.boxShadow = '0 8px 18px rgba(0,0,0,0.06)';
+                  (e.currentTarget as HTMLAnchorElement).style.boxShadow = minga
+                    ? `0 12px 24px ${accent}3d`
+                    : '0 8px 18px rgba(0,0,0,0.06)';
                 }}
                 onMouseLeave={(e) => {
                   (e.currentTarget as HTMLAnchorElement).style.transform = 'translateY(0)';
-                  (e.currentTarget as HTMLAnchorElement).style.boxShadow = 'none';
+                  (e.currentTarget as HTMLAnchorElement).style.boxShadow = minga
+                    ? `0 6px 16px ${accent}26`
+                    : 'none';
                 }}
               >
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                     <strong style={{ color: theme.text }}>{a.title}</strong>
-                    <span
-                      style={{
-                        background: accent,
-                        color: '#fff',
-                        fontSize: 10,
-                        fontWeight: 800,
-                        letterSpacing: 0.5,
-                        padding: '2px 8px',
-                        borderRadius: 999,
-                        textTransform: 'uppercase',
-                      }}
-                    >
-                      {minga ? t('profile.badgeMinga') : t('profile.badgeIndependent')}
-                    </span>
+                    {minga ? (
+                      <span
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 4,
+                          background: accent,
+                          color: '#fff',
+                          fontSize: 10,
+                          fontWeight: 800,
+                          letterSpacing: 0.5,
+                          padding: '3px 9px',
+                          borderRadius: 999,
+                          textTransform: 'uppercase',
+                          boxShadow: `0 2px 6px ${accent}59`,
+                        }}
+                      >
+                        <Award size={11} strokeWidth={2.6} />
+                        {t('profile.badgeMinga')}
+                      </span>
+                    ) : (
+                      <span
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 4,
+                          background: 'transparent',
+                          color: accent,
+                          fontSize: 10,
+                          fontWeight: 800,
+                          letterSpacing: 0.5,
+                          padding: '2px 8px',
+                          borderRadius: 999,
+                          textTransform: 'uppercase',
+                          border: `1.5px solid ${accent}80`,
+                        }}
+                      >
+                        <Mountain size={11} strokeWidth={2.4} />
+                        {t('profile.badgeIndependent')}
+                      </span>
+                    )}
                   </div>
                   <div style={{ color: theme.textMuted, fontSize: 13 }}>
                     {t(ACT_KEY[a.activity_type])} · {new Date(a.started_at).toLocaleDateString(locale)}
                   </div>
+                  {minga ? (
+                    <div
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 4,
+                        marginTop: 6,
+                        color: accent,
+                        fontSize: 11,
+                        fontWeight: 700,
+                      }}
+                    >
+                      <CheckCircle2 size={12} strokeWidth={2.6} />
+                      {t('profile.mingaVerified')}
+                    </div>
+                  ) : null}
                 </div>
                 <Stat theme={theme} label={t('stats.distance')} value={formatDistanceKm(a.distance_km)} small />
                 <Stat theme={theme} label={t('stats.elevation')} value={formatElevation(a.elevation_gain_m)} small />
@@ -321,39 +373,79 @@ function MetricCard({
   label,
   accent,
   totals,
+  featured,
+  share,
+  shareLabel,
 }: {
   theme: any;
   label: string;
   accent: string;
   totals: { count: number; distanceKm: number; elevationM: number };
+  featured?: boolean;
+  share?: number;
+  shareLabel?: string;
 }) {
   const { t } = useT();
+  const fg = featured ? '#fff' : theme.text;
+  const muted = featured ? 'rgba(255,255,255,0.82)' : theme.textMuted;
   return (
     <div
       style={{
-        background: theme.surface,
-        border: `1px solid ${theme.border}`,
-        borderTop: `4px solid ${accent}`,
+        position: 'relative',
+        overflow: 'hidden',
+        background: featured
+          ? `linear-gradient(135deg, ${accent} 0%, ${accent}cc 100%)`
+          : theme.surface,
+        border: featured ? 'none' : `1px solid ${theme.border}`,
+        borderTop: featured ? 'none' : `4px solid ${accent}`,
         borderRadius: 16,
         padding: 20,
+        boxShadow: featured ? `0 12px 28px ${accent}4d` : 'none',
+        transform: featured ? 'scale(1.0)' : 'none',
       }}
     >
+      {featured ? (
+        <Award
+          size={88}
+          strokeWidth={1.4}
+          style={{ position: 'absolute', right: -14, bottom: -18, color: 'rgba(255,255,255,0.16)' }}
+        />
+      ) : null}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-        <span style={{ width: 10, height: 10, borderRadius: 3, background: accent, display: 'inline-block' }} />
-        <span style={{ color: theme.text, fontWeight: 800, fontSize: 14 }}>{label}</span>
+        {featured ? (
+          <Award size={16} strokeWidth={2.6} style={{ color: '#fff' }} />
+        ) : (
+          <span style={{ width: 10, height: 10, borderRadius: 3, background: accent, display: 'inline-block' }} />
+        )}
+        <span style={{ color: fg, fontWeight: 800, fontSize: 14 }}>{label}</span>
+        {featured && typeof share === 'number' ? (
+          <span
+            style={{
+              marginLeft: 'auto',
+              background: 'rgba(255,255,255,0.22)',
+              color: '#fff',
+              fontWeight: 800,
+              fontSize: 12,
+              padding: '3px 10px',
+              borderRadius: 999,
+            }}
+          >
+            {t('profile.mingaShare', { pct: String(share) })}
+          </span>
+        ) : null}
       </div>
-      <div style={{ color: theme.text, fontSize: 28, fontWeight: 800 }}>{totals.count}</div>
-      <div style={{ color: theme.textMuted, fontSize: 12, letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 12 }}>
-        {t('stats.activities')}
+      <div style={{ color: fg, fontSize: 30, fontWeight: 800 }}>{totals.count}</div>
+      <div style={{ color: muted, fontSize: 12, letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 12 }}>
+        {featured && shareLabel ? `${t('stats.activities')} · ${shareLabel}` : t('stats.activities')}
       </div>
       <div style={{ display: 'flex', gap: 16 }}>
         <div>
-          <div style={{ color: theme.text, fontWeight: 700 }}>{formatDistanceKm(totals.distanceKm)}</div>
-          <div style={{ color: theme.textMuted, fontSize: 11, textTransform: 'uppercase' }}>{t('stats.totalKm')}</div>
+          <div style={{ color: fg, fontWeight: 700 }}>{formatDistanceKm(totals.distanceKm)}</div>
+          <div style={{ color: muted, fontSize: 11, textTransform: 'uppercase' }}>{t('stats.totalKm')}</div>
         </div>
         <div>
-          <div style={{ color: theme.text, fontWeight: 700 }}>{formatElevation(totals.elevationM)}</div>
-          <div style={{ color: theme.textMuted, fontSize: 11, textTransform: 'uppercase' }}>{t('stats.elevation')}</div>
+          <div style={{ color: fg, fontWeight: 700 }}>{formatElevation(totals.elevationM)}</div>
+          <div style={{ color: muted, fontSize: 11, textTransform: 'uppercase' }}>{t('stats.elevation')}</div>
         </div>
       </div>
     </div>

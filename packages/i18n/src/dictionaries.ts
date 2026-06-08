@@ -116,6 +116,12 @@ export type TranslationKey =
   | 'profile.legendIndependent'
   | 'profile.badgeMinga'
   | 'profile.badgeIndependent'
+  | 'profile.prevMonth'
+  | 'profile.nextMonth'
+  | 'profile.calendarMonthSummary'
+  | 'profile.mingaShare'
+  | 'profile.metricsShareLabel'
+  | 'profile.mingaVerified'
   | 'auth.welcomeBack'
   | 'auth.joinTitle'
   | 'auth.oauthNote'
@@ -517,6 +523,12 @@ export const en: Record<TranslationKey, string> = {
   'profile.legendIndependent': 'On your own',
   'profile.badgeMinga': 'Minga',
   'profile.badgeIndependent': 'On your own',
+  'profile.prevMonth': 'Previous month',
+  'profile.nextMonth': 'Next month',
+  'profile.calendarMonthSummary': '{minga} with Minga · {independent} on your own',
+  'profile.mingaShare': '{pct}% with Minga',
+  'profile.metricsShareLabel': 'of your trips',
+  'profile.mingaVerified': 'Booked through Minga',
   'auth.welcomeBack': 'Welcome back',
   'auth.joinTitle': 'Join the expedition',
   'auth.oauthNote': 'Sign in with Google, Meta, or your email.',
@@ -934,6 +946,12 @@ export const es: Record<TranslationKey, string> = {
   'profile.legendIndependent': 'Por tu cuenta',
   'profile.badgeMinga': 'Minga',
   'profile.badgeIndependent': 'Por tu cuenta',
+  'profile.prevMonth': 'Mes anterior',
+  'profile.nextMonth': 'Mes siguiente',
+  'profile.calendarMonthSummary': '{minga} con Minga · {independent} por tu cuenta',
+  'profile.mingaShare': '{pct}% con Minga',
+  'profile.metricsShareLabel': 'de tus salidas',
+  'profile.mingaVerified': 'Reservado con Minga',
   'auth.welcomeBack': 'Bienvenido de nuevo',
   'auth.joinTitle': 'Únete a la expedición',
   'auth.oauthNote': 'Inicia sesión con Google, Meta o tu correo.',
