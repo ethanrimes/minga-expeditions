@@ -192,12 +192,6 @@ export function ProfilePage() {
           accent={activityColors.minga}
           totals={summary.minga}
         />
-        <MetricCard
-          theme={theme}
-          label={t('profile.metricsIndependent')}
-          accent={activityColors.independent}
-          totals={summary.independent}
-        />
       </section>
 
       {/* Tier progress */}

@@ -16,13 +16,6 @@ export function MetricsBreakdown({ summary }: { summary: ActivitySummary }) {
     <View style={{ gap: spacing.sm }}>
       <Card theme={theme} t={t} label={t('profile.metricsAll')} accent={theme.primary} totals={summary.all} />
       <Card theme={theme} t={t} label={t('profile.metricsMinga')} accent={activityColors.minga} totals={summary.minga} />
-      <Card
-        theme={theme}
-        t={t}
-        label={t('profile.metricsIndependent')}
-        accent={activityColors.independent}
-        totals={summary.independent}
-      />
     </View>
   );
 }
