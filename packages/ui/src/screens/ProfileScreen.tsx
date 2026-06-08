@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { useTheme, spacing, fontSizes, fontWeights, radii } from '@minga/theme';
 import { fetchProfile, getSupabase } from '@minga/supabase';
-import { buildActivityCalendar, summarizeActivities } from '@minga/logic';
+import { summarizeActivities } from '@minga/logic';
 import { useT } from '@minga/i18n';
 import type { DbProfile } from '@minga/types';
 import { Screen } from '../primitives/Screen';
@@ -57,7 +57,6 @@ export function ProfileScreen({
   }
 
   const summary = summarizeActivities(activities);
-  const calendar = buildActivityCalendar(activities, 182);
 
   return (
     <Screen>
@@ -110,7 +109,7 @@ export function ProfileScreen({
       {profile ? <TierProgress distanceKm={profile.total_distance_km} /> : null}
 
       {/* Activity calendar */}
-      <ActivityCalendar data={calendar} />
+      <ActivityCalendar activities={activities} />
 
       <SectionHeader title={t('profile.recentActivities')} />
       {actsLoading ? (

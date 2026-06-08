@@ -47,17 +47,31 @@ export function ActivityCard({
           </Text>
           <View
             style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 4,
               alignSelf: 'flex-start',
-              backgroundColor: accent,
+              backgroundColor: minga ? accent : 'transparent',
               borderRadius: radii.pill,
+              borderWidth: minga ? 0 : 1.5,
+              borderColor: accent,
               paddingHorizontal: 8,
               paddingVertical: 2,
             }}
           >
-            <Text style={{ color: '#fff', fontSize: 10, fontWeight: fontWeights.bold, letterSpacing: 0.5 }}>
+            <Icon name={minga ? 'medal' : 'mountain'} size={11} color={minga ? '#fff' : accent} strokeWidth={2.4} />
+            <Text style={{ color: minga ? '#fff' : accent, fontSize: 10, fontWeight: fontWeights.bold, letterSpacing: 0.5 }}>
               {minga ? t('profile.badgeMinga') : t('profile.badgeIndependent')}
             </Text>
           </View>
+          {minga ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+              <Icon name="check" size={12} color={accent} strokeWidth={2.6} />
+              <Text style={{ color: accent, fontSize: 11, fontWeight: fontWeights.semibold }}>
+                {t('profile.mingaVerified')}
+              </Text>
+            </View>
+          ) : null}
         </View>
         <Text style={{ color: theme.textMuted, fontSize: fontSizes.xs }}>
           {new Date(activity.started_at).toLocaleDateString(locale)}
@@ -72,12 +86,13 @@ export function ActivityCard({
   );
 
   const style = {
-    backgroundColor: theme.surface,
+    backgroundColor: minga ? `${accent}0f` : theme.surface,
     borderRadius: radii.md,
-    borderWidth: 1,
-    borderColor: theme.border,
-    borderLeftWidth: 4,
+    borderWidth: minga ? 1.5 : 1,
+    borderColor: minga ? `${accent}66` : theme.border,
+    borderLeftWidth: minga ? 6 : 4,
     borderLeftColor: accent,
+    borderStyle: (minga ? 'solid' : 'dashed') as 'solid' | 'dashed',
     padding: spacing.lg,
     gap: spacing.sm,
   };
